@@ -98,10 +98,10 @@ msa.compl.char <- function(ch) {
   c[w]
 }
 
-msa.compl.string <- function(text) {
-  for (i in 1:length(text)) {
-    s <- text[i]
-    if (length(s)) 
-      for (j in 1:length(
+#msa.compl.string <- function(text) {
+#  for (i in 1:length(text)) {
+#    s <- text[i]
+#    if (length(s)) 
+#      for (j in 1:length(
        
 
