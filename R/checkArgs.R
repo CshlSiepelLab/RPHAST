@@ -14,8 +14,8 @@ check.arg <- function(arg, argname="argument", class=NULL,
   }
 
   # now arg is not null
-  if (length(arg) < min.length ||
-      length(arg) > max.length) {
+  if ((!is.null(min.length) && length(arg) < min.length) ||
+      (!is.null(max.length) && length(arg) > max.length)) {
     if (min.length == max.length)
       stop(paste(argname, "should be", class, "of length", min.length))
     stop(paste(argname, "should be ", class, "with length >=", min.length, "and length <=", max.length))

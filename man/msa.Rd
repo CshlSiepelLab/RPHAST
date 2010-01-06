@@ -6,35 +6,37 @@
   Creates a new MSA (multiple sequence alignment) object.
 }
 \usage{
-msa.new(nseqs = 0, seqlen = 0, names = NULL, seqs = NULL, alphabet = NULL)
+msa.new(seqs, names=NULL, alphabet="ACGT", pointerOnly=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{nseqs}{
-    the number of sequences (ie, samples or rows) in the alignment.
-}
-\item{seqlen}{
-  the length of the alignment (usually the number of base pairs).
-}
-  \item{names}{
-    a character vector of length nseqs with the name of each sample,
-    in the same order as given in the alignment.
-
-}
   \item{seqs}{
     a character vector of length nseqs, each string of length seqlen,
     containing the alignment.
+    }
+  \item{names}{
+    a character vector of length nseqs with the name of each sample,
+    in the same order as given in the alignment.
 }
   \item{alphabet}{
-    a character string containing all valid symbols that may appear
-  in the alignment.
+    a character string containing all valid data characters, not
+    including missing data (assumed to be "N") or gaps (assumed to be
+    "-").  The alphabet is not case-sensitive.
 }
-}
+\item{pointerOnly}{
+  a logical value indicating whether to store alignment in R, or only
+  as a pointer to an object in C.  See details below for important
+  warnings about this option.  Setting this to true saves memory and
+  improves performance, but for a loss of functionality.  See also
+  important warning about pointer objects in RPHAST.
+}}
 \details{
-  If seqs is not NULL, nseqs and seqlen will be inferred from seqs, and
-  a warning will be given if they do not match the arguments provided.
-  The alphabet will not be inferred from seqs unless it is required in a
-  downstream operation.
+  Creates a new alignment object with given sequences.
+
+  Setting pointerOnly to TRUE saves memory and improves performance, but
+  then the msa object can only be viewed or modified through calls to
+  RPHAST functions.  Furthermore, pointer objects will not always behave as
+  expected.  See warning below.
 }
 \value{
   Returns a new msa object.

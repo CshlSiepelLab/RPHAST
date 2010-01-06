@@ -7,7 +7,7 @@
   Prints an msa (multiple sequence alignment) object.
 }
 \usage{
-print.msa(msa, ..., printSeq = FALSE, format = "FASTA", prettyPrint = FALSE)
+print.msa(msa, ..., printSeq = FALSE, format = NULL, pretty.print = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,10 +20,13 @@ print.msa(msa, ..., printSeq = FALSE, format = "FASTA", prettyPrint = FALSE)
   }
   \item{format}{
     If printSeq is TRUE, specifies the format to print the alignment.
-    See \code{\link{msa.validFormat}}.
+    If format is NULL, prints as R character string (only possible if
+    sequence is not stored as pointer.  Otherwise format should be a
+    valid msa format character string.
+    See \code{\link{msa.validFormatStr}}.
   }
-  \item{prettyPrint}{
-    If printSeq is TRUE, prettyPrint=TRUE will cause '.' to be printed
+  \item{pretty.print}{
+    If printSeq is TRUE, pretty.print=TRUE will cause '.' to be printed
     whenever character matches corresponding character in first
     sequence.  Ignored if format is SS.
   }
@@ -59,8 +62,8 @@ m <- msa.new(names=c("human", "mouse", "rat"),
              seqs=c("ACGTAT", "AGGTAA", "AGGTAG"))
 m
 print(m, printSeq=TRUE)
-print(m, printSeq=TRUE, format="SS")
-print(m, printSeq=TRUE, format="PHYLIP", prettyPrint=TRUE)
+print(m, printSeq=TRUE)
+print(m, printSeq=TRUE, format="FASTA", pretty.print=TRUE)
 
   }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

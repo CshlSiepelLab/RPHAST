@@ -1,5 +1,5 @@
-\name{msa.validFormat}
-\alias{msa.validFormat}
+\name{msa.validFormatStr}
+\alias{msa.validFormatStr}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
   Check an MSA format string
@@ -10,7 +10,7 @@
   sequence alignment (MSA) object.
 }
 \usage{
-msa.validFormat(format)
+msa.validFormatStr(format)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -52,7 +52,7 @@ msa.validFormat(format)
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-msa.validFormat(c("MAF", "SS", "PHYLIP", "MPM", "LAV", "FASTA", "BAD_FORMAT_STRING"))
+msa.validFormatStr(c("MAF", "SS", "PHYLIP", "MPM", "LAV", "FASTA", "BAD_FORMAT_STRING"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
