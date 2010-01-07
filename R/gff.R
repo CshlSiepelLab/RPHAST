@@ -1,3 +1,4 @@
+#' @nord
 gff.makeObj <- function() {
   gff <- list()
   attr(gff, "class") <- "gff"
@@ -5,13 +6,14 @@ gff.makeObj <- function() {
 }
 
 
+#' @nord
 # don't call explicitly; this is the registered finalizer for GFF
 # external pointers
 gff.free <- function(extGffPtr) {
   .Call("rph_gff_free", extGffPtr)
 }
 
-gff.read <- function(filename, pointer.only=FALSE) {
+read.gff <- function(filename, pointer.only=FALSE) {
   obj <- .Call("rph_gff_read", filename)
   if (pointer.only) {
     gff <- gff.makeObj()
@@ -23,6 +25,15 @@ gff.read <- function(filename, pointer.only=FALSE) {
 }
 
 
+#' Create a new GFF object
+#'
+#' If pointer.only==FALSE, the new GFF object is a data frame, with
+#' columns mirroring the GFF Specification \url{http://www.sanger.ac.uk/resources/software/gff/spec.html}.
+#' Otherwise, it is a list containing a single element, which is
+#' a pointer to an object stored in C.
+#'
+#' @param seqname a character vector
+#' @seealso \code{\link{gff.read}}
 gff.new <- function(seqname, src, feature, start, end, score=NULL,
                     strand=NULL, frame=NULL, attribute=NULL,
                     pointer.only=FALSE) {
@@ -90,7 +101,7 @@ print.gff <- function(gff) {
 }
 
 write.gff <- function(filename, gff) {
-  checkArg(filename, "filename", "character", null.OK=TRUE)
+  check.arg(filename, "filename", "character", null.OK=TRUE)
   print.gff(filename, gff)
 }
 

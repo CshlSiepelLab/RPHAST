@@ -4,15 +4,44 @@ msa.free <- function(extMsaPtr) {
 }
 
 
-# make barebones msa obj
+#' make barebones msa obj
+#' @nord
 msa.makeObj <- function() {
   msa <- list()
   class(msa) <- "msa"
   msa
 }
 
-
-# make new MSA object given sequences and other information stored in R memory
+##' Creates a new MSA object given sequences.
+##'
+##' Make a new multiple sequence alignment (MSA) object given a vector of
+##' character strings.  They can be optionally annotated with sample names.
+##'
+##' Each character string in seqs must be the same length, and number of
+##' elements in names (if provided) must match the number of elements in
+##' seqs.
+##'
+##' Alphabet generally does not have to be specified if working with
+##' DNA alignments.
+##'
+##' If pointer.only==FALSE, the MSA object will be stored in R and can be
+##' viewed and modified by base R code as well as RPHAST functions.
+##' Setting pointer.only=TRUE will cause the MSA object to be stored by
+##' reference, as an external pointer to an object created by C code.  This
+##' may be necessary to improve performance, but the object can then only
+##' be viewed/manipulated via RPHAST functions.  Furthermore, if an object
+##' is stored as a pointer, the object can only be copied with msa.copy().
+##' See examples below.
+##' @title MSA Objects
+##' @param seqs a character vector containing sequences, one per sample
+##' @param names a character vector identifying the sample name for each
+##' sequence
+##' @param alphabet a character string containing valid non-missing character
+##' states
+##' @param pointer.only a boolean indicating whether MSA should be stored by
+##' reference (see Details)
+##' @useDynLib rphast
+##' @export
 msa.new <- function(seqs, names=NULL, alphabet="ACGT",
                     pointer.only=FALSE) {
   #checks
@@ -65,7 +94,20 @@ msa.nseq <- function(msa) {
   .Call("rph_msa_nseq", msa$externalPtr)
 }
 
-
+##' Returns TRUE if the argument is a valid string describing a
+##' multiple sequence alignment (MSA) format.
+##'
+##' Valid formats include "FASTA", "PHYLIP", "SS" (Sufficient statistics
+##' format used by PHAST), "MPM" (format used by MultiPipMaker),
+##' "LAV" (used by blastz), or "MAF" (Multiple Alignment Format used by
+##' MULTIZ and TBA.
+##' @title Check an MSA Format String
+##' @param format a character vector of strings to test
+##' @return a logical vector indicating whether each element of the
+##' input parameter is a valid format string.
+##' @keywords msa
+##' @keywords format
+##' @export
 msa.validFormatStr <- function(format) {
   if (is.null(format)) return(NULL)
   result <- logical(length(format))
@@ -128,6 +170,21 @@ msa.to.pointer <- function(src) {
 # object with contents of msa, print, then delete.
 # possible TODO: print directly from R in this case?
 # Would be easy except for formatting.
+
+##' Writes a multiple sequence alignment (MSA) object to a file
+##' in one of several formats.
+##' @title Writing MSA Objects to Files
+##' @param msa an object of class msa
+##' @param filename File to write (will be overwritten).  If NULL, output
+##' goes to terminal.
+##' @param format format to write MSA object.  Valid values are "FASTA",
+##' "PHYLIP", "MPM", or "SS".
+##' @param pretty.print Whether to pretty-print alignment (turning
+##' bases which match the first base in the same column to ".").
+##' @note pretty.print does not work if format="SS".
+##' @keywords write
+##' @keywords msa
+##' @export
 msa.write <- function(msa, filename=NULL, format="FASTA", pretty.print=FALSE) {
   #checks
   check.arg(filename, "filename", "character", null.OK=TRUE)
@@ -150,7 +207,31 @@ msa.write <- function(msa, filename=NULL, format="FASTA", pretty.print=FALSE) {
 }
 
 
-# print the msa.  Only print alignment if printSeq==TRUE.
+##' Prints an MSA (multiple sequence alignment) object.
+##'
+##' Valid formats for printing are "FASTA", "PHYLIP", "MPM", and "SS".
+##' See \code{\link{msa.validFormatStr}} for details on these formats.
+##' If format is specified, the alignment is printed regardless of
+##' printSeq.
+##'
+##' Pretty-printing will cause all characters in a column which match
+##' the value in the first row to be printed as ".".  It only works for
+##' FASTA, PHYLIP, or MPM formats.
+##'
+##' If printSeq==TRUE, then the default printing format depends on whether
+##' the sequence is stored by value (the default storage mode), or by 
+##' reference.  If the MSA is stored by value, the default format is
+##' as a R character vector.  Otherwise, the default format is FASTA.
+##'
+##' @title Printing MSA objects
+##' @param msa an object of class msa
+##' @param ... additional arguments sent to \code{print}
+##' @param printSeq whether to supress printing of the alignment
+##' @param format to print sequence in if printing alignment
+##' @param whether to pretty.print pretty-print sequence if printing alignment
+##' @keywords msa
+##' @keywords alignment
+##' @export
 print.msa <- function(msa, ..., printSeq=FALSE, format=NULL, pretty.print=FALSE) {
   check.arg(printSeq, "printSeq", "logical", null.OK=FALSE)
   # format and pretty.print are checked in msa.write
@@ -159,6 +240,10 @@ print.msa <- function(msa, ..., printSeq=FALSE, format=NULL, pretty.print=FALSE)
             msa.seqlen(msa),"columns"))
   cat("\n")
 
+  if (!is.null(format)) {
+    printSeq=TRUE
+  }
+  
   pointer <- msa$externalPtr
   names <- msa.names(msa)
   alphabet <- msa.alphabet(msa)
@@ -190,14 +275,22 @@ print.msa <- function(msa, ..., printSeq=FALSE, format=NULL, pretty.print=FALSE)
 }
 
 
-# same as print.msa but no option to print sequence
-summary.msa <- function(msa, ...) {
-  print.msa(msa, ...)
+##' Prints a short description of an MSA (multiple sequence alignment)
+##' object.
+##'
+##' @title MSA Summary
+##' @param object an MSA object
+##' @param ... additional arguments passed to \code{print.msa}
+##' @keywords msa
+##' @keywords summary
+##' @seealso \code{\link{print.msa}}
+##' @export
+summary.msa <- function(object, ...) {
+  print.msa(object, ...)
 }
 
 
-
-msa.read <- function(filename, format="FASTA",
+read.msa <- function(filename, format="FASTA",
                      alphabet=NULL,                     
                      gff.label=NULL, gff.only=NULL,
                      do4d=FALSE,
@@ -280,7 +373,7 @@ msa.read <- function(filename, format="FASTA",
   if (do4d) .Call("rph_msa_reduce_to_4d", msa$externalPtr, cmPtr)
 
   if (pointer.only == FALSE)
-    msa <- msa.extract.from.C(msa)
+    msa <- msa.from.pointer(msa)
 }
 
 
