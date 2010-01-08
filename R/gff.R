@@ -13,27 +13,76 @@ gff.free <- function(extGffPtr) {
   .Call("rph_gff_free", extGffPtr)
 }
 
+##' Read a GFF object from a file
+##'
+##' The function will guess the format of the input file automatically.
+##'
+##' @title Read a feature file (GFF, BED, or GenePred)
+##' @param filename the name of the file
+##' @param pointer.only Whether to store object by reference instead of a
+##' data.frame
+##' @return If pointer.only==FALSE, a data.frame with columns corresponding
+##' to the GFF specification.  Otherwise, an object which is a pointer to
+##' an object stored in C.
+##' @seealso \code{\link{gff.new}} for more description of GFF objects.
+##'
+##' \code{\link{msa.new}} for more explanation of the pointer.only option.
+##'
+##' \url{http://www.sanger.ac.uk/resources/software/gff/spec.html}
+##' for a detailed description of GFF file format.
+##' 
+##' \url{http://genome.ucsc.edu/FAQ/FAQformat} for descriptions
+##' of BED and GenePred formats.
+##' @keywords GFF
+##' @keywords Genepred
+##' @keywords BED
+##' @export
 read.gff <- function(filename, pointer.only=FALSE) {
-  obj <- .Call("rph_gff_read", filename)
-  if (pointer.only) {
-    gff <- gff.makeObj()
-    gff$externalPtr <- obj
-    reg.finalizer(gff$externalPtr, gff.free)
-    return(gff)
-  } 
-  return(as.data.frame(.Call("rph_gff_dataframe", obj)))
+  gff <- gff.makeObj()
+  gff$externalPtr <- .Call("rph_gff_read", filename)
+  reg.finalizer(gff$externalPtr, gff.free)
+  if (!pointer.only) {
+    gff <- as.data.frame.gff(gff)
+  }
+  gff
 }
 
 
-#' Create a new GFF object
-#'
-#' If pointer.only==FALSE, the new GFF object is a data frame, with
-#' columns mirroring the GFF Specification \url{http://www.sanger.ac.uk/resources/software/gff/spec.html}.
-#' Otherwise, it is a list containing a single element, which is
-#' a pointer to an object stored in C.
-#'
-#' @param seqname a character vector
-#' @seealso \code{\link{gff.read}}
+##' Create a new GFF object
+##'
+##' See \url{http://www.sanger.ac.uk/resources/software/gff/spec.html}
+##' for more detailed description of each parameter.
+##' 
+##' All arguments which are provided should be vectors of equal length.
+##' 
+##' If pointer.only==FALSE, the new GFF object is a data frame, with
+##' columns mirroring the GFF Specification
+##' Otherwise, it is a list containing a single element, which is
+##' a pointer to an object stored in C.
+##' @title GFF Objects
+##' @param seqname a character vector containing the name of the sequence
+##' @param src The source of the feature
+##' @param feature The feature type name
+##' @param start The start of the feature.  Sequence numbering begins at 1.
+##' @param end The end of the feature.  This is the last coordinate included
+##' in the feature.
+##' @param score The feature score, or NA if there is no score.
+##' @param strand A character string which is either "+", "-", or "." (if
+##' strand is not available or relevant).
+##' @param frame A 0, 1, or 2, which specifies whether the feature is in frame.
+##' @param attribute A feature attribute (character string).
+##' @param pointer.only Whether to store object as a pointer to an object
+##' in C, rather than as a data.frame in R.
+##' @return If pointer.only==FALSE, returns a data.frame whose format
+##' mirrors the GFF specification.  Otherwise, returns a list with a single
+##' object, which is a external pointer to a C structure representing a
+##' GFF file.
+##' @seealso \code{\link{read.gff}}
+##'
+##' \code{\link{msa.new}} for more details on the pointer.only option.
+##' @keywords general feature format
+##' @keywords GFF
+##' @export
 gff.new <- function(seqname, src, feature, start, end, score=NULL,
                     strand=NULL, frame=NULL, attribute=NULL,
                     pointer.only=FALSE) {
@@ -82,6 +131,14 @@ gff.new <- function(seqname, src, feature, start, end, score=NULL,
 }
 
 
+##' Take a GFF stored in R and return one stored by reference
+##' @title GFF To Pointer
+##' @param gff a GFF object stored by value in R
+##' @return a GFF object stored by reference as a pointer to an
+##' object created in C.
+##' @seealso \code{\link{gff.new}} for more details on GFF storage
+##' options.
+##' @export
 gff.to.pointer <- function(gff) {
   if (!is.null(gff$externalPtr))
     return(gff$externalPtr)
@@ -92,21 +149,40 @@ gff.to.pointer <- function(gff) {
 }
 
 
-# todo: print meta-data?
-print.gff <- function(gff) {
+##' Prints a GFF object.
+##' @title Printing a GFF Object
+##' @param x a GFF object
+##' @param ... further arguments to be passed to or from other methods
+##' @keywords GFF
+##' @seealso \code{\link{write.gff}}
+##' @export
+print.gff <- function(x, ...) {
   cat(paste("GFF object\n"))
-  if (is.null(gff$externalPtr))
-    gff <- gff.to.pointer(gff)
-  invisible(.Call("rph_gff_print", NULL, gff$externalPtr))
+  write.gff(NULL, x)
 }
 
+
+##' Write a GFF object to a file.
+##' @title Writing a GFF Object
+##' @param filename The name of the file to write to (will be overwritten)
+##' @param gff a GFF object
+##' @keywords GFF
+##' @export
 write.gff <- function(filename, gff) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
-  print.gff(filename, gff)
+  if (is.null(gff$externalPtr))
+    gff <- gff.to.pointer(gff)
+  invisible(.Call("rph_gff_print", filename, gff$externalPtr))
 }
 
 
-summary.gff <- function(gff) {
+##' Prints a brief summary of a GFF object.
+##' @title GFF Summary
+##' @param object a GFF object
+##' @param ... further arguments to be passed to or from other methods
+##' @keywords GFF
+##' @export
+summary.gff <- function(object, ...) {
   if (is.null(gff$externalPtr)) {
     as <- "stored as data frame"
     gff <- gff.to.pointer(gff)
@@ -116,7 +192,25 @@ summary.gff <- function(gff) {
   cat("\n")
 }
 
-as.data.frame.gff <- function(gff) {
-  attr(gff, "class") <- "data.frame"
-  gff
+
+##' Convert a GFF object to a data frame
+##' @title GFF to Data Frame
+##' @param x a GFF object
+##' @param row.names optional names for each feature
+##' @param optional logical, if \code{TRUE}, setting row names and 
+##' converting column names (to syntactic names: see
+##' \code{\link{make.names}} is optional.
+##' @param ... additional arguments to be passed to other methods
+##' @return a data frame containing the GFF data
+##' @seealso \code{\link{gff.new}} for a description of GFF data frames.
+##' @export
+as.data.frame.gff <- function(x, row.names=NULL, optional=FALSE, ...) {
+  if (is.data.frame(x)) return(x)
+  if (!is.null(x$externalPtr)) {
+    x <- .Call("rph_gff_dataframe", x$externalPtr)
+  }
+  attr(x, "class") <- "list"
+  as.data.frame(x, row.names, optional, ...)
 }
+
+
