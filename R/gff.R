@@ -17,7 +17,7 @@ gff.free <- function(extGffPtr) {
 ##'
 ##' The function will guess the format of the input file automatically.
 ##'
-##' @title Read a feature file (GFF, BED, or GenePred)
+##' @title Read a Feature File (GFF, BED, or GenePred)
 ##' @param filename the name of the file
 ##' @param pointer.only Whether to store object by reference instead of a
 ##' data.frame
@@ -80,8 +80,7 @@ read.gff <- function(filename, pointer.only=FALSE) {
 ##' @seealso \code{\link{read.gff}}
 ##'
 ##' \code{\link{msa.new}} for more details on the pointer.only option.
-##' @keywords general feature format
-##' @keywords GFF
+##' @keywords GFF feature
 ##' @export
 gff.new <- function(seqname, src, feature, start, end, score=NULL,
                     strand=NULL, frame=NULL, attribute=NULL,
@@ -141,7 +140,7 @@ gff.new <- function(seqname, src, feature, start, end, score=NULL,
 ##' @export
 gff.to.pointer <- function(gff) {
   if (!is.null(gff$externalPtr))
-    return(gff$externalPtr)
+    return(gff)
   gff.new(gff$seqname, gff$src, gff$feature,
           gff$start,   gff$end,    gff$score,
           gff$strand,  gff$frame,  gff$attribute,
@@ -176,6 +175,32 @@ write.gff <- function(filename, gff) {
 }
 
 
+##' Get the number of rows in a GFF object
+##' @title GFF Number of Rows
+##' @param gff A gff object
+##' @return An integer containing the number of rows in each gff object
+##' @export
+gff.numrow <- function(gff) {
+  if (is.null(gff$externalPtr))
+    return(dim(gff)[1])
+  .Call("rph_gff_numrow", gff$externalPtr)
+}
+
+
+##' Get the number of columns in a GFF object
+##' @title GFF Number of Columns
+##' @param gff A gff object
+##' @return An integer containing the number of columns in the gff object
+##' @note If the GFF object is stored as a pointer in C, the number
+##' of columns is always 9.
+##' @export
+gff.numcol <- function(gff) {
+  if (is.null(gff$externalPtr))
+    return(dim(gff)[2])
+  9 # gff objects stored in C always have 9 columns
+}
+
+
 ##' Prints a brief summary of a GFF object.
 ##' @title GFF Summary
 ##' @param object a GFF object
@@ -183,11 +208,11 @@ write.gff <- function(filename, gff) {
 ##' @keywords GFF
 ##' @export
 summary.gff <- function(object, ...) {
-  if (is.null(gff$externalPtr)) {
+  if (is.null(object$externalPtr)) {
     as <- "stored as data frame"
-    gff <- gff.to.pointer(gff)
+    object <- gff.to.pointer(object)
   } else as <- "stored as a pointer to a C structure"
-  nrow <- .Call("rph_gff_numrow", gff$externalPtr)
+  nrow <- gff.numrow(object)
   cat(paste("GFF object with", nrow, "rows", as))
   cat("\n")
 }
@@ -202,7 +227,9 @@ summary.gff <- function(object, ...) {
 ##' \code{\link{make.names}} is optional.
 ##' @param ... additional arguments to be passed to other methods
 ##' @return a data frame containing the GFF data
-##' @seealso \code{\link{gff.new}} for a description of GFF data frames.
+##' @seealso \code{\link{gff.new}} for a description of GFF data frames,
+##' and \code{\link{gff.to.pointer}} for conversion in the other
+##' direction.
 ##' @export
 as.data.frame.gff <- function(x, row.names=NULL, optional=FALSE, ...) {
   if (is.data.frame(x)) return(x)
@@ -214,3 +241,12 @@ as.data.frame.gff <- function(x, row.names=NULL, optional=FALSE, ...) {
 }
 
 
+##' Get the dimensions of a GFF feature object
+##' @title GFF dimensions
+##' @param x a GFF object
+##' @return An integer vector of length two containing the number of
+##' rows and number of columns in the GFF object.
+##' @export
+dim.gff <- function(x) {
+  c(gff.numrow(x), gff.numcol(x))
+}

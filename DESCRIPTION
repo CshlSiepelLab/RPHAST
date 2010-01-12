@@ -8,4 +8,4 @@ Maintainer: Melissa Hubisz <mt269@cornell.edu>
 Description: R interface to PHAST
 License: GPL (>= 2)
 URL: http://compgen.bscb.cornell.edu/phast
-Collate: 'checkArgs.R' 'gff.R' 'msa.R'
+Collate: 'checkArgs.R' 'gff.R' 'msa.R' 'trees.R'
