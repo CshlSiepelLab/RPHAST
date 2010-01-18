@@ -40,7 +40,6 @@ gff.free <- function(extGffPtr) {
 read.gff <- function(filename, pointer.only=FALSE) {
   gff <- gff.makeObj()
   gff$externalPtr <- .Call("rph_gff_read", filename)
-  reg.finalizer(gff$externalPtr, gff.free)
   if (!pointer.only) {
     gff <- as.data.frame.gff(gff)
   }
@@ -115,7 +114,6 @@ gff.new <- function(seqname, src, feature, start, end, score=NULL,
                  as.character(src), as.character(feature),
                  as.integer(start), as.integer(end),
                  score, strand, frame, attribute)
-    reg.finalizer(ptr, gff.free)
     gff <- gff.makeObj()
     gff$externalPtr <- ptr
   } else {

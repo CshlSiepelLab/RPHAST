@@ -313,3 +313,22 @@ msa.seqlen(m1, "hg18")
 #'
 unlink(files) # clean up
 
+################################################
+
+#' msa.likelhood
+files <- c("rev.mod", "ENr334.maf", "ENr334.fa")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, files)
+msa <- read.msa("ENr334.fa")
+tm <- read.tm("rev.mod")
+l <- msa.likelihood(msa, tm)
+msa.likelihood(msa, tm)
+like1 <- msa.likelihood(msa, tm, by.column=TRUE)
+like2 <- msa.likelihood(msa, tm, by.column=TRUE)
+msa <- read.msa("ENr334.maf")
+msa.likelihood(msa, tm)
+msa.likelihood(msa, tm)
+like3 <- msa.likelihood(msa, tm, by.column=TRUE)
+like4 <- msa.likelihood(msa, tm, by.column=TRUE)
+tm$subst.mod <- "JC69"
+msa.likelihood(msa, tm)

@@ -1,5 +1,14 @@
 require("rphast")
 
+#' print.tm
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+filename <- "rev.mod"
+unzip(exampleArchive, filename)
+tm <- read.tm(filename)
+tm
+print(tm, aslist=TRUE)
+unlink(filename)
+
 #' read.tm
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 filename <- "rev.mod"
@@ -22,8 +31,7 @@ unlink(c(filename, "test.mod"))
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 filename <- "rev.mod"
 unzip(exampleArchive, filename)
-tm <- read.tm(filename)
-summary(tm)
+read.tm(filename)
 unlink(c(filename, "test.mod"))
 
 
@@ -33,6 +41,9 @@ tm <- tm.new(tree="((human:0.01, chimp:0.01):0.03, mouse:0.3)",
 is.list(tm)
 is.list(as.list(tm))
 
+
+#' subst.mods
+subst.mods()
 
 #' tm.isValidSubstMod
 tm.isValidSubstMod(c("JC69", "K80", "F81", "HKY85", "HKY85+Gap",
@@ -52,13 +63,15 @@ backgd <- backgd/sum(backgd)
 alphabet <- "ACGT"
 t <- tm.new(tree, subst.mod, rate.mat, backgd, alphabet)
 t
-summary(t)
 #'
 nratecats <- 3
 alpha <- 1.5
 rate.consts <- runif(nratecats, max=3.0)
 root.leaf <- "human"
-t <- tm.new(tree, subst.mod, rate.mat, backgd, alphabet,
-            nratecats, alpha, rate.consts, root.leaf)
+t <- tm.new(tree, subst.mod, rate.matrix=rate.mat,
+            backgd=backgd, alphabet=alphabet,
+            nratecats=nratecats, alpha=alpha,
+            rate.consts=rate.consts, root.leaf=root.leaf)
 t
-summary(t)
+
+

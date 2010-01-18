@@ -29,7 +29,6 @@ msa.copy <- function(msa) {
   if (is.null(msa$externalPtr)) return(msa)
   result <- msa.makeObj()
   result$externalPtr <- .Call("rph_msa_create_copy", msa$externalPtr)
-  reg.finalizer(result$externalPtr, msa.free)
   result
 }
 
@@ -67,9 +66,11 @@ msa.copy <- function(msa) {
 ##' if is.ordered==FALSE.
 ##' @param pointer.only a boolean indicating whether MSA should be stored by
 ##' reference (see Details)
+##' @usage msa.new(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
+##'                    offset=NULL, pointer.only=FALSE)
 ##' @useDynLib rphast
 ##' @export
-msa.new <- function(seqs, names=NULL, alphabet="ACGT", is.ordered=TRUE,
+msa.new <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
                     offset=NULL, pointer.only=FALSE) {
   #checks
   seqlen <-  unique(sapply(seqs, nchar))
@@ -101,7 +102,6 @@ msa.new <- function(seqs, names=NULL, alphabet="ACGT", is.ordered=TRUE,
                              alphabetP=alphabet,
                              orderedP=is.ordered,
                              offsetP=offset)
-    reg.finalizer(msa$externalPtr, msa.free)
   } else {
     msa$seqs <- seqs
     if (! is.null(names)) msa$names <- names
@@ -254,7 +254,12 @@ msa.from.pointer <- function(src) {
 ##' @export
 msa.to.pointer <- function(src) {
   if (!is.null(src$externalPtr)) return(src)
-  msa.new(src$seq, src$names, src$alphabet, src$is.ordered, pointer.only=TRUE)
+  msa.new(seqs=src$seq,
+          names=src$names,
+          alphabet=src$alphabet,
+          is.ordered=src$is.ordered,
+          offset=src$offset,
+          pointer.only=TRUE)
 }
 
 
@@ -503,7 +508,6 @@ read.msa <- function(filename,
                            gff$externalPtr, do.4d, alphabet,
                            tuple.size, refseq, ordered, do.cats,
                            offset)
-  reg.finalizer(msa$externalPtr, msa.free)
   
   if (pointer.only == FALSE) 
     msa <- msa.from.pointer(msa)
@@ -553,7 +557,6 @@ msa.sub <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
   result$externalPtr <- .Call("rph_msa_sub_alignment",
                               msa$externalPtr, seqs, keep,
                               start.col, end.col, refseq)
-  reg.finalizer(result$externalPtr, msa.free)
 
   if (copy.to.R) 
     result <- msa.from.pointer(result)
@@ -631,3 +634,28 @@ msa.strip.gaps <- function(msa, strip.mode=1) {
 "[.msa" <- function(msa, rows, cols=NULL) {
   NULL
 }
+
+
+
+
+##' Likelihood of an alignment given a tree model
+##' @title MSA Likelihood
+##' @param msa An object of class msa representing the multiple alignment
+##' @param tm An object of class TM representing the tree and model of
+##' substitution
+##' @param by.column Logical indicating whether to get likelihoods for
+##' each alignment column.  If FALSE, returns total likelihood
+##' @return Either the likelihood of the entire alignment (if by.column is
+##' \code{FALSE}, or a numeric vecotr giving the likelihood of each
+##' column in the alignment
+##' @export
+msa.likelihood <- function(msa, tm, by.column=FALSE) {
+  check.arg(by.column, "by.column", "logical", null.OK=FALSE)
+  if (is.null(msa$externalPtr)) 
+    msa <- msa.to.pointer(msa)
+  tm <- tm.to.pointer(tm)
+  if (by.column && !msa.is.ordered(msa))
+    warning("by.column may not be a sensible option for unordered MSA")
+  .Call("rph_msa_likelihood", msa$externalPtr, tm$externalPtr, by.column)
+}
+

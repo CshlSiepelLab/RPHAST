@@ -31,7 +31,6 @@ tm.rootLeaf.from.pointer <- function(x, tree) {
 
 #' @nord
 tm.from.pointer <- function(x) {
-  cat("tm.from.pointer\n")
   if (is.null(x$externalPtr))
     stop("tm.from.pointer expects list with externalPtr")
   tm <- tm.makeObj()
@@ -39,6 +38,7 @@ tm.from.pointer <- function(x) {
   tm$backgd <- .Call("rph_tm_backgd", x$externalPtr)
   tm$rate.matrix <- tm.rateMatrix.from.pointer(x)
   tm$subst.mod <- .Call("rph_tm_substMod", x$externalPtr)
+  tm$likelihood <- .Call("rph_tm_likelihood", x$externalPtr)
   tm$alpha <- .Call("rph_tm_alpha", x$externalPtr)
   tm$nratecats <- .Call("rph_tm_nratecats", x$externalPtr)
   tm$rate.consts <- .Call("rph_tm_rK", x$externalPtr)
@@ -64,12 +64,12 @@ tm.to.pointer <- function(tm) {
                          tm$backgd,
                          tm$rate.matrix,
                          tm$subst.mod,
+                         tm$likelihood,
                          tm$alpha,
                          tm$nratecats,
                          tm$rate.consts,
                          tm$rate.weights,
                          tm$root.leaf)
-  reg.finalizer(x$externalPtr, tm.free)
   x
 }
 
@@ -80,11 +80,9 @@ tm.to.pointer <- function(tm) {
 ##' @seealso \code{\link{tm.new}}
 ##' @export
 read.tm <- function(filename) {
-  cat("read.tm\n")
   check.arg(filename, "filename", "character", null.OK=FALSE)
   x <- list()
   x$externalPtr <- .Call("rph_tm_read", filename)
-  reg.finalizer(x$externalPtr, tm.free)
   tm <- tm.from.pointer(x)
   tm
 }
@@ -130,12 +128,15 @@ as.list.tm <- function(x, ...) {
 
 ##' Print a tree model
 ##' @title Printing Tree Models
-##' @param x An object of class "tm"
+##' @param x An object of class \code{tm}.
+##' @param aslist Logical.  If \code{TRUE}, print the tree model as a list
+##' rather than in tree model format.
 ##' @param ... arguments to be passed to/from other functions
 ##' @seealso \code{\link{tm.new}}
 ##' @export
-print.tm <- function(x, ...) {
-  print(as.list(x), ...)
+print.tm <- function(x, aslist=FALSE, ...) {
+  if (aslist) print(as.list(x), ...)
+  else summary.tm(x, ...)
 }
 
 
@@ -152,6 +153,15 @@ tm.isValidSubstMod <- function(mod) {
     result[i] <- .Call("rph_subst_mods_is_valid_string", mod[i])
   result
 }
+
+##' List all valid substitution models
+##' @title List PHAST Substitution Models
+##' @return a character vector with the names of all valid substitution
+##' models
+##' @export
+subst.mods <- function() {
+  .Call("rph_subst_mods_list_all", NULL)
+}
     
 
 
@@ -164,7 +174,7 @@ tm.isValidSubstMod <- function(mod) {
 ##' @param tree A character string representing a phylogenetic tree in
 ##' newick foromat
 ##' @param subst.mod A character string giving a valid substitution mod.
-##' See \code{\link{tm.isValidSubstMod}}.
+##' See \code{\link{subst.mods}}.
 ##' @param rate.matrix A square matrix representing the rate of substitution
 ##' from one state to the next.
 ##' @param backgd A numeric vector giving the equilibrium frequencies for
@@ -183,12 +193,14 @@ tm.isValidSubstMod <- function(mod) {
 ##' otherwise).  May be defined implicitly by alpha.
 ##' @param root.leaf Usually NULL, but if set to the name of a leaf
 ##' node in the tree, the tree will be re-rooted at this leaf node.
+##' @param likelihood an optional value giving the log likelihood of this
+##' model for some alignment
 ##' @return An object of class tm
 ##' @export
 tm.new <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
-                   alphabet="ACGT", nratecats=1, alpha=0.0,
-                   rate.consts=NULL, rate.weights=NULL,
-                   root.leaf=NULL) {
+                   alphabet="ACGT", nratecats=1, 
+                   alpha=0.0, rate.consts=NULL, rate.weights=NULL,
+                   root.leaf=NULL, likelihood=NULL) {
   check.arg(tree, "tree", "character", null.OK=FALSE)
   check.arg(subst.mod, "subst.mod", "character", null.OK=FALSE)
   check.arg(rate.matrix, "rate.matrix", "numeric", null.OK=TRUE,
@@ -197,6 +209,7 @@ tm.new <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
             min.length=NULL, max.length=NULL) # will check later
   check.arg(alphabet, "alphabet", "character", null.OK=FALSE)
   check.arg(nratecats, "nratecats", "integer", null.OK=FALSE)
+  check.arg(likelihood, "likelihood", "numeric", null.OK=TRUE)
   check.arg(alpha, "alpha", "numeric", null.OK=FALSE)
   check.arg(rate.consts, "rate.consts", "numeric", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
@@ -222,6 +235,13 @@ tm.new <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
     if (nratecats != length(rate.consts))
       stop("rate.consts should have length equal to nratecats")
   }
+  if (!is.null(rate.weights)) {
+    if (is.null(rate.consts))
+      stop("rate.weights needs to be specified if rate.consts is specified")
+    if (nratecats != length(rate.weights))
+      stop("rate.weights should have length equal to nratecats")
+  }
+  
   if (!is.null(root.leaf)) {
     cat("calling .Call\n")
     if ( ! (.Call("rph_tree_isNode", tree, root.leaf))) {
@@ -236,9 +256,13 @@ tm.new <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
   tm$rate.matrix <- rate.matrix
   tm$subst.mod <- subst.mod
   tm$alpha <- alpha
+  tm$likelihood <- likelihood
   tm$nratecats <- nratecats
   tm$rate.consts <- rate.consts
+  tm$rate.weights <- rate.weights
   tm$tree <- tree
   tm$root.leaf <- root.leaf
   tm
 }
+
+
