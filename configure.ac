@@ -13,7 +13,7 @@ CFLAGS="${RCFLAGS} ${CFLAGS}"
 # use -fgnu89-inline if necessary
 OLDCFLAGS="${CFLAGS}"
 CFLAGS="${CFLAGS} -fgnu89-inline"
-AC_TRY_COMPILE(, [int i; i++;], INLINE_FLAG="-fgnu89-inline", oops="failed")
+AC_TRY_COMPILE(, [int i; i++;], INLINE_FLAG="-fgnu89-inline")
 CFLAGS="${OLD_CFLAGS}"
 PHAST_VERSION="\"`cat src/version`\""
 
