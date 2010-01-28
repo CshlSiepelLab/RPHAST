@@ -28,8 +28,6 @@ if test -n "${oops}" ; then
   fi
 fi
 LIBS="${OLD_LIBS}"
-echo "LIBS=${LIBS}"
-echo "PTHREAD_LIBS=${PTHREAD_LIBS}"
 
 AC_C_INLINE
 
