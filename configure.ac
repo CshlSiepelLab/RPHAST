@@ -34,23 +34,86 @@ AC_CHECK_FUNCS([atexit bzero floor gethostname gettimeofday memset pow re_comp r
 
 
 # use -pthread if available otherwise -lpthread
+AC_MSG_CHECKING(for pthread)
+
 OLD_LIBS=${LIBS}
-LIBS="-pthread"
-AC_TRY_LINK(, [int i; i++;], PTHREAD_LIBS=${LIBS}, oops="failed")
-if test -n "${oops}" ; then
-  LIBS="-lpthread"
-  AC_TRY_LINK(, [int i; i++;], PTHREAD_LIBS=${LIBS}, oops="again")
-  if test "${oops}" = "again" ; then
-   echo "pthread not found"
-  fi
+LIBS=""
+# first check if we need -pthread at all
+AC_LINK_IFELSE([
+#include <pthread.h>
+int main() {
+  pthread_t x;
+  pthread_join(x, NULL);
+  return 0;
+}
+], AC_MSG_RESULT(yes), 
+
+# now see if we can use -pthread, which is preferred over -lpthread?
+[ LIBS=-pthread; AC_LINK_IFELSE([
+#include <pthread.h>
+int main() {
+  pthread_t x;
+  pthread_join(x, NULL);
+  return 0;
+}
+], AC_MSG_RESULT(${LIBS}), [ LIBS=-lpthread; AC_LINK_IFELSE([
+#include <pthread.h>
+int main() {
+  pthread_t x;
+  pthread_join(x, NULL);
+  return 0;
+]}, AC_MSG_RESULT(${LIBS}), [AC_MSG_RESULT(no)
+                            AC_MSG_ERROR(pthread libs required)])])])
+
+PTHREAD_LIBS=${LIBS}
+LIBS=${OLD_LIBS}
+
+
+# use vecLib if available
+AC_MSG_CHECKING(for vecLib)
+OLD_CFLAGS=${CFLAGS}
+OLD_LIBS=${LIBS}
+CFLAGS="${CFLAGS} -DVECLIB"
+LIBS="${LIBS} -framework vecLib"
+AC_LINK_IFELSE( AC_LANG_PROGRAM(), 
+		[AC_MSG_RESULT(yes)
+                 LAPACK_FLAG="-DVECLIB"
+                 LAPACK_LIBS="-framework vecLib"],
+		[ AC_MSG_RESULT(no)
+                  CFLAGS=${OLD_CFLAGS}])
+CFLAGS=${OLD_CFLAGS}
+#echo "VECLIB=${VECLIB} CFLAGS=${CFLAGS}"
+
+# if not veclib, try to use R's lapack
+if test -z "$LAPACK_FLAG"; then
+  LAPACK_LIBS=`"${R_HOME}/bin/R" CMD config LAPACK_LIBS`
+  BLAS_LIBS=`"${R_HOME}/bin/R" CMD config BLAS_LIBS`
+  FLIBS=`"${R_HOME}/bin/R" CMD config FLIBS`
+  SHLIB=`"${R_HOME}/bin/R" CMD config SHLIB_LDFLAGS`
+  FPIC=`"${R_HOME}/bin/R" CMD config CPICFLAGS`
+  LIBS="${FPIC} ${SHLIB} ${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS}"
+
+  AC_MSG_CHECKING(for R's Lapack)
+  AC_LINK_IFELSE(AC_LANG_PROGRAM(),
+                 [AC_MSG_RESULT(yes)
+                  LAPACK_LIBS="\${LAPACK_LIBS} \${BLAS_LIBS} \${FLIBS}"
+		  LAPACK_FLAG="-DR_LAPACK"
+                 ],
+                 [AC_MSG_RESULT(no)
+                  AC_MSG_ERROR(Error linking to R's lapack library.  Check installation.)])
 fi
+
+
 LIBS="${OLD_LIBS}"
 
-
-# use -fgnu89-inline if necessary
-OLDCFLAGS="${CFLAGS}"
+# use -fgnu89-inline if available
+AC_MSG_CHECKING(for -fgnu89-inline flag)
+OLD_CFLAGS="${CFLAGS}"
 CFLAGS="${CFLAGS} -fgnu89-inline"
-AC_TRY_COMPILE(, [int i; i++;], INLINE_FLAG="-fgnu89-inline")
+AC_COMPILE_IFELSE(AC_LANG_PROGRAM(), 
+                  [INLINE_FLAG="-fgnu89-inline"
+                   AC_MSG_RESULT(yes)], 
+                  AC_MSG_RESULT(no))
 CFLAGS="${OLD_CFLAGS}"
 PHAST_VERSION="\"`cat src/version`\""
 
@@ -60,5 +123,7 @@ AC_C_INLINE
 AC_SUBST(PHAST_VERSION)
 AC_SUBST(INLINE_FLAG)
 AC_SUBST(PTHREAD_LIBS)
+AC_SUBST(LAPACK_FLAG)
+AC_SUBST(LAPACK_LIBS)
 
 AC_OUTPUT(src/Makevars)
