@@ -76,9 +76,9 @@ phyloFit <- function(msa,
 #                     report.error=FALSE,
 #                     ancestor=NULL,
                      ) {
-  if (msa.nseq(msa) > 2 && is.null(tree) && is.null(init.mod))
+  if (nrow.msa(msa) > 2 && is.null(tree) && is.null(init.mod))
     stop("need tree if MSA has more than two sequences")
-  if (!tm.isValidSubstMod(subst.mod))
+  if (!isSubstMod.tm(subst.mod))
     stop("invalid substitution model ", subst.mod)
   check.arg(scale.only, "scale.only", "logical", null.OK=FALSE)
   check.arg(scale.subtree, "scale.subtree", "character", null.OK=TRUE)
@@ -89,7 +89,7 @@ phyloFit <- function(msa,
   check.arg(rate.constants, "rate.constants", "numeric", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
   if (!is.null(init.mod))
-    init.mod <- tm.to.pointer(init.mod)
+    init.mod <- as.pointer.tm(init.mod)
   check.arg(init.random, "init.random", "logical", null.OK=FALSE)
   check.arg(init.parsimony, "init.parsimony", "logical", null.OK=FALSE)
   check.arg(clock, "clock", "logical", null.OK=FALSE)
@@ -107,10 +107,10 @@ phyloFit <- function(msa,
   }
 
   if (is.null(msa$externalPtr))
-    msa <- msa.to.pointer(msa)
+    msa <- as.pointer.msa(msa)
   if (!is.null(gff)) {
     if (is.null(gff$externalPtr))
-      gff <- gff.to.pointer(gff)
+      gff <- as.pointer.gff(gff)
   }
 
   result <- list()
@@ -141,7 +141,7 @@ phyloFit <- function(msa,
     tm <- list()
     tm$externalPtr <- .Call("rph_phyloFit_result_get_model",
                             result$externalPtr, i)
-    tm <- tm.from.pointer(tm)
+    tm <- from.pointer.tm(tm)
 
     # need to incorporate error here if option was given
 

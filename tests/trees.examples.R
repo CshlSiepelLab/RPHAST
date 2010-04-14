@@ -8,48 +8,48 @@ read.tree("test.nh")
 unlink("test.nh")
 
 
-#' tree.numnodes
-tree.numnodes(c("((hg18:0.142679,(mm9:0.083220,rn4:0.090564):0.269385):
+#' numnodes.tree
+numnodes.tree(c("((hg18:0.142679,(mm9:0.083220,rn4:0.090564):0.269385):
                 0.020666,canFam2:0.193569);",
                 "(human, (mouse, rat));"))
        
-#' tree.prune
+#' prune.tree
 trees <- c("((hg18, panTro2), mm9);",
            "((hg18:0.142679,(mm9:0.083220,rn4:0.090564):0.269385):
                 0.020666,canFam2:0.193569);")
-tree.prune(trees, c("panTro2", "mm9"), all.but=TRUE)
-tree.prune(trees, "hg18", all.but=FALSE)
+prune.tree(trees, c("panTro2", "mm9"), all.but=TRUE)
+prune.tree(trees, "hg18", all.but=FALSE)
 
 
-#' tree.name.ancestors
+#' name.ancestors
 trees <- c("((hg18, panTro2), mm9);",
            "((hg18:0.142679,(mm9:0.083220,rn4:0.090564):0.269385):
                 0.020666,canFam2:0.193569);")
-tree.name.ancestors(trees)
+name.ancestors(trees)
 
 
-#' tree.subtree
+#' subtree
 trees <- c("((hg18, panTro2), mm9);",
            "((hg18:0.142679,(mm9:0.083220,rn4:0.090564):0.269385)
             :0.020666,canFam2:0.193569);")
-trees <- tree.name.ancestors(trees)
-tree.subtree(trees, c("hg18-panTro2", "mm9-rn4"))
+trees <- name.ancestors(trees)
+subtree(trees, c("hg18-panTro2", "mm9-rn4"))
 
-#' tree.scale
+#' scale.tree
 q("no")
 require("rphast")
 trees <- c("((hg18:1.0, panTro2:2.0):3.0, mm9:4.0);",
            "((hg18:0.142679,(mm9:0.083220,rn4:0.090564):0.269385):
                 0.020666,canFam2:0.193569);")
-tree.scale(trees, 0.5)
-tree.scale(trees, c(0.5, 2.0))
-trees <- tree.name.ancestors(trees)
-tree.scale(trees, 0.5, c("hg18-panTro2", "hg18-mm9"))
+scale.tree(trees, 0.5)
+scale.tree(trees, c(0.5, 2.0))
+trees <- name.ancestors(trees)
+scale.tree(trees, 0.5, c("hg18-panTro2", "hg18-mm9"))
       
-#' tree.rename
+#' rename.tree
 trees <- c("((hg18:1.0, panTro2:2.0):3.0, mm9:4.0);",
            "((hg18:0.142679,(mm9:0.083220,rn4:0.090564):0.269385):
                 0.020666,canFam2:0.193569);")
-tree.rename(trees,
+rename.tree(trees,
             old.names=c("hg18", "panTro2", "mm9", "rn4", "canFam2"),
             new.names=c("human", "chimp", "mouse", "rat", "dog"))

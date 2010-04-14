@@ -1,0 +1,62 @@
+require("rphast")
+
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+files <- c("ENr334.fa", "gencode.ENr334.gff", "rev.mod")
+unzip(exampleArchive, files)
+tm <- read.tm("rev.mod")
+tm$tree <- name.ancestors(tm$tree)
+msa <- read.msa("ENr334.fa", offset=41405894)
+phyloP(tm, msa, method="LRT", outfile="test.out", outfile.only=TRUE, outfile.format="wig")
+t1 <- phyloP(tm, msa, method="LRT", outfile="test.out")
+t2 <- phyloP(tm, msa, method="LRT", outfile="test.out", outfile.format="wig")
+t1 <- phyloP(tm, msa, method="SPH")
+gff <- read.gff("gencode.ENr334.gff")
+t1 <- phyloP(tm, msa, method="LRT", outfile="test.out", gff=gff)
+t2 <- phyloP(tm, msa, method="LRT", gff=gff, outfile="test.out", outfile.format="gff", outfile.only=TRUE)
+
+require("rphast")
+
+##' phyloP.prior
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, "rev.mod")
+tm <- read.tm("rev.mod")
+t1 <- phyloP.prior(tm, nsites=10)
+t2 <- phyloP.prior(tm, nsites=20)
+t3 <- phyloP.prior(tm, nsites=20, quantiles=TRUE)
+t4 <- phyloP.prior(tm, nsites=20, epsilon=1e-20)
+plot(t1$nsub, t1$prior)
+points(t2$nsub, t2$prior, col="red")
+unlink(rev.mod)
+
+##' phyloP.sph
+exampleArchive <- system."extdata", "examples.zip", package="rphast")
+files <- c("ENr334.fa", "gencode.ENr334.gff", "rev.mod")
+
+
+resultCons <- phyloP(tm, msa, wig=TRUE)
+#resultAcc <- phyloP(tm, msa, wig=TRUE, mode="ACC")
+#resultConAcc <- phyloP(tm, msa, wig=TRUE, mode="CONACC")
+temp <- phyloP(tm, msa, baseByBase=TRUE, mode="CONACC", output.file="test.out")
+smallMsa <- sub.msa(msa, start.col=10900, end.col=12000)
+#temp <- phyloP(tm, smallMsa, method="SPH")
+temp <- phyloP(tm, smallMsa, method="LRT", subtree="mm9-rn4", baseByBase=TRUE, output.file="test.out")
+temp <- phyloP(tm, smallMsa, method="LRT", branches=c("mm9", "rn4"), baseByBase=TRUE)
+gff <- read.gff("gencode.ENr334.gff")
+temp <- phyloP(tm, msa, method="LRT", gff=gff)
+phyloP(tm, msa, method="LRT", output.file.only="test.out", wig=TRUE, chrom="chr1")
+
+unlink("test.out")
+x <- list()
+x$a <- c(1,2,3)
+x$b <- c(0.0, 0.5, 1.0)
+x <- as.data.frame(x)
+attr(x, "class") <- "data.frame"
+attr(x, "row.names") <- as.integer(c(1,2,3))
+
+x <- list()
+x$a <- c(1,2,3)
+x$b <- c(0.0, 0.5, 1.0)
+attr(x, "class") <- "data.frame"
+attr(x, "row.names") <- as.integer(c(1,2,3))
+dim(x) <- c(3,2)
+attr(x, "class") <- "matrix"

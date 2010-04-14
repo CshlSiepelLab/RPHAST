@@ -18,35 +18,35 @@ unlink(gffFile)
 
 ################################################
 
-#' gff.new
+#' gff
 seq <- rep("hg18.chr6", 10)
 src <- rep("fake_example", 10)
 feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
-g <- gff.new(seq, src, feature, start, end)
+g <- gff(seq, src, feature, start, end)
 dim(g)
 dim.gff(g)
-g <- gff.new(seq, src, feature, start, end, pointer.only=TRUE)
+g <- gff(seq, src, feature, start, end, pointer.only=TRUE)
 dim.gff(g)
        
 
 ################################################
 
-#' gff.to.pointer
+#' as.pointer.gff
 seq <- rep("hg18.chr6", 10)
 src <- rep("fake_example", 10)
 feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
-g1 <- gff.new(seq, src, feature, start, end)
-g2 <- gff.to.pointer(g1)
+g1 <- gff(seq, src, feature, start, end)
+g2 <- as.pointer.gff(g1)
 g1
 g2
 
 
 # non-example test
-g <- gff.to.pointer(g2)
+g <- as.pointer.gff(g2)
 summary(g)
 
 ################################################
@@ -57,41 +57,41 @@ src <- rep("fake_example", 10)
 feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
-g <- gff.new(seq, src, feature, start, end)
+g <- gff(seq, src, feature, start, end)
 write.gff("test.gff", g)
 #'
 unlink("test.gff") # clean up
 
 # non-example tests
-g <- gff.new(seq, src, feature, start, end)
+g <- gff(seq, src, feature, start, end)
 write.gff("test.gff", g)
 unlink("test.gff")
 
 ################################################
 
-#' gff.numrow
+#' nrow.gff
 seq <- rep("hg18.chr6", 10)
 src <- rep("fake_example", 10)
 feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
-g <- gff.new(seq, src, feature, start, end)
-gff.numrow(g)
+g <- gff(seq, src, feature, start, end)
+nrow.gff(g)
 
 # non-example tests
-gff.numrow(gff.to.pointer(g))
+nrow.gff(as.pointer.gff(g))
 
 ################################################
 
-#' gff.numcol
+#' ncol.gff
 seq <- rep("hg18.chr6", 10)
 src <- rep("fake_example", 10)
 feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
-g <- gff.new(seq, src, feature, start, end)
-gff.numcol(g)
-gff.numcol(gff.to.pointer(g))
+g <- gff(seq, src, feature, start, end)
+ncol.gff(g)
+ncol.gff(as.pointer.gff(g))
 
 
 ################################################
@@ -102,9 +102,9 @@ src <- rep("fake_example", 10)
 feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
-g <- gff.new(seq, src, feature, start, end)
+g <- gff(seq, src, feature, start, end)
 summary(g)  # this calls summary.data.frame
-summary(gff.to.pointer(g))
+summary(as.pointer.gff(g))
 
 
 ################################################
@@ -115,7 +115,7 @@ src <- rep("fake_example", 10)
 feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
-g1 <- gff.new(seq, src, feature, start, end, pointer.only=TRUE)
+g1 <- gff(seq, src, feature, start, end, pointer.only=TRUE)
 summary(g1)
 g2 <- as.data.frame(g1)
 summary(g2)
@@ -130,10 +130,10 @@ src <- rep("fake_example", 10)
 feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
-g1 <- gff.new(seq, src, feature, start, end)
+g1 <- gff(seq, src, feature, start, end)
 dim(g1)
 dim.gff(g1)
-g2 <- gff.to.pointer(g1)
+g2 <- as.pointer.gff(g1)
 dim(g2)
 dim.gff(g2)
 

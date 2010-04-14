@@ -1,14 +1,6 @@
-# don't call explicitly; this is the registered finalizer for MSA external
-# pointers
-#' @nord
-msa.free <- function(extMsaPtr) {
-  .Call("rph_msa_free", extMsaPtr)
-}
-
-
 # make barebones msa obj
 #' @nord
-msa.makeObj <- function() {
+.makeObj.msa <- function() {
   msa <- list()
   class(msa) <- "msa"
   msa
@@ -16,18 +8,18 @@ msa.makeObj <- function() {
 
 ##' Creates a copy of an MSA sequence
 ##'
-##' If m is stored in R (as it is by default), then m2 <- msa.copy(m1)
+##' If m is stored in R (as it is by default), then m2 <- copy.msa(m1)
 ##' is no different than m2 <- m1.  But if it is stored as a pointer
-##' to a C structure, this is the only way to make an explicity copy
+##' to a C structure, this is the only way to make an explicit copy
 ##' of the MSA object.
 ##' @title MSA copy
 ##' @param msa an MSA object
 ##' @return an MSA object which can be modified independently from the
 ##' original object
 ##' @export
-msa.copy <- function(msa) {
+copy.msa <- function(msa) {
   if (is.null(msa$externalPtr)) return(msa)
-  result <- msa.makeObj()
+  result <- .makeObj.msa()
   result$externalPtr <- .Call("rph_msa_create_copy", msa$externalPtr)
   result
 }
@@ -51,7 +43,7 @@ msa.copy <- function(msa) {
 ##' reference, as an external pointer to an object created by C code.  This
 ##' may be necessary to improve performance, but the object can then only
 ##' be viewed/manipulated via RPHAST functions.  Furthermore, if an object
-##' is stored as a pointer, the object can only be copied with msa.copy().
+##' is stored as a pointer, the object can only be copied with copy.msa().
 ##' See examples below.
 ##' @title MSA Objects
 ##' @param seqs a character vector containing sequences, one per sample
@@ -66,11 +58,9 @@ msa.copy <- function(msa) {
 ##' if is.ordered==FALSE.
 ##' @param pointer.only a boolean indicating whether MSA should be stored by
 ##' reference (see Details)
-##' @usage msa.new(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
-##'                    offset=NULL, pointer.only=FALSE)
 ##' @useDynLib rphast
 ##' @export
-msa.new <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
+msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
                     offset=NULL, pointer.only=FALSE) {
   #checks
   seqlen <-  unique(sapply(seqs, nchar))
@@ -91,7 +81,7 @@ msa.new <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
 
   # TODO: if alphabet non-null, check that seqs only contains those chars?
 
-  msa <- msa.makeObj()
+  msa <- .makeObj.msa()
 
   if (pointer.only) {
     msa$externalPtr <- .Call("rph_msa_new",
@@ -114,20 +104,21 @@ msa.new <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
 
 ##' Returns the length of sequence in an MSA alignment.
 ##' @title MSA Sequence Length.
-##' @param msa an MSA object
+##' @param x an MSA object
 ##' @param refseq character vector giving name(s) of sequence whose
 ##' length to return.
 ##' @return an integer vector containing the length of the named sequences.
 ##' If refseq is NULL, returns the number of columns in the alignment.
 ##' @keywords msa
-##' @seealso \code{\link{msa.new}}
+##' @seealso \code{\link{msa}}
 ##' @export
-msa.seqlen <- function(msa, refseq=NULL) {
+ncol.msa <- function(x, refseq=NULL) {
+  msa <- x
   if (is.null(msa$externalPtr) && is.null(refseq)) {
     return(nchar(msa$seqs[1]))
   }
   if (is.null(msa$externalPtr))
-    msa <- msa.to.pointer(msa)
+    msa <- as.pointer.msa(msa)
   if (is.null(refseq))
     return(.Call("rph_msa_seqlen", msa$externalPtr, NULL))
   result <- integer(length(refseq))
@@ -141,9 +132,9 @@ msa.seqlen <- function(msa, refseq=NULL) {
 ##' @param msa an MSA object
 ##' @return an integer containing the number of sequences in an alignment.
 ##' @keywords msa
-##' @seealso \code{\link{msa.new}}
+##' @seealso \code{\link{msa}}
 ##' @export
-msa.nseq <- function(msa) {
+nrow.msa <- function(msa) {
   if (is.null(msa$externalPtr)) {
     return(length(msa$seqs))
   }
@@ -164,7 +155,7 @@ msa.nseq <- function(msa) {
 ##' @keywords msa
 ##' @keywords format
 ##' @export
-msa.validFormatStr <- function(format) {
+validFormatStr.msa <- function(format) {
   if (is.null(format)) return(NULL)
   result <- logical(length(format))
   for (i in 1:length(format)) {
@@ -180,7 +171,7 @@ msa.validFormatStr <- function(format) {
 ##' @return The difference between the first position in an alignment
 ##' from the beginning of a chromosome.
 ##' @export
-msa.offset <- function(msa) {
+offset.msa <- function(msa) {
   if (!is.null(msa$externalPtr))
     return(.Call("rph_msa_idxOffset", msaP=msa$externalPtr))
   if (is.null(msa$offset)) return (0)
@@ -192,7 +183,7 @@ msa.offset <- function(msa) {
 ##' @param msa an MSA object
 ##' @return the valid non-missing-data characters for an MSA object.
 ##' @export
-msa.alphabet <- function(msa) {
+alphabet.msa <- function(msa) {
   if (!is.null(msa$externalPtr))
     return(.Call("rph_msa_alphabet", msaP=msa$externalPtr))
   msa$alphabet
@@ -203,7 +194,7 @@ msa.alphabet <- function(msa) {
 ##' @param msa an MSA object
 ##' @return a boolean indicating whether the columns are in order
 ##' @export
-msa.is.ordered <- function(msa) {
+is.ordered.msa <- function(msa) {
   if (!is.null(msa$externalPtr))
     return(.Call("rph_msa_isOrdered", msaP=msa$externalPtr))
 
@@ -214,14 +205,15 @@ msa.is.ordered <- function(msa) {
 
 ##' Returns the sequence names for an MSA object.
 ##' @title MSA Sequence Names
-##' @param msa an MSA object
+##' @param x an MSA object
 ##' @return a character vector giving the names of the sequences, or
 ##' NULL if they are not defined
 ##' @export
-msa.names <- function(msa) {
-  if (!is.null(msa$externalPtr))
-    return(.Call("rph_msa_seqNames", msaP=msa$externalPtr))
-  msa$names
+##' @S3method names msa
+names.msa <- function(x) {
+  if (!is.null(x$externalPtr))
+    return(.Call("rph_msa_seqNames", msaP=x$externalPtr))
+  x$names
 }
 
 
@@ -230,9 +222,9 @@ msa.names <- function(msa) {
 ##' @param src an MSA object stored by reference
 ##' @return an MSA object stored in R.  If src is already stored in R,
 ##' returns a copy of the object.
-##' @seealso \code{\link{msa.new}} for details on MSA storage options.
+##' @seealso \code{\link{msa}} for details on MSA storage options.
 ##' @export
-msa.from.pointer <- function(src) {
+from.pointer.msa <- function(src) {
   if (is.null(src$externalPtr)) return(src)
   seqs <- .Call("rph_msa_seqs", src$externalPtr)
   
@@ -240,7 +232,7 @@ msa.from.pointer <- function(src) {
   alphabet <- .Call("rph_msa_alphabet", src$externalPtr)
   ordered <- .Call("rph_msa_isOrdered", src$externalPtr)
   offset <- .Call("rph_msa_idxOffset", src$externalPtr)
-  msa.new(seqs, names, alphabet, is.ordered=ordered,
+  msa(seqs, names, alphabet, is.ordered=ordered,
           offset=offset, pointer.only=FALSE)
 }
 
@@ -250,11 +242,11 @@ msa.from.pointer <- function(src) {
 ##' @param src an MSA object stored by value in R
 ##' @return an MSA object stored by reference as a pointer to an object
 ##' created in C.
-##' @seealso \code{\link{msa.new}} for details on MSA storage options.
+##' @seealso \code{\link{msa}} for details on MSA storage options.
 ##' @export
-msa.to.pointer <- function(src) {
+as.pointer.msa <- function(src) {
   if (!is.null(src$externalPtr)) return(src)
-  msa.new(seqs=src$seq,
+  msa(seqs=src$seq,
           names=src$names,
           alphabet=src$alphabet,
           is.ordered=src$is.ordered,
@@ -269,9 +261,9 @@ msa.to.pointer <- function(src) {
 ##' @return A string describing an MSA file (one of "MAF", "FASTA",
 ##' "LAV", "SS", "MPM", "PHYLIP"), or NULL if a guess can't be made
 ##' based on the file extension.
-##' @seealso msa.validFormatStr
+##' @seealso validFormatStr.msa
 ##' @export
-msa.format.from.ext  <- function(filename) {
+guess.format.msa  <- function(filename) {
   if (is.null(filename)) return(NULL)
   x <- strsplit(filename, ".", fixed=TRUE)[[1]]
   x <- x[length(x)]
@@ -297,18 +289,18 @@ msa.format.from.ext  <- function(filename) {
 ##' @keywords write
 ##' @keywords msa
 ##' @export
-msa.write <- function(msa, filename=NULL,
-                      format=c(msa.format.from.ext(filename), "FASTA")[1],
+write.msa <- function(msa, filename=NULL,
+                      format=c(guess.format.msa(filename), "FASTA")[1],
                       pretty.print=FALSE) {
   #checks
   check.arg(filename, "filename", "character", null.OK=TRUE)
   check.arg(format, "format", "character", null.OK=FALSE)
   check.arg(pretty.print, "pretty.print", "logical", null.OK=FALSE)
-  if (! msa.validFormatStr(format)) {
+  if (! validFormatStr.msa(format)) {
     stop(paste("invalid MSA FORMAT \"", format, "\"", sep=""))
   }
   if (is.null(msa$externalPtr)) {
-    printMsa <- msa.to.pointer(msa)
+    printMsa <- as.pointer.msa(msa)
   } else {
     printMsa <- msa
   }
@@ -335,14 +327,15 @@ msa.write <- function(msa, filename=NULL,
 ##' @keywords summary
 ##' @seealso \code{\link{print.msa}}
 ##' @export
+##' @S3method summary msa
 summary.msa <- function(object, ..., print.seq=FALSE, format="FASTA",
                         pretty.print=FALSE) {
   msa <- object
   check.arg(print.seq, "print.seq", "logical", null.OK=FALSE)
-  # format and pretty.print are checked in msa.write
+  # format and pretty.print are checked in write.msa
 
-  cat(paste("msa object with", msa.nseq(msa), "sequences and",
-            msa.seqlen(msa),"columns, stored"))
+  cat(paste("msa object with", nrow.msa(msa), "sequences and",
+            ncol.msa(msa),"columns, stored"))
   if (is.null(msa$externalPtr)) cat(" in R") else cat(" as a pointer to a C structure")
   cat("\n")
 
@@ -351,10 +344,10 @@ summary.msa <- function(object, ..., print.seq=FALSE, format="FASTA",
   }
   
   pointer <- msa$externalPtr
-  names <- msa.names(msa)
-  alphabet <- msa.alphabet(msa)
-  is.ordered <- msa.is.ordered(msa)
-  offset <- msa.offset(msa)
+  names <- names.msa(msa)
+  alphabet <- alphabet.msa(msa)
+  is.ordered <- is.ordered.msa(msa)
+  offset <- offset.msa(msa)
 
   printMsa <- list()
   printed <- FALSE
@@ -372,7 +365,7 @@ summary.msa <- function(object, ..., print.seq=FALSE, format="FASTA",
   if (!printed && print.seq) {
     cat("$seq\n")
     if (is.null(format)) format <- "FASTA"
-      msa.write(msa, filename=NULL, format, pretty.print)
+      write.msa(msa, filename=NULL, format, pretty.print)
     cat("\n")
   }
 }
@@ -381,7 +374,7 @@ summary.msa <- function(object, ..., print.seq=FALSE, format="FASTA",
 ##' Prints an MSA (multiple sequence alignment) object.
 ##'
 ##' Valid formats for printing are "FASTA", "PHYLIP", "MPM", and "SS".
-##' See \code{\link{msa.validFormatStr}} for details on these formats.
+##' See \code{\link{validFormatStr.msa}} for details on these formats.
 ##' If format is specified, the alignment is printed regardless of
 ##' print.seq.
 ##'
@@ -403,9 +396,10 @@ summary.msa <- function(object, ..., print.seq=FALSE, format="FASTA",
 ##' @keywords msa
 ##' @keywords alignment
 ##' @export
+##' @S3method print msa
 print.msa <- function(x, ..., print.seq=FALSE, format=NULL, pretty.print=FALSE) {
   check.arg(print.seq, "print.seq", "logical", null.OK=FALSE)
-  # format and pretty.print are checked in msa.write
+  # format and pretty.print are checked in write.msa
 
   summary.msa(x, print.seq=print.seq, format=format, pretty.print=pretty.print, ...)
 
@@ -449,15 +443,15 @@ print.msa <- function(x, ..., print.seq=FALSE, format=NULL, pretty.print=FALSE) 
 ##' an external pointer to an object created by C code, rather than
 ##' directly in R memory.  This improves performance and may be necessary
 ##' for large alignments, but reduces functionality.  See
-##' \code{\link{msa.new}} for more details on MSA object storage options.
+##' \code{\link{msa}} for more details on MSA object storage options.
 ##' @note If the input is in "MAF" format and a gff is given, the
 ##' resulting alignment will be stripped of gaps in the reference (1st)
 ##' sequence.
 ##' @return an MSA object.  
-##' @seealso \code{\link{msa.new}}, \code{\link{read.gff}}
+##' @seealso \code{\link{msa}}, \code{\link{read.gff}}
 ##' @export
 read.msa <- function(filename,
-                     format=c(msa.format.from.ext(filename), "FASTA")[1],
+                     format=c(guess.format.msa(filename), "FASTA")[1],
                      alphabet=NULL,                     
                      gff=NULL,
                      do.4d=FALSE,
@@ -481,7 +475,7 @@ read.msa <- function(filename,
   check.arg(offset, "offset", "integer", null.OK=TRUE)
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
 
-  if (!msa.validFormatStr(format))
+  if (!validFormatStr.msa(format))
     stop(paste("invalid format string", format))
   if (!is.null(tuple.size) && tuple.size <= 0)
     stop("tuple.size should be integer >= 1")
@@ -500,29 +494,30 @@ read.msa <- function(filename,
 
   if (!is.null(gff)) {
     if (is.null(gff$externalPtr))
-      gff <- gff.to.pointer(gff)
+      gff <- as.pointer.gff(gff)
   }
 
-  msa <- msa.makeObj()
+  msa <- .makeObj.msa()
   msa$externalPtr <- .Call("rph_msa_read", filename, format,
                            gff$externalPtr, do.4d, alphabet,
                            tuple.size, refseq, ordered, do.cats,
                            offset)
   
   if (pointer.only == FALSE) 
-    msa <- msa.from.pointer(msa)
+    msa <- from.pointer.msa(msa)
   msa
 }
 
 
-# TODO: would rather make more general version that takes
-# string vector and returns complement.
-msa.compl.char <- function(ch) {
-  b <- c("A", "C", "G", "T", "a", "c", "g", "t")
-  c <- c("T", "G", "C", "A", "t", "g", "c", "a")
-  w <- which(ch==b)
-  if (is.null(w)) return(ch)
-  c[w]
+##' DNA complement
+##'
+##' @title complement
+##' @param x A character vector with DNA sequences to be complemented
+##' @return The complement of the given sequence(s).  Characters other
+##' than A,C,G,T,a,c,g,t are unchanged.
+##' @export
+complement <- function(x) {
+  chartr("ACGTacgt", "TGCAtgca", x)
 }
 
        
@@ -540,7 +535,7 @@ msa.compl.char <- function(ch) {
 ##' end.col are column indices in the multiple alignment.
 ##' @return A new MSA object containing a subset of the original MSA.
 ##' @export
-msa.sub <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
+sub.msa <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
                    refseq=NULL) {
   check.arg(keep, "keep", "logical", null.OK=FALSE)
   check.arg(seqs, "seqs", "character", null.OK=TRUE,
@@ -549,9 +544,9 @@ msa.sub <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
   check.arg(end.col, "end.col", "integer", null.OK=TRUE)
   check.arg(refseq, "refseq", "character", null.OK=TRUE)
   
-  result <- msa.makeObj()
+  result <- .makeObj.msa()
   if (is.null(msa$externalPtr)) {
-    msa <- msa.to.pointer(msa)
+    msa <- as.pointer.msa(msa)
     copy.to.R<-TRUE
   } else copy.to.R <- FALSE
   result$externalPtr <- .Call("rph_msa_sub_alignment",
@@ -559,7 +554,7 @@ msa.sub <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
                               start.col, end.col, refseq)
 
   if (copy.to.R) 
-    result <- msa.from.pointer(result)
+    result <- from.pointer.msa(result)
   result
 }
 
@@ -583,13 +578,13 @@ msa.sub <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
 ##' input alignment
 ##' @return an MSA object, with gaps stripped according to strip.mode
 ##' @export
-msa.strip.gaps <- function(msa, strip.mode=1) {
+strip.gaps.msa <- function(msa, strip.mode=1) {
   names <- NULL
   nseq <- NULL
   if (is.null(msa$externalPtr)) {
-    names <- msa.names(msa)
-    nseq <- msa.nseq(msa)
-    msa <- msa.to.pointer(msa)
+    names <- names.msa(msa)
+    nseq <- nrow.msa(msa)
+    msa <- as.pointer.msa(msa)
     copy.to.R <- TRUE
   } else copy.to.R <- FALSE
   for (s in strip.mode) {
@@ -597,13 +592,13 @@ msa.strip.gaps <- function(msa, strip.mode=1) {
       msa$externalPtr <- .Call("rph_msa_strip_gaps", msa$externalPtr, 0, s)
     else {
       if (!is.character(s)) {
-        if (is.null(nseq)) nseq <- msa.nseq(msa)
+        if (is.null(nseq)) nseq <- nrow.msa(msa)
         if (as.integer(s) != s || s <=0 || s>nseq)
           stop(cat("invalid sequence index", s))
         w <- s
       } else {
         if (is.null(names))
-          names <- msa.names(msa)
+          names <- names.msa(msa)
         w <- which(names==s)
         if (is.null(w))
           stop(cat("no sequence with name", s))
@@ -612,7 +607,7 @@ msa.strip.gaps <- function(msa, strip.mode=1) {
     }
   }
   if (copy.to.R) 
-    msa <- msa.from.pointer(msa)
+    msa <- from.pointer.msa(msa)
   
   msa
 }
@@ -649,12 +644,12 @@ msa.strip.gaps <- function(msa, strip.mode=1) {
 ##' \code{FALSE}, or a numeric vecotr giving the likelihood of each
 ##' column in the alignment
 ##' @export
-msa.likelihood <- function(msa, tm, by.column=FALSE) {
+likelihood.msa <- function(msa, tm, by.column=FALSE) {
   check.arg(by.column, "by.column", "logical", null.OK=FALSE)
   if (is.null(msa$externalPtr)) 
-    msa <- msa.to.pointer(msa)
-  tm <- tm.to.pointer(tm)
-  if (by.column && !msa.is.ordered(msa))
+    msa <- as.pointer.msa(msa)
+  tm <- as.pointer.tm(tm)
+  if (by.column && !is.ordered.msa(msa))
     warning("by.column may not be a sensible option for unordered MSA")
   .Call("rph_msa_likelihood", msa$externalPtr, tm$externalPtr, by.column)
 }

@@ -16,7 +16,7 @@ read.tree <- function(filename) {
 ##' @param tree A vector of character strings, each containing a newick tree
 ##' @return A numeric vector containing the number of nodes in each tree
 ##' @export
-tree.numnodes <- function(tree) {
+numnodes.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
             max.length=NULL)
   result <- integer(length(tree))
@@ -35,7 +35,7 @@ tree.numnodes <- function(tree) {
 ##' from the tree.  If TRUE, prunes all sequences except the ones named.
 ##' @return a vector of character strings representing the pruned trees.
 ##' @export
-tree.prune <- function(tree, seqs, all.but=FALSE) {
+prune.tree <- function(tree, seqs, all.but=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
             min.length=1, max.length=NULL)
   check.arg(seqs, "seqs", "character", null.OK=FALSE, min.length=1,
@@ -55,7 +55,7 @@ tree.prune <- function(tree, seqs, all.but=FALSE) {
 ##' @return A vector of character strings containing newick trees with all
 ##' ancestors named
 ##' @export
-tree.name.ancestors <- function(tree) {
+name.ancestors <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
             min.length=1, max.length=NULL)
   result <- character(length(tree))
@@ -75,7 +75,7 @@ tree.name.ancestors <- function(tree) {
 ##' @return A vector of trees which have been pruned, removing all nodes
 ##' which are not descendants of the given node.
 ##' @export
-tree.subtree <- function(tree, node) {
+subtree <- function(tree, node) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
             min.length=1, max.length=NULL)
   check.arg(node, "node", "character", null.OK=FALSE,
@@ -103,7 +103,7 @@ tree.subtree <- function(tree, node) {
 ##' named node.  Subtrees will be recycled as necessary if shorter than trees.
 ##' @return A vector of trees whose branches have been scaled
 ##' @export
-tree.scale <- function(tree, scale, subtree=NULL) {
+scale.tree <- function(tree, scale, subtree=NULL) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
             min.length=1, max.length=NULL)
   check.arg(scale, "scale", "numeric", null.OK=FALSE,
@@ -141,7 +141,7 @@ tree.scale <- function(tree, scale, subtree=NULL) {
 ##' @return A vector of character strings, in which all nodes with names
 ##' given in old.names are replaced with values from new.names
 ##' @export
-tree.rename <- function(tree, old.names, new.names) {
+rename.tree <- function(tree, old.names, new.names) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
             min.length=1, max.length=NULL)
   check.arg(old.names, "old.names", "character", null.OK=FALSE,

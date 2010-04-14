@@ -1,17 +1,10 @@
 #' @nord
-gff.makeObj <- function() {
+.makeObj.gff <- function() {
   gff <- list()
   attr(gff, "class") <- "gff"
   gff
 }
 
-
-#' @nord
-# don't call explicitly; this is the registered finalizer for GFF
-# external pointers
-gff.free <- function(extGffPtr) {
-  .Call("rph_gff_free", extGffPtr)
-}
 
 ##' Read a GFF object from a file
 ##'
@@ -24,9 +17,9 @@ gff.free <- function(extGffPtr) {
 ##' @return If pointer.only==FALSE, a data.frame with columns corresponding
 ##' to the GFF specification.  Otherwise, an object which is a pointer to
 ##' an object stored in C.
-##' @seealso \code{\link{gff.new}} for more description of GFF objects.
+##' @seealso \code{\link{gff}} for more description of GFF objects.
 ##'
-##' \code{\link{msa.new}} for more explanation of the pointer.only option.
+##' \code{\link{msa}} for more explanation of the pointer.only option.
 ##'
 ##' \url{http://www.sanger.ac.uk/resources/software/gff/spec.html}
 ##' for a detailed description of GFF file format.
@@ -38,7 +31,7 @@ gff.free <- function(extGffPtr) {
 ##' @keywords BED
 ##' @export
 read.gff <- function(filename, pointer.only=FALSE) {
-  gff <- gff.makeObj()
+  gff <- .makeObj.gff()
   gff$externalPtr <- .Call("rph_gff_read", filename)
   if (!pointer.only) {
     gff <- as.data.frame.gff(gff)
@@ -78,12 +71,12 @@ read.gff <- function(filename, pointer.only=FALSE) {
 ##' GFF file.
 ##' @seealso \code{\link{read.gff}}
 ##'
-##' \code{\link{msa.new}} for more details on the pointer.only option.
+##' \code{\link{msa}} for more details on the pointer.only option.
 ##' @keywords GFF feature
 ##' @export
-gff.new <- function(seqname, src, feature, start, end, score=NULL,
-                    strand=NULL, frame=NULL, attribute=NULL,
-                    pointer.only=FALSE) {
+gff <- function(seqname, src, feature, start, end, score=NULL,
+                strand=NULL, frame=NULL, attribute=NULL,
+                pointer.only=FALSE) {
   check.arg(seqname, "seqname", "character", null.OK=FALSE, min.length=NULL,
              max.length=NULL)
   len <- length(seqname)
@@ -114,7 +107,7 @@ gff.new <- function(seqname, src, feature, start, end, score=NULL,
                  as.character(src), as.character(feature),
                  as.integer(start), as.integer(end),
                  score, strand, frame, attribute)
-    gff <- gff.makeObj()
+    gff <- .makeObj.gff()
     gff$externalPtr <- ptr
   } else {
     gff <- data.frame(seqname=seqname, src=src, feature=feature,
@@ -133,16 +126,16 @@ gff.new <- function(seqname, src, feature, start, end, score=NULL,
 ##' @param gff a GFF object stored by value in R
 ##' @return a GFF object stored by reference as a pointer to an
 ##' object created in C.
-##' @seealso \code{\link{gff.new}} for more details on GFF storage
+##' @seealso \code{\link{gff}} for more details on GFF storage
 ##' options.
 ##' @export
-gff.to.pointer <- function(gff) {
+as.pointer.gff <- function(gff) {
   if (!is.null(gff$externalPtr))
     return(gff)
-  gff.new(gff$seqname, gff$src, gff$feature,
-          gff$start,   gff$end,    gff$score,
-          gff$strand,  gff$frame,  gff$attribute,
-          pointer.only=TRUE)
+  gff(gff$seqname, gff$src, gff$feature,
+      gff$start,   gff$end,    gff$score,
+      gff$strand,  gff$frame,  gff$attribute,
+      pointer.only=TRUE)
 }
 
 
@@ -153,6 +146,7 @@ gff.to.pointer <- function(gff) {
 ##' @keywords GFF
 ##' @seealso \code{\link{write.gff}}
 ##' @export
+##' @S3method print gff
 print.gff <- function(x, ...) {
   cat(paste("GFF object\n"))
   write.gff(NULL, x)
@@ -168,7 +162,7 @@ print.gff <- function(x, ...) {
 write.gff <- function(filename, gff) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
   if (is.null(gff$externalPtr))
-    gff <- gff.to.pointer(gff)
+    gff <- as.pointer.gff(gff)
   invisible(.Call("rph_gff_print", filename, gff$externalPtr))
 }
 
@@ -178,7 +172,8 @@ write.gff <- function(filename, gff) {
 ##' @param gff A gff object
 ##' @return An integer containing the number of rows in each gff object
 ##' @export
-gff.numrow <- function(gff) {
+##' @S3method nrow gff
+nrow.gff <- function(gff) {
   if (is.null(gff$externalPtr))
     return(dim(gff)[1])
   .Call("rph_gff_numrow", gff$externalPtr)
@@ -192,7 +187,8 @@ gff.numrow <- function(gff) {
 ##' @note If the GFF object is stored as a pointer in C, the number
 ##' of columns is always 9.
 ##' @export
-gff.numcol <- function(gff) {
+##' @S3method ncol gff
+ncol.gff <- function(gff) {
   if (is.null(gff$externalPtr))
     return(dim(gff)[2])
   9 # gff objects stored in C always have 9 columns
@@ -205,12 +201,13 @@ gff.numcol <- function(gff) {
 ##' @param ... further arguments to be passed to or from other methods
 ##' @keywords GFF
 ##' @export
+##' @S3method summary gff
 summary.gff <- function(object, ...) {
   if (is.null(object$externalPtr)) {
     as <- "stored as data frame"
-    object <- gff.to.pointer(object)
+    object <- as.pointer.gff(object)
   } else as <- "stored as a pointer to a C structure"
-  nrow <- gff.numrow(object)
+  nrow <- nrow.gff(object)
   cat(paste("GFF object with", nrow, "rows", as))
   cat("\n")
 }
@@ -225,10 +222,11 @@ summary.gff <- function(object, ...) {
 ##' \code{\link{make.names}} is optional.
 ##' @param ... additional arguments to be passed to other methods
 ##' @return a data frame containing the GFF data
-##' @seealso \code{\link{gff.new}} for a description of GFF data frames,
-##' and \code{\link{gff.to.pointer}} for conversion in the other
+##' @seealso \code{\link{gff}} for a description of GFF data frames,
+##' and \code{\link{as.pointer.gff}} for conversion in the other
 ##' direction.
 ##' @export
+##' @S3method as.data.frame gff
 as.data.frame.gff <- function(x, row.names=NULL, optional=FALSE, ...) {
   if (is.data.frame(x)) return(x)
   if (!is.null(x$externalPtr)) {
@@ -245,6 +243,7 @@ as.data.frame.gff <- function(x, row.names=NULL, optional=FALSE, ...) {
 ##' @return An integer vector of length two containing the number of
 ##' rows and number of columns in the GFF object.
 ##' @export
+##' @S3method dim gff
 dim.gff <- function(x) {
-  c(gff.numrow(x), gff.numcol(x))
+  c(nrow.gff(x), ncol.gff(x))
 }

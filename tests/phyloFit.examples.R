@@ -8,7 +8,7 @@ m <- read.msa("ENr334.maf")
 tm <- phyloFit(m, tree="((hg18, (mm9, rn4)), canFam2)")
 tm
 phyloFit(m, init.mod=tm)
-msa.likelihood(m, tm)
+likelihood.msa(m, tm)
 tm$likelihood
 print(tm$likelihood, digits=10)
 g <- read.gff("gencode.ENr334.gff")

@@ -1,5 +1,5 @@
 #' @nord
-tm.makeObj <- function() {
+.makeObj.tm <- function() {
   tm <- list()
   class(tm) <- "tm"
   tm
@@ -10,9 +10,9 @@ tm.makeObj <- function() {
 # in R from within C.  The C code returns a vector which is coerced
 # into a matrix here.  Watch out for row/column order!
 #' @nord
-tm.rateMatrix.from.pointer <- function(x) {
+.rateMatrix.from.pointer.tm <- function(x) {
   if (is.null(x$externalPtr))
-    stop("tm.rateMatrix.from.pointer expects list with externalPtr")
+    stop(".rateMatrix.from.pointer.tm expects list with externalPtr")
   m <- .Call("rph_tm_rateMatrix", x$externalPtr)
   if (is.null(m)) return(NULL)
   matrix(m, nrow=sqrt(length(m)), byrow=TRUE)
@@ -20,9 +20,9 @@ tm.rateMatrix.from.pointer <- function(x) {
 
 
 #' @nord
-tm.rootLeaf.from.pointer <- function(x, tree) {
+.rootLeaf.from.pointer.tm <- function(x, tree) {
   if (is.null(x$externalPtr))
-    stop("tm.rootLeaf.from.pointer expects list with externalPtr")
+    stop(".rootLeaf.from.pointer.tm expects list with externalPtr")
   id <- .Call("rph_tm_rootLeaf", x$externalPtr)
   if (is.null(id) || id == -1) return(NULL)
   .Call("rph_tree_nodeName", tree, id)
@@ -30,13 +30,13 @@ tm.rootLeaf.from.pointer <- function(x, tree) {
 
 
 #' @nord
-tm.from.pointer <- function(x) {
+from.pointer.tm <- function(x) {
   if (is.null(x$externalPtr))
-    stop("tm.from.pointer expects list with externalPtr")
-  tm <- tm.makeObj()
+    stop("from.pointer.tm expects list with externalPtr")
+  tm <- .makeObj.tm()
   tm$alphabet <- .Call("rph_tm_alphabet", x$externalPtr)
   tm$backgd <- .Call("rph_tm_backgd", x$externalPtr)
-  tm$rate.matrix <- tm.rateMatrix.from.pointer(x)
+  tm$rate.matrix <- .rateMatrix.from.pointer.tm(x)
   tm$subst.mod <- .Call("rph_tm_substMod", x$externalPtr)
   tm$likelihood <- .Call("rph_tm_likelihood", x$externalPtr)
   tm$alpha <- .Call("rph_tm_alpha", x$externalPtr)
@@ -44,19 +44,14 @@ tm.from.pointer <- function(x) {
   tm$rate.consts <- .Call("rph_tm_rK", x$externalPtr)
   tm$rate.weights <- .Call("rph_tm_freqK", x$externalPtr)
   tm$tree <- .Call("rph_tm_tree", x$externalPtr)
-  tm$root.leaf <- tm.rootLeaf.from.pointer(x, tm$tree)
+  tm$root.leaf <- .rootLeaf.from.pointer.tm(x, tm$tree)
   tm
 }
 
 
 #' @nord
-tm.free <- function(x) {
-  invisible(.Call("rph_tm_free", x))
-}
-
-
-#' @nord
-tm.to.pointer <- function(tm) {
+##' @export
+as.pointer.tm <- function(tm) {
   x <- list()
   x$externalPtr <- .Call("rph_tm_new",
                          tm$tree,
@@ -77,13 +72,13 @@ tm.to.pointer <- function(tm) {
 ##' @param filename The file containing a tree model
 ##' @title Read a Tree Model
 ##' @return An object of class "tm"
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
 read.tm <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
   x <- list()
   x$externalPtr <- .Call("rph_tm_read", filename)
-  tm <- tm.from.pointer(x)
+  tm <- from.pointer.tm(x)
   tm
 }
 
@@ -94,12 +89,12 @@ read.tm <- function(filename) {
 ##' @param filename The filename to write to (use NULL for output to terminal)
 ##' @param append Whether to append the tree to the end of the file
 ##' (if FALSE, overwrites file).  Not used if filename is \code{NULL}
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
-tm.write <- function(tm, filename=NULL, append=FALSE) {
+write.tm <- function(tm, filename=NULL, append=FALSE) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
   check.arg(append, "append", "logical", null.OK=TRUE)
-  tm <- tm.to.pointer(tm)
+  tm <- as.pointer.tm(tm)
   invisible(.Call("rph_tm_print", tm$externalPtr, filename, append))
 }
 
@@ -108,10 +103,11 @@ tm.write <- function(tm, filename=NULL, append=FALSE) {
 ##' @title Tree Model Summary
 ##' @param object An object of class tm
 ##' @param ... Parameters to be passed to/from other functions
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
+##' @S3method summary tm
 summary.tm <- function(object, ...) {
-  tm.write(object, NULL)
+  write.tm(object, NULL)
 }
 
 
@@ -119,8 +115,9 @@ summary.tm <- function(object, ...) {
 ##' @title Tree Model to List
 ##' @param x an object of class tm
 ##' @param ... arguments to be passed to/from other functions
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
+##' @S3method as.list tm
 as.list.tm <- function(x, ...) {
   class(x) <- "list"
   x
@@ -132,8 +129,9 @@ as.list.tm <- function(x, ...) {
 ##' @param aslist Logical.  If \code{TRUE}, print the tree model as a list
 ##' rather than in tree model format.
 ##' @param ... arguments to be passed to/from other functions
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
+##' @S3method print tm
 print.tm <- function(x, aslist=FALSE, ...) {
   if (aslist) print(as.list(x), ...)
   else summary.tm(x, ...)
@@ -147,7 +145,7 @@ print.tm <- function(x, aslist=FALSE, ...) {
 ##' @return A vector of logical values indicating whether each string
 ##' represents a defined substitution model
 ##' @export
-tm.isValidSubstMod <- function(mod) {
+isSubstMod.tm <- function(mod) {
   result <- logical(length(mod))
   for (i in 1:length(mod)) 
     result[i] <- .Call("rph_subst_mods_is_valid_string", mod[i])
@@ -197,10 +195,10 @@ subst.mods <- function() {
 ##' model for some alignment
 ##' @return An object of class tm
 ##' @export
-tm.new <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
-                   alphabet="ACGT", nratecats=1, 
-                   alpha=0.0, rate.consts=NULL, rate.weights=NULL,
-                   root.leaf=NULL, likelihood=NULL) {
+tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
+               alphabet="ACGT", nratecats=1, 
+               alpha=0.0, rate.consts=NULL, rate.weights=NULL,
+               root.leaf=NULL, likelihood=NULL) {
   check.arg(tree, "tree", "character", null.OK=FALSE)
   check.arg(subst.mod, "subst.mod", "character", null.OK=FALSE)
   check.arg(rate.matrix, "rate.matrix", "numeric", null.OK=TRUE,
@@ -215,7 +213,7 @@ tm.new <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
             min.length=NULL, max.length=NULL)
   check.arg(root.leaf, "root.leaf", "character", null.OK=TRUE)
 
-  if (!tm.isValidSubstMod(subst.mod))
+  if (!isSubstMod.tm(subst.mod))
     stop("invalid subst mod ", subst.mod)
   matsize <- NULL
   if (!is.null(rate.matrix)) {
@@ -250,7 +248,7 @@ tm.new <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
     cat("done\n")
   }
 
-  tm <- tm.makeObj()
+  tm <- .makeObj.tm()
   tm$alphabet <- alphabet
   tm$backgd <- backgd
   tm$rate.matrix <- rate.matrix

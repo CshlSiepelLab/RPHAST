@@ -68,6 +68,22 @@ int main() {
 PTHREAD_LIBS=${LIBS}
 LIBS=${OLD_LIBS}
 
+# see if we have PCRE libs
+OLD_LIBS=${LIBS}
+LIBS=""
+
+AC_MSG_CHECKING(for pcre)
+LIBS=-lpcre
+AC_LINK_IFELSE([
+#include <pcre.h>
+int main() {
+  pcre_compile("asdf", 0, NULL, NULL, NULL);
+  return 0;
+}
+], AC_MSG_RESULT(yes), [AC_MSG_RESULT(no)
+                        AC_MSG_ERROR(pcre required)])                         
+PCRE_LIBS=${LIBS}
+LIBS=${OLD_LIBS}
 
 # use vecLib if available
 AC_MSG_CHECKING(for vecLib)
@@ -100,7 +116,7 @@ if test -z "$LAPACK_FLAG"; then
 		  LAPACK_FLAG="-DR_LAPACK"
                  ],
                  [AC_MSG_RESULT(no)
-                  AC_MSG_ERROR(Error linking to R's lapack library.  Check installation.)])
+                  AC_MSG_ERROR(Error linking to R's lapack library.  Check R installation.)])
 fi
 
 
@@ -123,6 +139,7 @@ AC_C_INLINE
 AC_SUBST(PHAST_VERSION)
 AC_SUBST(INLINE_FLAG)
 AC_SUBST(PTHREAD_LIBS)
+AC_SUBST(PCRE_LIBS)
 AC_SUBST(LAPACK_FLAG)
 AC_SUBST(LAPACK_LIBS)
 
