@@ -534,6 +534,7 @@ complement <- function(x) {
 ##' coordinates for start.col and end.col.  If NULL, start.col and
 ##' end.col are column indices in the multiple alignment.
 ##' @return A new MSA object containing a subset of the original MSA.
+##' @S3method sub msa
 ##' @export
 sub.msa <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
                    refseq=NULL) {

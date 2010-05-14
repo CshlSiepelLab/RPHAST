@@ -1,4 +1,3 @@
-q("no")
 library(rphast)
 
 #' read.gff

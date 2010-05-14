@@ -1,5 +1,4 @@
 require("rphast")
-
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 files <- c("ENr334.fa", "gencode.ENr334.gff", "rev.mod")
 unzip(exampleArchive, files)
@@ -14,8 +13,6 @@ gff <- read.gff("gencode.ENr334.gff")
 t1 <- phyloP(tm, msa, method="LRT", outfile="test.out", gff=gff)
 t2 <- phyloP(tm, msa, method="LRT", gff=gff, outfile="test.out", outfile.format="gff", outfile.only=TRUE)
 
-require("rphast")
-
 ##' phyloP.prior
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 unzip(exampleArchive, "rev.mod")
@@ -26,12 +23,19 @@ t3 <- phyloP.prior(tm, nsites=20, quantiles=TRUE)
 t4 <- phyloP.prior(tm, nsites=20, epsilon=1e-20)
 plot(t1$nsub, t1$prior)
 points(t2$nsub, t2$prior, col="red")
-unlink(rev.mod)
+unlink("rev.mod")
 
 ##' phyloP.sph
-exampleArchive <- system."extdata", "examples.zip", package="rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 files <- c("ENr334.fa", "gencode.ENr334.gff", "rev.mod")
-
+unzip(exampleArchive, files)
+tm <- read.tm("rev.mod")
+t1 <- phyloP.sph(tm, prior.only=TRUE, nsites=20)
+msa <- sub.msa(read.msa("ENr334.fa", offset=41405894), end=10000)
+t2 <- phyloP.sph(tm, msa)
+tm <- read.tm("rev.mod")
+msa <- sub.msa(read.msa("ENr334.fa", offset=41405894), end=10000)
+t2 <- phyloP.sph(tm, msa, subtree="hg18", post.only=TRUE)  # this takes a couple minutes
 
 resultCons <- phyloP(tm, msa, wig=TRUE)
 #resultAcc <- phyloP(tm, msa, wig=TRUE, mode="ACC")

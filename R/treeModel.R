@@ -49,8 +49,11 @@ from.pointer.tm <- function(x) {
 }
 
 
+### note: we don't necessarily want to export this function, as it
+### is only used internally.  but it is nice for debugging for it to
+### be visible
 #' @nord
-##' @export
+#' @export
 as.pointer.tm <- function(tm) {
   x <- list()
   x$externalPtr <- .Call("rph_tm_new",
@@ -66,6 +69,14 @@ as.pointer.tm <- function(tm) {
                          tm$rate.weights,
                          tm$root.leaf)
   x
+}
+
+
+# should we check to make sure it has all the necessary elements and no extra ones?
+#' @nord
+as.tm.list <- function(l) {
+  class(l) <- "tm"
+  l
 }
 
 ##' Read a tree model from a file

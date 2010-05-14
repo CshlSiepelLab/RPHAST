@@ -73,5 +73,3 @@ t <- tm(tree, subst.mod, rate.matrix=rate.mat,
         nratecats=nratecats, alpha=alpha,
         rate.consts=rate.consts, root.leaf=root.leaf)
 t
-
-

@@ -53,7 +53,7 @@ phyloP.call<- function(mod,
       stop("invalid outfile.format")
   }
   if (!is.null(fit.model) && fit.model && !is.null(gff)) {
-    warn("cannot use fit.model with a features file.  Setting fit.model=FALSE")
+    warning("cannot use fit.model with a features file.  Setting fit.model=FALSE")
     fit.model <- FALSE
   }
   mod <- as.pointer.tm(mod)
@@ -71,7 +71,6 @@ phyloP.call<- function(mod,
       gff <- as.pointer.gff(gff)
     }
   }
-  cat("before .Call nsites=", nsites, "\n")
   result <- .Call("rph_phyloP",
                   mod$externalPtr,
                   msaPtr,
@@ -137,6 +136,7 @@ phyloP.call<- function(mod,
 ##' branches to consider in the subtree.  The remaining branches are
 ##' considered part of the supertree, and the test considers
 ##' conservation or acceleration in the subtree relative to the supertree.
+##' This option is currently only available for method="LRT" or "SCORE".
 ##' @param ref.idx index of reference sequence in the alignment.  If zero,
 ##' use frame of reference of entire alignment.
 ##' @param outfile Character string.  If given, write results to given file.
@@ -222,10 +222,6 @@ phyloP.prior <- function(mod, nsites=100, subtree=NULL, branches=NULL,
 ##' complementary supertree, and consider conservation/acceleration in the
 ##' subtree given the supertree.  The branch above the specified node is
 ##' included with the subtree.
-##' @param branches A vector of character strings giving the names of
-##' branches to consider in the subtree.  The remaining branches are
-##' considered part of the supertree, and the test considers
-##' conservation/acceleration in the subtree relative to the supertree.
 ##' @param ref.idx index of reference sequence in the alignment.  If zero,
 ##' use frame of reference of entire alignment.
 ##' @param outfile Character string.  If given, write results to given file.
@@ -265,7 +261,6 @@ phyloP.sph <- function(mod,
                        gff=NULL,
                        basewise=FALSE,
                        subtree=NULL,
-                       branches=NULL,
                        ref.idx=1,
                        outfile=NULL,
                        outfile.only=FALSE,
@@ -278,8 +273,8 @@ phyloP.sph <- function(mod,
                        confidence.interval=NULL,
                        quantiles=FALSE) {
   phyloP.call(mod, msa=msa, method="SPH", mode=mode,
-              gff=gff, basewise=basewise, subtree=subtree,
-              branches=branches, ref.idx=ref.idx,
+              gff=gff, basewise=basewise,
+              subtree=subtree, ref.idx=ref.idx,
               outfile=outfile, outfile.only=outfile.only,
               outfile.format=outfile.format,
               prior.only=prior.only, nsites=nsites,

@@ -122,17 +122,7 @@ fi
 
 LIBS="${OLD_LIBS}"
 
-# use -fgnu89-inline if available
-AC_MSG_CHECKING(for -fgnu89-inline flag)
-OLD_CFLAGS="${CFLAGS}"
-CFLAGS="${CFLAGS} -fgnu89-inline"
-AC_COMPILE_IFELSE(AC_LANG_PROGRAM(), 
-                  [INLINE_FLAG="-fgnu89-inline"
-                   AC_MSG_RESULT(yes)], 
-                  AC_MSG_RESULT(no))
-CFLAGS="${OLD_CFLAGS}"
 PHAST_VERSION="\"`cat src/version`\""
-
 
 AC_C_INLINE
 
