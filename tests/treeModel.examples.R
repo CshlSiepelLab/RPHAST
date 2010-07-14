@@ -41,7 +41,6 @@ tm <- tm(tree="((human:0.01, chimp:0.01):0.03, mouse:0.3)",
 is.list(tm)
 is.list(as.list(tm))
 
-
 #' subst.mods
 subst.mods()
 

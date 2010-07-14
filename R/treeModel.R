@@ -5,6 +5,15 @@
   tm
 }
 
+##' Check whether an object is of type tm (tree model)
+##' @title Tree Models
+##' @param x an object to be tested
+##' @return TRUE if an object has class "tm", FALSE otherwise
+##' @export
+is.tm <- function(x) {
+  return(class(x)=="tm")
+}
+
 
 # this needs a special function to avoid having to make a matrix object
 # in R from within C.  The C code returns a vector which is coerced

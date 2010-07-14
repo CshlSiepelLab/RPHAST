@@ -74,7 +74,7 @@ read.gff <- function(filename, pointer.only=FALSE) {
 ##' \code{\link{msa}} for more details on the pointer.only option.
 ##' @keywords GFF feature
 ##' @export
-gff <- function(seqname, src, feature, start, end, score=NULL,
+gff.new <- function(seqname, src, feature, start, end, score=NULL,
                 strand=NULL, frame=NULL, attribute=NULL,
                 pointer.only=FALSE) {
   check.arg(seqname, "seqname", "character", null.OK=FALSE, min.length=NULL,
@@ -132,10 +132,10 @@ gff <- function(seqname, src, feature, start, end, score=NULL,
 as.pointer.gff <- function(gff) {
   if (!is.null(gff$externalPtr))
     return(gff)
-  gff(gff$seqname, gff$src, gff$feature,
-      gff$start,   gff$end,    gff$score,
-      gff$strand,  gff$frame,  gff$attribute,
-      pointer.only=TRUE)
+  gff.new(gff$seqname, gff$src, gff$feature,
+          gff$start,   gff$end,    gff$score,
+          gff$strand,  gff$frame,  gff$attribute,
+          pointer.only=TRUE)
 }
 
 

@@ -25,6 +25,13 @@ copy.msa <- function(msa) {
 }
 
 
+is.msa <- function(msa) {
+  if (is.null(msa$externalPtr)) {
+    
+  }
+}
+
+
 ##' Creates a new MSA object given sequences.
 ##'
 ##' Make a new multiple sequence alignment (MSA) object given a vector of
@@ -328,7 +335,9 @@ write.msa <- function(msa, filename=NULL,
 ##' @seealso \code{\link{print.msa}}
 ##' @export
 ##' @S3method summary msa
-summary.msa <- function(object, ..., print.seq=FALSE, format="FASTA",
+summary.msa <- function(object, ...,
+                        print.seq=ifelse(ncol.msa(object)*nrow.msa(object) < 500, TRUE, FALSE),
+                        format="FASTA",
                         pretty.print=FALSE) {
   msa <- object
   check.arg(print.seq, "print.seq", "logical", null.OK=FALSE)
@@ -397,7 +406,8 @@ summary.msa <- function(object, ..., print.seq=FALSE, format="FASTA",
 ##' @keywords alignment
 ##' @export
 ##' @S3method print msa
-print.msa <- function(x, ..., print.seq=FALSE, format=NULL, pretty.print=FALSE) {
+print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TRUE, FALSE),
+                      format=NULL, pretty.print=FALSE) {
   check.arg(print.seq, "print.seq", "logical", null.OK=FALSE)
   # format and pretty.print are checked in write.msa
 
@@ -655,3 +665,143 @@ likelihood.msa <- function(msa, tm, by.column=FALSE) {
   .Call("rph_msa_likelihood", msa$externalPtr, tm$externalPtr, by.column)
 }
 
+##' Simulate a MSA given a tree model and HMM.
+##'
+##' Simulates a multiple sequence alignment of specified length.  Deals
+##' with base-substitution only, not indels.  If one tree model is given,
+##' simply simulates a sequence from this model.  If an HMM is provided,
+##' then the mod parameter should be a list of tree models with the same
+##' length as the number of states in the HMM.
+##' @param mod A tree model or a list of tree models from which to simulate.
+##' @param nsites The number of columns in the simulated alignment.
+##' @param hmm an object of type HMM describing transitions between the
+##' tree models across the columns of the alignment.
+##' @param seed A value for initializing the random number generator used
+##' by phast.  If set to "time", grab a seed based on the current time.
+##' Otherwise, the value should be an integer.
+##' @param pointer.only (Advanced use only). If TRUE, return only a pointer
+##' to the simulated alignment.  Possibly useful for very (very) large
+##' alignments.
+##' @return An object of type MSA containing the simulated alignment.
+##' @export
+simulate.msa <- function(mod, nsites, hmm=NULL, seed="time", pointer.only=FALSE) {
+  nstate <- 1L
+  if (!is.null(hmm)) {
+    nstate <- nstate.hmm(hmm)
+    hmm <- (as.pointer.hmm(hmm))$externalPtr
+  }
+  if (is.tm(mod)) {
+    tmlist <- list(mod)
+  } else tmlist <- mod
+  nmod <- length(tmlist)
+  for (i in 1:nmod) {
+    if (!is.tm(tmlist[[i]]))
+      stop("mod should be a list of tree models (one for every state of HMM)")
+    tmlist[[i]] <- (as.pointer.tm(tmlist[[i]]))$externalPtr
+  }
+  if (nstate != nmod) 
+    stop("number of states in HMM (", nstate, ") does not match number of models (", nmod,")")
+  if (seed == "time") {
+    seed=NULL
+  } else {
+    check.arg(seed, "seed", "integer", max.length=1L, null.OK=FALSE)
+  }
+  msa <- .makeObj.msa()
+  msa$externalPtr <- .Call("rph_msa_base_evolve", tmlist, nsites, hmm, seed)
+  if (pointer.only == FALSE) msa <- from.pointer.msa(msa)
+  msa
+}
+
+
+##' Extract fourfold degenerate sites from an MSA object
+##' @param msa An object of type MSA
+##' @param gff an object of type GFF.  Should have defined coding regions
+##' with feature type "CDS"
+##' @return an unordered msa object containing only the sites which are
+##' fourfold degenerate
+##' @note if original msa is stored as a pointer it will be destroyed.  For
+##' very large MSA objects it is more efficient to use the do.4d option
+##' in the read.msa function instead.
+##' @export
+get4d.msa <- function(msa, gff) {
+  if (is.null(msa$externalPtr))
+    msa <- as.pointer.msa(msa)
+  if (is.null(gff$externalPtr) && sum(gff$feature=="CDS")==0L) 
+    stop("gff has no features labelled \"CDS\"... cannot extract 4d sites")
+  if (is.null(gff$externalPtr))
+    gff <- as.pointer.gff(gff)
+  msa$externalPtr <- .Call("rph_msa_reduce_to_4d",
+                           msa$externalPtr,
+                           gff$externalPtr)
+  msa <- from.pointer.msa(msa)
+}
+
+
+##' Extract features from an MSA object
+##'
+##' Returns the subset of the MSA which appears in the features (GFF) object.
+##' @param msa An object of type MSA
+##' @param gff A GFF object denoting the regions of the alignment to extract.
+##' @return An msa object containing only the regions of the msa
+##' appearing in the GFF object.
+##' @note if input msa is stored as a pointer it will be destroyed.
+##' @export
+extract.feature.msa <- function(msa, gff) {
+  if (!is.ordered.msa(msa))
+    stop("extract.feature.msa requires ordered alignment")
+  if (is.null(msa$externalPtr))
+    msa <- as.pointer.msa(msa)
+
+  if (is.null(gff$externalPtr))
+    gff <- as.pointer.gff(gff)
+
+  if (do4d && sum(gff$feature=="CDS")==0L) {
+    stop("gff has no features labelled \"CDS\"... cannot extract 4d sites")
+  }
+
+  # probably want to move code from rph_msa_read to a sub-function
+  # which extracts features once an MSA is already read.  Though
+  # if it was read as a MAF there could be a problem
+  
+  if (pointer.only==FALSE)
+    msa <- from.pointer.msa(msa)
+}
+
+
+##' Concatenate msa objects
+##'
+##' Each MSA object must contain the same sequences in the same order.
+##' The names of sequences for the first MSA will be used in the com
+##' @param msa A list of MSA objects to concatenate together.
+##' @param ordered If FALSE, disregard the order of columns in the combined
+##' MSA.
+##' @param pointer.only (Advanced use only, for very large MSA objects) If
+##' TRUE, return object will be a pointer to an object stored in C.
+##' @param return An object of type MSA
+concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
+  if (pointer.only == FALSE) {
+    aggMsa <- msas[[1]]
+    if (!is.null(aggMsa$externalPtr))
+      aggMsa <- from.pointer.msa(aggMsa)
+    for (i in 2:length(msas)) {
+      currMsa <- msas[[i]]
+      if (!is.null(currMsa$externalPtr))
+        currMsa <- from.pointer.msa(currMsa)
+      aggMsa$seqs <- sprintf("%s%s", aggMsa$seqs, currMsa$seqs)
+    }
+    if (ordered==FALSE) aggMsa$is.ordered = FALSE
+  } else {
+    aggMsa <- msa.copy(msas[[1]])
+    if (is.null(aggMsa$externalPtr))
+      aggMsa <- as.pointer.msa(aggMsa)
+    for (i in 2:length(msas)) {
+      currMsa <- msas[[i]]
+      if (is.null(currMsa$externalPtr))
+        currMsa <- as.pointer.msa(currMsa)
+      aggMsa$externalPtr <- .Call("rph_msa_concat",
+                                  aggMsa$externalPtr,
+                                  currMsa$externalPtr)
+    }
+  }
+  aggMsa
+}

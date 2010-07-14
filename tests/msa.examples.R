@@ -167,7 +167,7 @@ write.msa(m, NULL, format="PHYLIP", pretty.print=TRUE)
 #'
 #clean up
 unlink("foo.ss")
-unlink("foo.fasta")
+unlink("foo.fa")
 
 ################################################
 
@@ -246,7 +246,6 @@ print(m, print.seq=TRUE)
 ################################################
 
 #' read.msa
-require("rphast")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 files <- c("ENr334.maf", "ENr334.fa", "gencode.ENr334.gff")
 unzip(exampleArchive, files)
@@ -332,3 +331,35 @@ like3 <- likelihood.msa(msa, tm, by.column=TRUE)
 like4 <- likelihood.msa(msa, tm, by.column=TRUE)
 tm$subst.mod <- "JC69"
 likelihood.msa(msa, tm)
+unlink(files)
+
+
+####################################################
+
+#' simulate.msa
+m <- matrix(nrow=3, ncol=3)
+m[1,] <- c(1,2,3)
+m[2,] <- c(1,5,10)
+m[3,] <- c(10,4,2)
+eq.freq <- c(1,2,3)
+h <- hmm.new(m, eq.freq)
+filename <- "rev.mod"
+tm <- read.tm(filename)
+tm2 <- tm
+tm2$backgd <- rep(0.25, 4)
+tm3 <- tm
+tm3$backgd <- c(0.6, 0.1, 0.2, 0.1)
+m <- simulate.msa(tm, 20)
+m <- simulate.msa(list(tm, tm2, tm3), 20, h)
+m <- matrix(1, nrow=9, ncol=9)
+h <- hmm.new(m)
+m <- simulate.msa(list(tm, tm, tm, tm, tm, tm, tm, tm, tm), 20, h)
+
+
+#' get4d.msa
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+files <- c("ENr334.maf", "ENr334.fa", "gencode.ENr334.gff")
+unzip(exampleArchive, files)
+gff <- read.gff("gencode.ENr334.gff")
+m1 <- read.msa("ENr334.maf", gff=gff, do.4d=TRUE)
