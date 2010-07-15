@@ -113,7 +113,7 @@ phyloP.call<- function(mod,
 ##'
 ##' If a gff is not provided, then outfile.format can be either "default" or
 ##' "wig".  In either case the outfile will be in fixed step wig format
-##' (see \link{http://genome.ucsc.edu/goldenPath/help/wiggle.html}).
+##' (see \url{http://genome.ucsc.edu/goldenPath/help/wiggle.html}).
 ##' If format is "default", then each row (corresponding to one alignment
 ##' column) will contain several values, such as parameter estimates and
 ##' p-values for that column.  If outfile.format is "wig", then the output
@@ -253,6 +253,8 @@ phyloP.prior <- function(mod, nsites=100, subtree=NULL, branches=NULL,
 ##' exactly, but the confidence interval is based on the assumption that
 ##' the combined distribution will be approximately normal (true for
 ##' large numbers of sites by the central limit theorem).
+##' @param quantiles Logical.  If \code{TRUE}, report quantiles of distribution
+##' rather than whole distribution.
 ##' @return Either a list, data frame, or matrix, depending on options.
 ##' @export
 phyloP.sph <- function(mod,

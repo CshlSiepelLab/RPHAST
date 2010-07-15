@@ -1,5 +1,4 @@
-# (may not want to export in the long run but good to have visible for testing)
-##' @export
+##' @nord
 rphast.simplify.list <- function(lol) {
   if (!is.list(lol)) return(lol)
   if (length(lol) == 1) 

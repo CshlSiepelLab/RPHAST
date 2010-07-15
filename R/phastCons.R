@@ -1,7 +1,5 @@
 # don't export in the future, 
-##'
-##'
-##' @export
+##' @nord
 phastCons.call <- function(msa,
                            mod,
                            rho=0.3,
@@ -26,12 +24,12 @@ phastCons.call <- function(msa,
   check.arg(estimate.rho, "estimate.rho", "logical", null.OK=FALSE)
   check.arg(gc, "gc", "numeric", null.OK=TRUE)
   if (!is.null(gc) && (gc < 0 || gc > 1)) stop("gc should be in range [0,1]")
-  check.arg(nrates, "nrates", "integer", null.OK=TRUE)
-  if (!is.null(nrates) && nrates <=0) stop("nrates should be >=1")
+  check.arg(nrates, "nrates", "integer", null.OK=TRUE, min.length=1L, max.length=2L)
+  if (!is.null(nrates) || sum(nrates <= 0) >= 1L) stop("nrates should be >=1")
   check.arg(transitions, "transitions", "numeric", min.length=1L, max.length=2L,
             null.OK=TRUE)
-  if (!is.null(transitions) && (sum(transitions > 1)>0 ||
-                                sum(transitions < 0)>0))
+  if (!is.null(transitions) && (sum(transitions > 1)>0L ||
+                                sum(transitions < 0)>0L))
     stop("transitions values should be in range [0,1]")
   if (!is.null(transitions) && length(transitions)==1L)
     transitions <- rep(transitions, 2)
@@ -122,7 +120,70 @@ phastCons.call <- function(msa,
 ##' one is given, then this represents the non-conserved model, and the
 ##' conserved model is obtained by scaling the branches by a parameter
 ##' rho.
-##' @param rho The scaling parameter
+##' @param rho Set the scale (overall evolutionary rate) of the model for the
+##' conserved state to be <rho> times tht of the model for the non-conserved state
+##' ( 0 < rho < 1).  If used with estimate.trees or estimate.rho, the specified
+##' value will be used for initialization only, and rho will be estimated.  This
+##' argument is ignored if mod contains two tree model objects.
+##' @param estimate.trees A logical value.  If \code{TRUE}, estimate free
+##' parameters of tree models for conserved and non-conserved state.
+##' Estimated models are stored in return list.
+##' @param estimate.rho A logical value.  If \code{TRUE}, Estimate the parameter
+##' rho (as described above).  Estimated value is reported in return list.
+##' @param gc A single numeric value given the fraction of bases that are G or C, for
+##' optional use with estimate.trees or estimate.rho.  This overrides the default
+##' behavior of estimating the base composition empirically from the data.
+##' @param nrates An integer vector of length one or two, for optional use with
+##' estimate.trees and a discrete-gamma model.  Assume the specified number of
+##' rate categories, rather than the number given in the input tree model(s).  If
+##' two values are given they apply to the conserved and nonconserved models,
+##' respectively.
+##' @param transitions A numeric vector of length one or two, representing the
+##' transition probabilities for the two-state HMM.  If not provided transition rates
+##' will be estimated by maximum likelihood.  The first value represents mu, the
+##' transition rate from the conserved to the non-conserved state, and the second
+##' value is nu, the rate from non-conserved to conserved.  If only one value is
+##' provided then mu=nu.  The rate of self-transitions are then 1-mu and 1-nu, and
+##' the expected lengths of conserved and non-conserved elements are 1/mu and 1/nu,
+##' respectively.
+##' @param init.transitions Like the transitions argument (described above), but
+##' only specifies initial values for mu, and nu.  Transitions probabilities will
+##' then be estimated by maximum likelihood.
+##' @param target.coverage A single numeric value, representing the parameter gamma,
+##' which describes the fraction of sites in conserved elements.  This argument is
+##' an alternative to the transitions argument.  This argument sets a prior
+##' expectation rather than a posterior and assumes stationarity of the
+##' state-transition process.  Adding this constraint causes the ratio of
+##' between-state transitions to be fixed at (1-gamma)/gamma.  If used with the
+##' expected.length argument, the transition probailities will be completely fixed,
+##' otherwise the expected-length parameter will be estimated by maximum likelihood.
+##' @param expected.length A single numeric value, representing the parameter omega,
+##' which describes the expected length of conserved elements.  This is an
+##' alternative to the transitions argument.  If provided with target.coverage, than
+##' transition rates are fully determined, otherwise the target-coverage parameter
+##' will be estimated by maximum likelihood.
+##' @param init.expected.length Like expected.length above, but only sets the initial
+##' value of the expected length parameter, which will be estimated by maximum
+##' likelihood.
+##' @param viterbi A logical value.  If \code{TRUE}, produce discrete elements
+##' using the Viterbi algorithm.
+##' @param ref.idx An integer value.  Use the coordinate frame of the given sequence.
+##' Default is 1, indicating the first sequence in the alignment.
+##' A value of 0 indicates the coordinate frame of the entire alignment.
+##' @return A list containing parameter estimates.  The list may have any of the
+##' following elements, depending on the arguments:
+##' \item{transition.rates}{A numeric vector of length two giving the rates from the
+##' conserved to the non-conserved state, and from the non-conserved to the conserved
+##' state.}
+##' \item{rho}{The relative evolutionary rate of the conserved state compared to the
+##' non-conserved state.}
+##' \item{tree.models}{Tree model objects describing the evolutionary process in the
+##' conserved and non-conserved states.}
+##' \item{most.conserved}{An object of type gff which describes conserved elements
+##' detected by the Viterbi algorithm.}
+##' \item{post.prob.wig}{A data frame giving a coordinate and score for individual
+##' bases in the alignment}
+##' \item{likelihood}{The likelihood of the data under the estimated model.}
 ##' @export
 phastCons <- function(msa,
                       mod,

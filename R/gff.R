@@ -17,9 +17,9 @@
 ##' @return If pointer.only==FALSE, a data.frame with columns corresponding
 ##' to the GFF specification.  Otherwise, an object which is a pointer to
 ##' an object stored in C.
-##' @seealso \code{\link{gff}} for more description of GFF objects.
+##' @seealso \code{\link{gff.new}} for more description of GFF objects.
 ##'
-##' \code{\link{msa}} for more explanation of the pointer.only option.
+##' \code{\link{msa.new}} for more explanation of the pointer.only option.
 ##'
 ##' \url{http://www.sanger.ac.uk/resources/software/gff/spec.html}
 ##' for a detailed description of GFF file format.
@@ -71,7 +71,7 @@ read.gff <- function(filename, pointer.only=FALSE) {
 ##' GFF file.
 ##' @seealso \code{\link{read.gff}}
 ##'
-##' \code{\link{msa}} for more details on the pointer.only option.
+##' \code{\link{msa.new}} for more details on the pointer.only option.
 ##' @keywords GFF feature
 ##' @export
 gff.new <- function(seqname, src, feature, start, end, score=NULL,
@@ -126,7 +126,7 @@ gff.new <- function(seqname, src, feature, start, end, score=NULL,
 ##' @param gff a GFF object stored by value in R
 ##' @return a GFF object stored by reference as a pointer to an
 ##' object created in C.
-##' @seealso \code{\link{gff}} for more details on GFF storage
+##' @seealso \code{\link{gff.new}} for more details on GFF storage
 ##' options.
 ##' @export
 as.pointer.gff <- function(gff) {
@@ -222,7 +222,7 @@ summary.gff <- function(object, ...) {
 ##' \code{\link{make.names}} is optional.
 ##' @param ... additional arguments to be passed to other methods
 ##' @return a data frame containing the GFF data
-##' @seealso \code{\link{gff}} for a description of GFF data frames,
+##' @seealso \code{\link{gff.new}} for a description of GFF data frames,
 ##' and \code{\link{as.pointer.gff}} for conversion in the other
 ##' direction.
 ##' @export

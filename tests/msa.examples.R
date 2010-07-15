@@ -2,30 +2,30 @@ library(rphast)
 
 #' print.msa
 # read in an MSA stored in R
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+             names=c("human", "mouse", "rat"))
 print(m)
 print(m, format="FASTA")
 print(m, format="PHYLIP", pretty.print=TRUE)
 #'
 # read in an MSA stored by reference in C
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
-         names=c("human", "mouse", "rat"),
-         pointer.only=TRUE)
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+             names=c("human", "mouse", "rat"),
+             pointer.only=TRUE)
 print(m)
 
 ###############################################
 
 #' summary.msa
 # read in an MSA stored in R
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+             names=c("human", "mouse", "rat"))
 summary(m)
 #'
 # read in an MSA stored by reference in C
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
-         names=c("human", "mouse", "rat"),
-         pointer.only=TRUE)
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+             names=c("human", "mouse", "rat"),
+             pointer.only=TRUE)
 summary(m)
 
 ################################################
@@ -46,14 +46,14 @@ guess.format.msa("helloWorld")
 ################################################
 
 #' ncol.msa
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"))
 ncol.msa(m)
 ncol.msa(m, names.msa(m))
 
 ## non-example tests
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 ncol.msa(m)
 ncol.msa(m, names.msa(m))
 print(m, print.seq=TRUE)
@@ -61,64 +61,64 @@ print(m, print.seq=TRUE)
 ################################################
 
 #' nrow.msa
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"))
 nrow.msa(m)
 
 ## non-example tests
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 nrow.msa(m)
 
 
 ################################################
 
 #' offset.msa
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"))
 offset.msa(m)
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), offset=500000)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), offset=500000)
 offset.msa(m)
 
 ## non-example tests
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 offset.msa(m)
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"),
-         offset=500000, pointer.only=TRUE)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"),
+             offset=500000, pointer.only=TRUE)
 offset.msa(m)
 
 
 ################################################
 
 #' alphabet.msa
-m <- msa(seqs=c("a--acgtaa", "NN-nnnTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("a--acgtaa", "NN-nnnTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"))
 alphabet.msa(m)
 
 ## non-example tests
-m <- msa(seqs=c("a--acgtaa", "NN-nnnTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("a--acgtaa", "NN-nnnTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 alphabet.msa(m)
 
 ################################################
 
 #' is.ordered.msa
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"))
 is.ordered.msa(m)
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), is.ordered=FALSE)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), is.ordered=FALSE)
 is.ordered.msa(m)
 
 # non-example tests
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 is.ordered.msa(m)
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), is.ordered=FALSE,
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), is.ordered=FALSE,
          pointer.only=TRUE)
 is.ordered.msa(m)
 
@@ -126,15 +126,15 @@ is.ordered.msa(m)
 
 
 #' from.pointer.msa
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 m
 m <- from.pointer.msa(m)
 m
 
 # non-example tests
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"))
 m
 m <- from.pointer.msa(m)
 m
@@ -142,15 +142,15 @@ m
 ################################################
 
 #' as.pointer.msa
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"))
 m
 m <- as.pointer.msa(m)
 m
 
 # non-example tests
-m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 m
 m <- as.pointer.msa(m)
 m
@@ -159,8 +159,8 @@ m
 ################################################
 
 #' write.msa
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+             names=c("human", "mouse", "rat"))
 write.msa(m, "foo.ss")
 write.msa(m, "foo.fa", pretty.print=TRUE)
 write.msa(m, NULL, format="PHYLIP", pretty.print=TRUE)
@@ -171,10 +171,10 @@ unlink("foo.fa")
 
 ################################################
 
-#' msa
+#' msa.new
 # Here is an MSA object stored in the default mode
-m1 <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
-          names=c("human", "mouse", "rat"))
+m1 <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+              names=c("human", "mouse", "rat"))
 m2 <- m1
 # NOTE seqs would not be directly accessible if stored by reference
 m2$seqs[3] <- "AAAAAA"
@@ -185,8 +185,8 @@ print(m2, print.seq=TRUE)
 ################################################
 
 #' sub.msa
-m <- msa(seqs=c("ACGT---AT", "AGGTAGTAA", "AGGAAGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("ACGT---AT", "AGGTAGTAA", "AGGAAGTAG"),
+             names=c("human", "mouse", "rat"))
 print(sub.msa(m, c("human", "rat"), start.col=3, end.col=6),
       print.seq=TRUE)
 print(sub.msa(m, c("mouse"), keep=FALSE, refseq="human", start.col=3, end.col=4),
@@ -197,8 +197,8 @@ print(sub.msa(m, c("human", "rat")), print.seq=TRUE)
 print(sub.msa(m, c("human", "rat"), end.col=6), print.seq=TRUE)
 print(sub.msa(m, c("human", "rat"), start.col=3), print.seq=TRUE)
               
-m <- msa(seqs=c("ACGT---AT", "AGGTAGTAA", "AGGAAGTAG"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("ACGT---AT", "AGGTAGTAA", "AGGAAGTAG"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 print(sub.msa(m, c("human", "rat"), start.col=3, end.col=6),
       print.seq=TRUE)
 print(sub.msa(m, c("mouse"), keep=FALSE, refseq="human", start.col=3, end.col=4),
@@ -207,26 +207,26 @@ print(sub.msa(m, c("mouse"), keep=FALSE, refseq="human", start.col=3, end.col=4)
 ################################################
 
 #' names.msa
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+             names=c("human", "mouse", "rat"))
 names.msa(m)
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"))
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"))
 names.msa(m)
 
 # non-example tests
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
-         names=c("human", "mouse", "rat"),
-         pointer.only=TRUE)
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+             names=c("human", "mouse", "rat"),
+             pointer.only=TRUE)
 names.msa(m)
-m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"), pointer.only=TRUE)
+m <- msa.new(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"), pointer.only=TRUE)
 names.msa(m)
 
 
 ################################################
 
 #' strip.gaps.msa
-m <- msa(seqs=c("A--ACGTAT-", "AG-AGGTAA-", "AGGAGGTA--"),
-         names=c("human", "mouse", "rat"))
+m <- msa.new(seqs=c("A--ACGTAT-", "AG-AGGTAA-", "AGGAGGTA--"),
+             names=c("human", "mouse", "rat"))
 print(strip.gaps.msa(m, c("human", "mouse")), print.seq=TRUE)
 print(strip.gaps.msa(m, strip.mode="any.gaps"), print.seq=TRUE)
 print(strip.gaps.msa(m, strip.mode="all.gaps"), print.seq=TRUE)
@@ -237,8 +237,8 @@ temp <- strip.gaps.msa(m, "any.gaps")
 print(m, print.seq=TRUE)
 
 # non-example tests
-m <- msa(seqs=c("A--ACGTAT-", "AG-AGGTAA-", "AGGAGGTA--"),
-         names=c("human", "mouse", "rat"), pointer.only=TRUE)
+m <- msa.new(seqs=c("A--ACGTAT-", "AG-AGGTAA-", "AGGAGGTA--"),
+             names=c("human", "mouse", "rat"), pointer.only=TRUE)
 print(strip.gaps.msa(m, c("human", "mouse")), print.seq=TRUE)
 print(strip.gaps.msa(m, strip.mode="any.gaps"), print.seq=TRUE)
 print(strip.gaps.msa(m, strip.mode="all.gaps"), print.seq=TRUE)
@@ -363,3 +363,8 @@ files <- c("ENr334.maf", "ENr334.fa", "gencode.ENr334.gff")
 unzip(exampleArchive, files)
 gff <- read.gff("gencode.ENr334.gff")
 m1 <- read.msa("ENr334.maf", gff=gff, do.4d=TRUE)
+
+# this is crashing my mac
+require("rphast")
+m <- read.msa("ENr334.maf", pointer.only=TRUE)
+m <- read.msa("ENr334.maf")
