@@ -88,7 +88,7 @@ as.tm.list <- function(l) {
 ##' @param filename The file containing a tree model
 ##' @title Read a Tree Model
 ##' @return An object of class "tm"
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
 read.tm <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
@@ -105,7 +105,7 @@ read.tm <- function(filename) {
 ##' @param filename The filename to write to (use NULL for output to terminal)
 ##' @param append Whether to append the tree to the end of the file
 ##' (if FALSE, overwrites file).  Not used if filename is \code{NULL}
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
 write.tm <- function(tm, filename=NULL, append=FALSE) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
@@ -119,7 +119,7 @@ write.tm <- function(tm, filename=NULL, append=FALSE) {
 ##' @title Tree Model Summary
 ##' @param object An object of class tm
 ##' @param ... Parameters to be passed to/from other functions
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
 ##' @S3method summary tm
 summary.tm <- function(object, ...) {
@@ -131,7 +131,7 @@ summary.tm <- function(object, ...) {
 ##' @title Tree Model to List
 ##' @param x an object of class tm
 ##' @param ... arguments to be passed to/from other functions
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
 ##' @S3method as.list tm
 as.list.tm <- function(x, ...) {
@@ -145,7 +145,7 @@ as.list.tm <- function(x, ...) {
 ##' @param aslist Logical.  If \code{TRUE}, print the tree model as a list
 ##' rather than in tree model format.
 ##' @param ... arguments to be passed to/from other functions
-##' @seealso \code{\link{tm.new}}
+##' @seealso \code{\link{tm}}
 ##' @export
 ##' @S3method print tm
 print.tm <- function(x, aslist=FALSE, ...) {
@@ -211,7 +211,7 @@ subst.mods <- function() {
 ##' model for some alignment
 ##' @return An object of class tm
 ##' @export
-tm.new <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
+tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
                    alphabet="ACGT", nratecats=1, 
                    alpha=0.0, rate.consts=NULL, rate.weights=NULL,
                    root.leaf=NULL, likelihood=NULL) {

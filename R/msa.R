@@ -67,7 +67,7 @@ is.msa <- function(msa) {
 ##' reference (see Details)
 ##' @useDynLib rphast
 ##' @export
-msa.new <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
+msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
                     offset=NULL, pointer.only=FALSE) {
   #checks
   seqlen <-  unique(sapply(seqs, nchar))
@@ -117,7 +117,7 @@ msa.new <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
 ##' @return an integer vector containing the length of the named sequences.
 ##' If refseq is NULL, returns the number of columns in the alignment.
 ##' @keywords msa
-##' @seealso \code{\link{msa.new}}
+##' @seealso \code{\link{msa}}
 ##' @export
 ncol.msa <- function(x, refseq=NULL) {
   msa <- x
@@ -139,7 +139,7 @@ ncol.msa <- function(x, refseq=NULL) {
 ##' @param msa an MSA object
 ##' @return an integer containing the number of sequences in an alignment.
 ##' @keywords msa
-##' @seealso \code{\link{msa.new}}
+##' @seealso \code{\link{msa}}
 ##' @export
 nrow.msa <- function(msa) {
   if (is.null(msa$externalPtr)) {
@@ -229,7 +229,7 @@ names.msa <- function(x) {
 ##' @param src an MSA object stored by reference
 ##' @return an MSA object stored in R.  If src is already stored in R,
 ##' returns a copy of the object.
-##' @seealso \code{\link{msa.new}} for details on MSA storage options.
+##' @seealso \code{\link{msa}} for details on MSA storage options.
 ##' @export
 from.pointer.msa <- function(src) {
   if (is.null(src$externalPtr)) return(src)
@@ -239,7 +239,7 @@ from.pointer.msa <- function(src) {
   alphabet <- .Call("rph_msa_alphabet", src$externalPtr)
   ordered <- .Call("rph_msa_isOrdered", src$externalPtr)
   offset <- .Call("rph_msa_idxOffset", src$externalPtr)
-  msa.new(seqs, names, alphabet, is.ordered=ordered,
+  msa(seqs, names, alphabet, is.ordered=ordered,
           offset=offset, pointer.only=FALSE)
 }
 
@@ -249,11 +249,11 @@ from.pointer.msa <- function(src) {
 ##' @param src an MSA object stored by value in R
 ##' @return an MSA object stored by reference as a pointer to an object
 ##' created in C.
-##' @seealso \code{\link{msa.new}} for details on MSA storage options.
+##' @seealso \code{\link{msa}} for details on MSA storage options.
 ##' @export
 as.pointer.msa <- function(src) {
   if (!is.null(src$externalPtr)) return(src)
-  msa.new(seqs=src$seq,
+  msa(seqs=src$seq,
           names=src$names,
           alphabet=src$alphabet,
           is.ordered=src$is.ordered,
@@ -453,12 +453,12 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' an external pointer to an object created by C code, rather than
 ##' directly in R memory.  This improves performance and may be necessary
 ##' for large alignments, but reduces functionality.  See
-##' \code{\link{msa.new}} for more details on MSA object storage options.
+##' \code{\link{msa}} for more details on MSA object storage options.
 ##' @note If the input is in "MAF" format and a gff is given, the
 ##' resulting alignment will be stripped of gaps in the reference (1st)
 ##' sequence.
 ##' @return an MSA object.  
-##' @seealso \code{\link{msa.new}}, \code{\link{read.gff}}
+##' @seealso \code{\link{msa}}, \code{\link{read.gff}}
 ##' @export
 read.msa <- function(filename,
                      format=c(guess.format.msa(filename), "FASTA")[1],
@@ -512,13 +512,9 @@ read.msa <- function(filename,
                            gff$externalPtr, do.4d, alphabet,
                            tuple.size, refseq, ordered, do.cats,
                            offset)
-  cat("done reading msa\n");
   
-  if (pointer.only == FALSE) {
-    cat("calling from.pointer\n"); 
+  if (pointer.only == FALSE) 
     msa <- from.pointer.msa(msa)
-    cat("done from.pointer\n");
-  }
   msa
 }
 
