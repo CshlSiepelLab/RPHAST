@@ -18,7 +18,7 @@
 \begin{document}
 
 \section{Conservation Analysis}
-Firs we will show an example of conservation analysis in a non-model organism,
+First we will show an example of conservation analysis in a non-model organism,
 \emph{S. lycopersicon} (tomato).  An alignment of tomato, potato,
 eggplant, pepper, and petunia is available at Cornell's UCSC genome browser
 mirror, and can be downloaded through the table browser.
@@ -245,7 +245,7 @@ the hg18 assembly, as well as the multiple alignment.
 
 <<rarAnalysis1>>=
 require("rphast")
-elements <- read.gff("chr22-elements.bed")
+elements <- read.gff("/home/melissa/rphast/chr22-elements.bed")
 unique(elements$seqname)
 elements$seqname <- "hg18.chr22"  # need species name 
 
@@ -268,7 +268,7 @@ can be estimated from four-fold degenerate sites as in the previous example.
 <<rarAnalyiss3>>=
 
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
-unzip(exampleArchive, c("placentalMammals.mod))
+unzip(exampleArchive, c("placentalMammals.mod"))
 neutralMod <- read.tm("placentalMammals.mod")
 
 @ 
@@ -280,7 +280,7 @@ we will use a a subset of the full species set.
 
 <<rarAnalysis4>>=
 seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "mm9", "rn4", "canFam2")
-align <- read.msa("/Users/melissa/rphast/chr22.maf", 
+align <- read.msa("/home/melissa/rphast/chr22.maf", 
                   seqnames=seqnames, gff=elements)
 @ 
 
@@ -349,7 +349,7 @@ Now we want to run phyloP on the real data.  To do this we need
 to read an ordered version of the alignment from the MAF file, then
 run phyloP on our elements:
 <<<rarAnalyiss8>>=
-align <- read.msa("/Users/melissa/rphast/chr22.maf",
+align <- read.msa("/home/melissa/rphast/chr22.maf",
                   seqnames=seqnames)
 obs.phyloP <- phyloP(scaledNeutralModel, msa=align, mode="ACC", gff=splitElements,
                      subtree="mm9-rn4")
@@ -437,7 +437,8 @@ nrsfSites <- read.gff("NRSF/NRSF.gff")
 motifLen <- 21   # this is the length of the NRSF binding site
 msaList <- list()
 for (i in 1:length(mafFiles)) {
-  smallMsa <- read.msa(mafFiles[i], seqnames=seqnames)
+                                        #smallMsa <- read.msa(mafFiles[i], seqnames=seqnames)
+  smallMsa <- read.msa(mafFiles[i])
   
   # remove gaps from hg18 so that alignments have exactly 21 columns
   smallMsa <- strip.gaps.msa(smallMsa)
@@ -449,8 +450,10 @@ for (i in 1:length(mafFiles)) {
   feat <- nrsfSites[which(nrsfSites$feature == nrsfNames[i]),]
   
   # reverse the alignment if the binding site is on the minus strand
-  if (feat$strand == "-") 
+  if (feat$strand == "-") {
+    cat(nrsfNames[i], " ", mafFiles[i], " neg strand\n")
     smallMsa <- reverse.complement(smallMsa)
+  }
   if (ncol.msa(smallMsa) != motifLen)
     cat("wrong number of columns in ", nrsfNames[i], "\n")
   msaList[[nrsfNames[i]]] <- smallMsa
@@ -474,6 +477,14 @@ mods <- phyloFit(aggMsa, init.mod=neutralMod, no.rates=TRUE, gff=feats,
 # the warning about skipping category 0 just means that there are no sites
 # which don't belong to any category so it won't return a model for that
 
+nullLike <- numeric()
+lr  <- numeric()
+
+for (i in 1:21) {
+  nullLike[i] <- likelihood.msa(aggMsa[,(0:(length(mafFiles)-1))*21+i], neutralMod)
+  lr[i] <- mods[[i]]$likelihood - nullLike[i]
+}
+
 length(mods)
 
 # compute the scale factors for each position
@@ -486,10 +497,12 @@ scale.factors <- branchlen.tree(trees)/branchlen.tree(neutralMod$tree)
 # is there another pacakge for plotting logos? 
 require("seqLogo")
 m <- read.table("NRSF/NRSF.mtf")
-barplot(scale.factors, density=1)
+#barplot(scale.factors, density=1)
+barplot(lr, density=1)
 pwm <- makePWM(t(m))
 seqLogo(pwm)
-barplot(scale.factors, add=TRUE, density=1)
+barplot(lr, density=1, add=TRUE)
+#barplot(scale.factors, add=TRUE, density=1)
 abline(h=1,lty=2)
 
 @ 
@@ -554,7 +567,7 @@ nrsf.hmm <- hmm(trans.mat, eq.freq, begin.freq=eq.freq)
 # now we are going to test the HMM on a 1 MB region of chromosome 19 which has
 # several known NRSF sites.  We are cheating here though because these sites
 # were used to define the HMM.  Maybe we should do something else?
-align <- read.msa("/Users/melissa/rphast/chr19.59000000-60000000.maf",
+align <- read.msa("/home/melissa/rphast/chr19.59000000-60000000.maf",
                   seqnames=seqnames)
 align <- strip.gaps.msa(align)
 pc <- phastCons(msa=align, mod=mods, hmm=nrsf.hmm, viterbi=TRUE,
