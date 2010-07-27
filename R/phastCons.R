@@ -1,5 +1,6 @@
 # don't export in the future, 
 ##' @nord
+##' @export
 phastCons.call <- function(msa,
                            mod,
                            rho=0.3,
@@ -16,7 +17,8 @@ phastCons.call <- function(msa,
                            score.viterbi=FALSE,
                            compute.lnl=FALSE,
                            suppress.probs=FALSE,
-                           ref.idx=1) {
+                           ref.idx=1,
+                           hmm=NULL, states=NULL, reflect.strand=NULL) {
   # check parameters
   check.arg(rho, "rho", "numeric", null.OK=FALSE)
   if (rho < 0 || rho > 1) stop("rho should be in range [0,1]")
@@ -58,6 +60,47 @@ phastCons.call <- function(msa,
   check.arg(ref.idx, "ref.idx", "integer", null.OK=FALSE)
   if (ref.idx < 0) stop("ref.idx must be >=0")
   if (ref.idx > nrow.msa(msa)) stop("ref.idx must be <= nrow.msa(msa)")
+  if (!is.null(states)) {
+    if (is.null(hmm)) {
+      warning("states is not used when hmm is NULL")
+    } else {
+      if (is.character(states)) {
+        orig <- states
+        states <- sapply(states, function(x, mat) {
+          which(row.names(mat) == x)}, hmm$trans.mat)
+        if (length(states) != length(orig))
+          warning("some states not found in hmm")
+      } else {
+        nstate <- nrow(hmm$trans.mat)
+        check.arg(states, "states", "integer", null.OK=FALSE,
+                  min.length=1L, max.length=nstate)
+        if (sum(states <= 0 | states > max.length) > 0L)
+          stop("invalid integers in states")
+      }
+    }
+  }
+  if (!is.null(reflect.strand)) {
+    if (is.null(hmm)) {
+      warning("reflect.strand not used when hmm is NULL")
+    } else {
+      if (is.character(reflect.strand)) {
+        orig <- reflect.strand
+        reflect.strand <- sapply(reflect.strand, function(x, mat) {
+          which(row.names(mat) == x)}, hmm$trans.mat)
+        if (length(reflect.strand) != length(orig))
+          warning("some reflect.strand elements not found in hmm")
+      } else {
+        nstate <- nrow(hmm$trans.mat)
+        check.arg(reflect.strand, "reflect.strand", "integer", null.OK=FALSE,
+                  min.length=1L, max.length=nstate)
+        if (sum(reflect.strand <= 0 | reflect.strand > max.length) > 0L)
+          stop("invalid integers in reflect.strand")
+      }
+    }
+  }
+  if (!is.null(hmm)) hmm <- as.pointer.hmm(hmm)
+  if (is.null(states) && (!is.null(hmm)) && (!suppress || viterbi))
+    warning("no states given; scoring state 2")
 
   # check for bad param combinations
   if (estimate.trees && estimate.rho)
@@ -75,12 +118,12 @@ phastCons.call <- function(msa,
 
   
   if (is.null(mod$tree)) {
-    l <- length(mod$tree)
+    l <- length(mod)
     modList <- list()
     for (i in 1:l) {
-      if (is.null(mod[[l]]$tree))
+      if (is.null(mod[[i]]$tree))
         stop("invalid tree model")
-      modList[[i]] <- as.pointer.tm(mod[[l]])$externalPtr
+      modList[[i]] <- as.pointer.tm(mod[[i]])$externalPtr
     }
   } else {
     modList <- as.pointer.tm(mod)
@@ -95,7 +138,9 @@ phastCons.call <- function(msa,
                   target.coverage, expected.length,
                   init.expected.length, viterbi,
                   score.viterbi, compute.lnl, suppress.probs,
-                  ref.idx)
+                  ref.idx,
+                  if(is.null(hmm)) NULL else hmm$externalPtr,
+                  states, reflect.strand)
   rphast.simplify.list(result)
 }
 
@@ -170,6 +215,18 @@ phastCons.call <- function(msa,
 ##' @param ref.idx An integer value.  Use the coordinate frame of the given sequence.
 ##' Default is 1, indicating the first sequence in the alignment.
 ##' A value of 0 indicates the coordinate frame of the entire alignment.
+##' @param hmm An object of type \code{hmm} describing a custom HMM
+##' @param states (For use with hmm) A vector of characters naming
+##' the states of interest in the phylo-HMM, or a vector of integers
+##' corresponding to states in the transition matrix.  The post.probs will give
+##' the probability of any of these states, and the viterbi regions reflect
+##' regions where the state is predicted to be any of these states.
+##' @param reflect.strand (For use with hmm) Given an hmm describing
+##' the forward strand, create a larger HMM that allows for features
+##' on both strands by "reflecting" the original HMM about the specified
+##' states.  States can be described as a vector of integers or characters
+##' in the same manner as states argument (above).  The new hmm will be
+##' used for prediction on both strands.
 ##' @return A list containing parameter estimates.  The list may have any of the
 ##' following elements, depending on the arguments:
 ##' \item{transition.rates}{A numeric vector of length two giving the rates from the
@@ -198,8 +255,10 @@ phastCons <- function(msa,
                       expected.length=NULL,
                       init.expected.length=NULL,
                       viterbi=FALSE,
-                      ref.idx=1) {
-  score.viterbi <- viterbi;
+                      ref.idx=1, hmm=NULL,
+                      states=NULL,
+                      reflect.strand=NULL) {
+  score.viterbi <- viterbi
   compute.lnl <- TRUE
   suppress.probs <- FALSE
   phastCons.call(msa,mod, rho=rho, estimate.trees=estimate.trees,
@@ -212,5 +271,5 @@ phastCons <- function(msa,
                  viterbi=viterbi, score.viterbi=score.viterbi,
                  compute.lnl=compute.lnl,
                  suppress.probs=suppress.probs,
-                 ref.idx=ref.idx)
+                 ref.idx=ref.idx, hmm=hmm, states, reflect.strand)
 }

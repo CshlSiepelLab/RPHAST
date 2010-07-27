@@ -1,4 +1,5 @@
 ##' @nord
+##' @export
 phyloP.call<- function(mod,
                        msa=NULL,
                        method="LRT",
@@ -65,12 +66,8 @@ phyloP.call<- function(mod,
   } else {
     msaPtr <- msa$externalPtr
   }
-  if (!is.null(gff)) {
-    gffStoredInR <- is.null(gff$externalPtr)
-    if (gffStoredInR) {
-      gff <- as.pointer.gff(gff)
-    }
-  }
+  if (!is.null(gff) && is.null(gff$externalPtr)) 
+    gff <- as.pointer.gff(gff)
   result <- .Call("rph_phyloP",
                   mod$externalPtr,
                   msaPtr,

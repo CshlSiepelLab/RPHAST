@@ -1,4 +1,5 @@
 #' @nord
+#' @export
 .makeObj.gff <- function() {
   gff <- list()
   attr(gff, "class") <- "gff"
@@ -77,23 +78,31 @@ read.gff <- function(filename, pointer.only=FALSE) {
 gff <- function(seqname, src, feature, start, end, score=NULL,
                 strand=NULL, frame=NULL, attribute=NULL,
                 pointer.only=FALSE) {
-  check.arg(seqname, "seqname", "character", null.OK=FALSE, min.length=NULL,
+  
+  check.arg(start, "start", "integer", null.OK=FALSE, min.length=NULL,
              max.length=NULL)
-  len <- length(seqname)
+  len <- length(start)
+  seqname <- rep(seqname, length.out = len)
+  check.arg(seqname, "seqname", "character", null.OK=FALSE, min.length=len,
+            max.length=len)
+  src <- rep(src, length.out = len)
   check.arg(src, "src", "character", null.OK=FALSE, min.length=len,
              max.length=len)
+  feature <- rep(feature, length.out = len)
   check.arg(feature, "feature", "character", null.OK=FALSE, min.length=len,
-             max.length=len)
-  check.arg(start, "start", "integer", null.OK=FALSE, min.length=len,
              max.length=len)
   check.arg(end, "end", "integer", null.OK=FALSE, min.length=len,
              max.length=len)
+  if (!is.null(score)) score <- rep(score, length.out=len)
   check.arg(score, "score", "numeric", null.OK=TRUE, min.length=len,
              max.length=len)
+  if (!is.null(strand)) strand <- rep(strand, length.out=len)
   check.arg(strand, "strand", "character", null.OK=TRUE, min.length=len,
              max.length=len)
+  if (!is.null(frame)) frame <- rep(frame, length.out = len)
   check.arg(frame, "frame", "integer", null.OK=TRUE, min.length=len,
              max.length=len)
+  if (!is.null(attribute)) attribute <- rep(attribute, length.out = len)
   check.arg(attribute, "attribute", "character", null.OK=TRUE,
              min.length=len, max.length=len)
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
@@ -247,3 +256,314 @@ as.data.frame.gff <- function(x, row.names=NULL, optional=FALSE, ...) {
 dim.gff <- function(x) {
   c(nrow.gff(x), ncol.gff(x))
 }
+
+
+##' Get the range of a GFF feature object
+##' @title GFF range
+##' @param x An object of type GFF
+##' @param na.rm Whether to remove values of NA before calculating range.
+##' @return A vector of size 2 indicating minimum and maximum coord in
+##' the GFF object
+##' @S3method range gff
+##' @export
+range.gff <- function(x, na.rm=FALSE) {
+  gff <- x
+  if (is.data.frame(gff)) 
+    return(range(c(gff$start, gff$end), na.rm=na.rm))
+  c(.Call("rph_gff_minCoord", gff$externalPtr),
+    .Call("rph_gff_maxCoord", gff$externalPtr))
+}
+
+
+##' plot a GFF
+##' @title GFF plot
+##' @param x an object of type GFF
+##' @param y the location of the plot on the y axis
+##' @param width the width of the boxes
+##' @param plottype either "r" for rectangles or "a" for arrows
+##' @param density the density of the shading lines, in lines per inch.  The
+##' default of \code{NULL} implies no lines are drawn.  A zero value of
+##' density \code{density} means no shading lines whereas negative values
+##' (and \code{NA}) suppress shading (and so allow color filling).
+##' @param angle angle (in degrees) of the shading lines.
+##' @param col color(s) to fill or shade the boxes with.  The default
+##' \code{NA} (or also \code{NULL} means do not fill, i.e., draw
+##' transparent rectangles, unless \code{density} is specified.
+##' @param border color for rectangle border(s).  The default means
+##' \code{par("fg")}.  Use \code{border = NA} to omit borders.  If there
+##' are shading lines, \code{border = TRUE} means use the same color for
+##' the border as for the shading lines
+##' @param lty line type for borders and shading; defaults to \code{"solid"}.
+##' @param lwd line width for borders and shading.
+##' @param add if \code{TRUE}, add to existing plot
+## @param labels whether to label the boxes.  If a vector of strings gives
+## the lables for each element.  If \code{TRUE}, use gff$feature for labels.
+##' @S3method plot gff
+##' @param ... graphical parameters to be passed to \code{plot}.
+##' @export
+plot.gff <- function(x, y=0, width=1, plottype="r",
+                     density=NULL, angle=45,
+                     col=NA, border=NULL,
+                     lty=par("lty"), lwd=par("lwd"),
+                     add=FALSE,
+#                     labels=FALSE,
+                     xlim=range.gff(x),
+                     ylim=c(y-width*3/4, y+width*3/4), ...) {
+
+  if (is.data.frame(x)) {
+    starts <- x$start
+    ends <- x$end
+    if (is.logical(labels) && labels==TRUE) 
+      labels <- x$feature
+  } else if (!is.null(x$externalPtr)) {
+    starts <- .Call("rph_gff_starts", x$externalPtr)
+    ends <- .Call("rph_gff_ends", x$externalPtr)
+    if (is.logical(labels) && labels==TRUE)
+      labels <- .Call("rph_gff_feature", x$externalPtr)
+  } else {
+    stop("invalid gff object")
+  }
+
+  if (!add) {
+    coord <- c(0); y<-c(0)
+    plot(coord, y, type="n", xlim=xlim, ylim=ylim, ...)
+  }
+  if (plottype == "a") {  # arrows plot- just do lines if no strand
+    stop("gff plottype a is not implemented yet")
+    strand <- x$strand
+    if (is.null(x$strand)) code <- 0 else code <- ifelse(x$strand=="+", 2, 1)
+    arrows(starts, y, ends, y, col=col, code=ifelse(x$strand)) # TODO!
+  } else {
+    rect(starts, y-width/2, ends, y+width/2,
+         density=density, angle=angle, col=col, border=border, lty=lty,
+         lwd=lwd)
+    # how to do strand in rect plot?  Could use shading lines, might be very slow.
+  }
+#  if (labels) {  #TODO
+    
+#  }
+  invisible(NULL)
+}
+
+##' plot histogram of feature lengths
+##' @param x an object of type \code{gff}
+##' @param type a character string, denoting the value to make the histogram with.
+##' Currently the only valid types are "length" or "score"
+##' @param ... additional arguments to be passed to \code{hist}
+##' @S3method hist gff
+##' @export
+hist.gff <- function(x, type="length", ...) {
+  if (type == "length") {
+    if (!is.null(x$externalPtr)) {
+      vals <- .Call("rphast_gff_lengths", x$externalPtr)
+    } else {
+      vals <- x$end - x$start
+    }
+  } else if (type == "score") {
+    if (!is.null(x$externalPtr)) {
+      vals <- .Call("rphast_gff_getScores", x$externalPtr)
+    } else {
+      vals <- x$score
+    }
+  } else stop("unknown type (should be \"length\" or \"score\")")
+  hist(vals, ...)
+}
+
+##' Feature overlap
+##' @param gff An object of type \code{GFF} containing features to select
+##' @param filterGff An object of type \code{GFF} which determines which elements of gff to select
+##' @param numbase The number of bases of overlap between gff and filterGff required to choose
+##' a record.  Use NULL to ignore (but then min.percent must be defined)
+##' @param min.percent The minimum percent that a record must overlap with the combined records in filterGff
+##' in order to be chosen
+##' @param overlapping If \code{FALSE}, choose records with less than numbase overlapping bases,
+##' and less than min.percent fraction overlap if min.percent is not \code{NULL}
+##' @param get.fragments If \code{FALSE}, entire records are selected from gff based on whether
+##' they meet selection criteria.   
+##' If \code{TRUE}, return only the fragments of \code{GFF} that overlap
+##' with filterGff.  In this case, the same fragments may be output multiple times, if they are
+##' selected by multiple entries in filterGff.  numbase and min.percent apply in either case.
+##' @return an object of type GFF containing the selected entries from gff.
+##' @export
+overlap.gff <- function(gff, filterGff, numbase=NULL, min.percent=NULL,
+                        overlapping=TRUE, get.fragments=FALSE) {
+  check.arg(numbase, "numbase", "integer", null.OK=TRUE)
+  check.arg(min.percent, "min.percent", "numeric", null.OK=TRUE)
+  if (is.null(numbase) && is.null(min.percent)) stop("one of numbase or min.percent should not be NULL")
+  if (!is.null(numbase) && numbase < 0) stop("numbase should be at least 1 (if it isn't NULL)")
+  if (!is.null(min.percent) && (min.percent < 0 || min.percent > 1))
+    stop("min.percent should be NULL or in the range (0,1)")
+  check.arg(overlapping, "overlapping", "logical", null.OK=FALSE)
+  check.arg(get.fragments, "get.fragments", "logical", null.OK=FALSE)
+
+  if (is.null(gff$externalPtr)) 
+    gff <- as.pointer.gff(gff)
+  if (is.null(filterGff$externalPtr))
+    filterGff <- as.pointer.gff(filterGff)
+
+  rv <- .makeObj.gff()
+  rv$externalPtr <- .Call("rph_gff_overlapSelect", gff$externalPtr, filterGff$externalPtr,
+                          numbase, min.percent, !overlapping, get.fragments)
+  if (!is.null(rv)) {
+    rv <- as.data.frame.gff(rv)
+  }
+  if (nrow.gff(rv) == 0) return(NULL)
+  rv
+}
+
+
+##' Take the inverse of a GFF
+##' @param gff An object of type \code{gff}
+##' @param region.bounds An object of type \code{gff} which defines
+##' the boundaries of all relevant chromosomes in the first argument
+##' @return An object of type \code{gff} which contains all regions in
+##' region.bounds that are not in the first argument
+##' @export
+inverse.gff <- function(gff, region.bounds) {
+  if (is.null(gff$externalPtr))
+    gff <- as.pointer.gff(gff)
+  if (is.null(region.bounds$externalPtr))
+    region.bounds <- as.pointer.gff(region.bounds)
+  rv <- .makeObj.gff()
+  rv$externalPtr <- .Call("rph_gff_inverse",
+                          gff$externalPtr,
+                          region.bounds$externalPtr)
+  as.data.frame.gff(rv)
+}
+
+
+##' GFF coverage
+##' @param ... objects of type \code{gff}
+##' @param or if \code{TRUE}, get the coverage of union of gff arguments.
+##' or is \code{FALSE} by default, which takes the intersection.
+##' @param get.feats if \code{TRUE}, return an object of type \code{gff}
+##' representing the intersection (or union of \code{or==TRUE}) of the
+##' gff arguments
+##' @param not If not \code{NULL}, a vector of logicals the same length
+##' as the number of gffs
+##' provided.  For each value which is \code{TRUE}, the inverse of the gff
+##' will be used.  If any element of \code{not} is \code{TRUE}, then
+##' the region.bounds arg must also be provided.  If \code{NULL}, do not
+##' take the inverse of any features.
+##' @param region.bounds An object of type \code{gff} which defines the
+##' start and end coordinates of all relevant chromosomes/regions in the
+##' provided gff objects.  Used for taking inverses of the gff objects as
+##' required by the argument \code{not}.  If \code{not==NULL} or
+##' \code{not==FALSE} for all gff objects, then this argument is not used.
+##' @param return The number of bases covered by the gff arguments, or the
+##' combined gff object if \code{get.feats==TRUE}.
+##' @export
+coverage.gff <- function(..., or=FALSE, get.feats=FALSE,
+                         not=NULL,
+                         region.bounds=NULL) {
+  check.arg(or, "or", "logical", null.OK=FALSE)
+  check.arg(get.feats, "get.feats", "logical", null.OK=FALSE)
+  gff <- .makeObj.gff()
+  gfflist <- list(...)
+  check.arg(not, "not", null.OK=TRUE, min.length=length(gfflist),
+            max.length=length(gfflist))
+  if (is.null(not)) not <- rep(FALSE, length(gfflist))
+  if (sum(not==TRUE) > 0L) {
+    if (is.null(region.bounds))
+      stop("region.bounds must be provided to take inverse gffs")
+  }
+  for (i in 1:length(gfflist)) {
+    currgff <- gfflist[[i]]
+    if (not[i]) currgff <- inverse.gff(currgff, region.bounds)
+    if (is.null(currgff$externalPtr)) 
+      currgff <- as.pointer.gff(currgff)
+    gfflist[[i]] <- currgff$externalPtr
+  }
+  if (get.feats) {
+    rv <- .makeObj.gff()
+    rv$externalPtr <- .Call("rph_gff_featureBits", gfflist, or, get.feats)
+    return(as.pointer.gff(rv))
+  }
+  .Call("rph_gff_featureBits", gfflist, or, get.feats)
+}
+
+
+##' Add UTRs to GFF
+##' @param gff An object of type \code{gff}.  CDS regions must be present with type "CDS", and
+##' the transcript_id must be indicated in the attribute field.
+##' @return An object of type \code{gff}, with all the entries of the original GFF, but
+##' also with UTR annotations.
+##' @export
+addUTRs.gff <- function(gff) {
+  if (is.null(gff$externalPtr))
+    gff <- as.pointer.gff(gff)
+  rv <- .makeObj.gff()
+  rv$externalPtr <- .Call("rph_gff_add_UTRs", gff$externalPtr)
+  as.data.frame.gff(rv)
+}
+
+##' Add introns to GFF
+##' @param gff An object of type \code{gff}.  CDS regions must be present with type "CDS", and
+##' the transcript_id must be indicated in the attribute field.
+##' @return An object of type \code{gff}, with all the entries of the original GFF, but
+##' also with intron annotations.
+##' @export
+addIntrons.gff <- function(gff) {
+  if (is.null(gff$externalPtr))
+    gff <- as.pointer.gff(gff)
+  rv <- .makeObj.gff()
+  rv$externalPtr <- .Call("rph_gff_add_introns", gff$externalPtr)
+  as.data.frame.gff(rv)
+}
+
+
+##' concatenate GFF objects
+##' @param ... gff objects to be combined into a single object
+##' @return An object of type \code{gff} containing entries from all
+##' given gffs
+##' @export
+rbind.gff <- function(...) {
+  gff <- .makeObj.gff()
+  gfflist <- list(...)
+  for (i in 1:length(gfflist)) {
+    currgff <- gfflist[[i]]
+    if (is.null(currgff$externalPtr)) 
+      currgff <- as.pointer.gff(currgff)
+    gfflist[[i]] <- currgff$externalPtr
+  }
+  gff$externalPtr <- .Call("rph_gff_append", gfflist)
+  as.data.frame.gff(gff)
+}
+
+##' Split a GFF
+##' @param gff An object of type GFF
+##' @param max.length the maximum length of features in new object.  Can
+##' be a vector giving a different length for each row, or a single numeric
+##' value.  Values will be recycled to the same length
+##' as \code{nrow.gff(gff)}.
+##' @return An object of type GFF with the same features as gff but
+##' with all features of length > max.length broken into segments
+##' (starting from the first position in feature).  The last piece
+##' of each split segment may be smaller than max.length
+##' @export
+split.gff <- function(gff, max.length) {
+  gffSize <- nrow.gff(gff)
+  check.arg(max.length, "max.length", "integer", null.OK=FALSE,
+            min.length = 1, max.length = NULL)
+  if (is.null(gff$externalPtr))
+    gff <- as.pointer.gff(gff)
+  splitGff <- .makeObj.gff()
+  splitGff$externalPtr <- .Call("rph_gff_split", gff$externalPtr,
+                                max.length)
+  as.data.frame.gff(splitGff)
+}
+
+
+##' Sort a GFF
+##' @param gff An object of type \code{gff}
+##' @return An object of type \code{gff} sorted primarily by
+##' start position, then by end position.
+##' @export
+sort.gff <- function(gff) {
+  if (is.null(gff$externalPtr))
+    gff <- as.pointer.gff(gff)
+  rv <- .makeObj.gff()
+  rv$externalPtr <- .Call("rph_gff_sort", gff$externalPtr)
+  as.data.frame.gff(rv)
+}
+  

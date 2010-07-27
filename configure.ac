@@ -6,10 +6,16 @@ if test -z "${R_HOME}"; then
    AC_MSG_ERROR([Could not determine R_HOME.])
 fi
 
-AC_PROG_CC
+AC_MSG_CHECKING(for CFLAGS)
+#AC_PROG_CC
 CC=`"${R_HOME}/bin/R" CMD config CC`
-RCFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
-CFLAGS="${RCFLAGS} ${CFLAGS}"
+#RCFLAGS=`"${R_HOME}/bin/R" CMD config CFLAGS`
+RCFLAGS="-g"
+#CFLAGS="${RCFLAGS} ${CFLAGS}"
+CFLAGS=" -g"
+AC_MSG_RESULT(${CFLAGS})
+AC_PROG_CC
+AC_MSG_RESULT(${CFLAGS})
 
 # Checks for header files.
 AC_FUNC_ALLOCA
@@ -102,7 +108,6 @@ if test -z "$LAPACK_FLAG"; then
                   AC_MSG_ERROR(Error linking to R's lapack library.  Check R installation.)])
 fi
 
-
 LIBS="${OLD_LIBS}"
 
 PHAST_VERSION="\"`cat src/version`\""
@@ -116,3 +121,13 @@ AC_SUBST(LAPACK_FLAG)
 AC_SUBST(LAPACK_LIBS)
 
 AC_OUTPUT(src/Makevars)
+
+echo "CFLAGS=$CFLAGS"
+echo "CPPFLAGS=$CPPFLAGS"
+echo "LIBS=$LIBS"
+echo "CC=$CC"
+echo "CPP=$CPP"
+echo "LDFLAGS=$LDFLAGS"
+echo "LAPACK_LIBS=$LAPACK_LIBS"
+echo "BLAS_LIBS=$BLAS_LIBS"
+echo "FLIBS=$FLIBS"

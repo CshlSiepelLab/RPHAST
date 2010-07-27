@@ -1,3 +1,4 @@
+##' @export
 ##' @nord
 rphast.simplify.list <- function(lol) {
   if (!is.list(lol)) return(lol)
@@ -13,7 +14,7 @@ rphast.simplify.list <- function(lol) {
     if (!is.null(lol$frame)) {
       lol$frame[lol$frame < 0] <- NA
     }
-    isDataFrame <- TRUE;
+    isDataFrame <- TRUE
     isMatrix <- FALSE
   } else {
     isMatrix <- (!is.null(currClass) && currClass=="matrix")
@@ -30,6 +31,7 @@ rphast.simplify.list <- function(lol) {
   } else {
     for (i in 1:length(lol))
       lol[[i]] <- rphast.simplify.list(lol[[i]])
+    if (!is.null(currClass)) attr(lol, "class") <- currClass
   }
   lol
 }

@@ -17,6 +17,18 @@ unlink(gffFile)
 
 ################################################
 
+#' plot.gff
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+gffFile <- "gencode.ENr334.gff"
+unzip(exampleArchive, gffFile)
+g <- read.gff(gffFile)
+# note that plot(g) does not work because GFFs are stored as data.frames
+plot.gff(g[g$feature=="CDS",])
+unlink(gffFile)
+
+
+################################################
+
 #' gff
 seq <- rep("hg18.chr6", 10)
 src <- rep("fake_example", 10)
@@ -136,3 +148,47 @@ g2 <- as.pointer.gff(g1)
 dim(g2)
 dim.gff(g2)
 
+###############################################
+
+#' overlap.gff
+require("rphast")
+gff1 <- gff(seqname=c(rep("chr1", 3), rep("chr2", 2)),
+            src="example",
+            feature=".",
+            start=c(1, 5, 100, 10, 20),
+            end=c(7, 10, 105, 15, 30))
+gff2 <- gff(seqname=c("chr1","chr2"), src="test", feature=".", start=c(1,1), end=c(5,10))
+#'
+overlap.gff(gff1, gff1)
+overlap.gff(gff1, gff2, min.percent=0.25)
+overlap.gff(gff1, gff2, min.percent=0.25, numbase=NULL, overlapping=FALSE)
+overlap.gff(gff1, gff2, get.fragments=TRUE)
+overlap.gff(gff1, gff2, get.fragments=TRUE)
+rm(gff1, gff2)
+
+
+#' coverage.gff
+q("no")
+require("rphast")
+gff1 <- gff(seqname=c(rep("chr1", 3), rep("chr2", 2)),
+            src="example",
+            feature=".",
+            start=c(1, 5, 100, 10, 20),
+            end=c(7, 10, 105, 15, 30))
+gff2 <- gff(seqname=c("chr1","chr2"), src="test", feature=".", start=c(1,1), end=c(5,10))
+coverage.gff(gff1, gff2, or=FALSE)
+coverage.gff(gff1, gff2, or=TRUE)
+coverage.gff(gff1, gff2, get.feats=TRUE, or=TRUE)
+coverage.gff(gff1, gff2, or=TRUE)
+
+q("no")
+require("rphast")
+gff1 <- read.gff("/home/melissa/rphast/RPHAST/inst/extdata/neutral-loci.bed")
+coverage.gff(gff1)
+gff2 <- read.gff("/home/melissa/rphast/RPHAST/inst/extdata/kb1.homoDif.bed")
+coverage.gff(gff2)
+coverage.gff(gff1, gff2)
+coverage.gff(gff1, gff2, or=TRUE)
+gff3 <- read.gff("/home/melissa/rphast/RPHAST/inst/extdata/watson.homoDif.bed")
+coverage.gff(gff1, gff2, gff3)
+coverage.gff(gff1, gff2, gff3, or=TRUE)

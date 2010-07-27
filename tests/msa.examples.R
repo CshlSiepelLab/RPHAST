@@ -205,6 +205,27 @@ print(sub.msa(m, c("human", "rat"), start.col=3, end.col=6),
 print(sub.msa(m, c("mouse"), keep=FALSE, refseq="human",
               start.col=3, end.col=4),
       print.seq=TRUE)
+################################################
+
+#' "[.msa"
+require("rphast")
+m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+         names=c("human", "mouse", "rat"))
+print(m[c("rat", "rat", "human"), ], print.seq=TRUE)
+print(m[c(3,3,1),], print.seq=TRUE)
+print(m[c(TRUE, FALSE, TRUE),], print.seq=TRUE)
+print(m[TRUE,], print.seq=TRUE)
+print(m"[.msa"("mouse",c(1,6,3,5)), print.seq=TRUE)
+
+
+################################################
+
+#' sample.msa
+require("rphast")
+m <- msa(seqs=c("AAAAAAAAAACCCCCGGT", "GGGGGGGGGGTTTTTCCA", "CCCCCCCCCCAAAAAGGA"),
+         names=c("human", "mouse", "rat"))
+sample.msa(m, 10, replace=TRUE)
+sample.msa(m, 10, replace=TRUE, prob=c(rep(1, 10), rep(2, 5), rep(5, 2), 10))
 
 ################################################
 

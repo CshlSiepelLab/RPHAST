@@ -1,4 +1,5 @@
-#' @nord
+##' @nord
+##' @export
 .makeObj.tm <- function() {
   tm <- list()
   class(tm) <- "tm"
@@ -18,7 +19,8 @@ is.tm <- function(x) {
 # this needs a special function to avoid having to make a matrix object
 # in R from within C.  The C code returns a vector which is coerced
 # into a matrix here.  Watch out for row/column order!
-#' @nord
+##' @nord
+##' @export
 .rateMatrix.from.pointer.tm <- function(x) {
   if (is.null(x$externalPtr))
     stop(".rateMatrix.from.pointer.tm expects list with externalPtr")
@@ -28,7 +30,8 @@ is.tm <- function(x) {
 }
 
 
-#' @nord
+##' @nord
+##' @export
 .rootLeaf.from.pointer.tm <- function(x, tree) {
   if (is.null(x$externalPtr))
     stop(".rootLeaf.from.pointer.tm expects list with externalPtr")
@@ -38,7 +41,8 @@ is.tm <- function(x) {
 }
 
 
-#' @nord
+##' @nord
+##' @export
 from.pointer.tm <- function(x) {
   if (is.null(x$externalPtr))
     stop("from.pointer.tm expects list with externalPtr")
@@ -58,7 +62,8 @@ from.pointer.tm <- function(x) {
 }
 
 
-#' @nord
+##' @nord
+##' @export
 as.pointer.tm <- function(tm) {
   x <- list()
   x$externalPtr <- .Call("rph_tm_new",
@@ -78,7 +83,8 @@ as.pointer.tm <- function(tm) {
 
 
 # should we check to make sure it has all the necessary elements and no extra ones?
-#' @nord
+##' @nord
+##' @export
 as.tm.list <- function(l) {
   class(l) <- "tm"
   l

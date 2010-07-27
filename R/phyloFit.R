@@ -9,6 +9,11 @@
 ##' @param subst.mod The substitution model to use.  See
 ##' \code{\link{subst.mods}}.
 ##' @param init.mod An object of class \code{tm} used to initialize the model
+##' @param no.freqs (Only applies when init.mod provided). If \code{TRUE}, do
+##' not estimate equilibrium frequencies; just use the ones from init.mod.
+##' @param no.rates (Only applies when init.mod provided). If \code{TRUE},
+##' do not estimate transition rate parameters; just use the transition
+##' matrix in init.mod.
 ##' @param gff An object of class GFF.  If given, a separate model will be
 ##' estimated for each feature type.
 ##' @param scale.only A logical value. If \code{TRUE}, estimate only the
@@ -55,6 +60,8 @@ phyloFit <- function(msa,
                      tree=NULL,
                      subst.mod="REV",
                      init.mod=NULL,
+                     no.freqs=FALSE,
+                     no.rates=FALSE,
                      gff=NULL,
 #                     do.cats=NULL,
 #                     reverse.groups=NULL,
@@ -90,6 +97,16 @@ phyloFit <- function(msa,
             min.length=NULL, max.length=NULL)
   if (!is.null(init.mod))
     init.mod <- as.pointer.tm(init.mod)
+  check.arg(no.freqs, "no.freqs", "logical", null.OK=FALSE)
+  check.arg(no.rates, "no.rates", "logical", null.OK=FALSE)
+  if (no.freqs && is.null(init.mod)) {
+    warning("no.freqs only applies when init.mod is specified; ignoring")
+    no.freqs <- FALSE
+  }
+  if (no.rates && is.null(init.mod)) {
+    warning("no.rates only applies when init.mod is specified; ignoring")
+    no.rates <- FALSE
+  }
   check.arg(init.random, "init.random", "logical", null.OK=FALSE)
   check.arg(init.parsimony, "init.parsimony", "logical", null.OK=FALSE)
   check.arg(clock, "clock", "logical", null.OK=FALSE)
@@ -124,6 +141,8 @@ phyloFit <- function(msa,
                               alpha,
                               rate.constants,
                               init.mod$externalPtr,
+                              no.freqs,
+                              no.rates,
                               init.random,
                               init.parsimony,
                               clock,
@@ -155,3 +174,48 @@ phyloFit <- function(msa,
   }
   resultList
 }
+
+
+
+# NOTE THE Function below is NOT exported because it is probably better
+# to use phyloP for this test!
+
+##' Test a subtree for a change in evolutionary rate
+##' @param msa A multiple sequence alignment object
+##' @param subtree.msa The node name denoting the root of the
+##' subtree (also includes branch leading up to this node)
+##' @param neutral.mod An object of type tree model (\code{tm}) which
+##' describes the neutral evolutionary rate
+##' @param quiet Whether to proceed quietly
+##' @return A data.frame with the following columns (and 1 row): \enumerate{
+##' \item p.val The p-value based on a chi-square distribution with one d.f.
+##' \item like.null The likelihood of the null model
+##' \item null.scale The scale factor estimated in the null model
+##' \item like.alt The likelihood of the alternative model
+##' \item alt.subtree.scale The absolute scaling factor for the subtree in the alternative model
+##' \item alt.supertree.scale The absolute scaling factor for the super-tree in the alternative model
+##' \item null.tree The tree estimated in the null model
+##' \item alt.tree The tree estimated in the alternative model
+##' }
+##' @seealso \code{\link{name.ancestors}} to name internal nodes of
+##' trees
+phyloFit.subtree.test <- function(msa, subtree.name, neutral.mod, quiet=TRUE) {
+  m0 <- phyloFit(msa, scale.only=TRUE, no.freqs=TRUE, no.rates=TRUE, 
+                 init.mod=neutral.mod, quiet=TRUE)
+  m1 <- phyloFit(msa, scale.only=TRUE, no.freqs=TRUE, no.rates=TRUE,
+                 init.mod=neutral.mod, quiet=TRUE,
+                 scale.subtree=subtree.name)
+  orig.scale <- branchlen.tree(neutral.mod$tree)
+  m0scale <- branchlen.tree(m0$tree)/orig.scale
+  orig.superTree.scale <- branchlen.tree(subtree(neutral.mod$tree, subtree.name, super.tree=TRUE))
+  m1superScale <- branchlen.tree(subtree(m1$tree, subtree.name, super.tree=TRUE))/orig.superTree.scale
+  orig.subTree.scale <- branchlen.tree(subtree(neutral.mod$tree, subtree.name))
+  m1subScale <- branchlen.tree(subtree(m1$tree, subtree.name))/orig.subTree.scale
+  chisqStat <- 2.0*(m1$likelihood - m0$likelihood)
+  pval <- 1.0-pchisq(chisqStat, 1)
+  data.frame(p.value=pval, like.null=m0$likelihood, null.scale=m0scale,
+       like.alt=m1$likelihood, alt.subtree.scale=m1subScale,
+       alt.supertree.scale=m1superScale, null.tree=m0$tree,
+       alt.tree=m1$tree)
+}
+                 

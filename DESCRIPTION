@@ -9,4 +9,5 @@ Description: R interface to PHAST
 License: GPL (>= 2)
 URL: http://compgen.bscb.cornell.edu/phast
 Collate: 'checkArgs.R' 'gff.R' 'hmm.R' 'listOfLists.R' 'msa.R'
-    'phastCons.R' 'phyloFit.R' 'phyloP.R' 'treeModel.R' 'trees.R'
+    'phastCons.R' 'phyloFit.R' 'phyloP.R' 'plot.R' 'treeModel.R'
+    'trees.R'

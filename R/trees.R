@@ -5,7 +5,7 @@
 ##' @param filename The file containing the tree.
 ##' @return a character string representing the tree in newick format
 ##' @export
-read.tree <- function(filename) {
+read.newick.tree <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
   .Call("rph_tree_read", filename)
 }
@@ -25,6 +25,39 @@ numnodes.tree <- function(tree) {
   }
   result
 }
+
+
+##' Get the total length of the edges of a tree
+##' @param tree A vector of character strings, each containing a newick tree
+##' @return A numeric vector containing the total branchlength of each tree
+##' @export
+branchlen.tree <- function(tree) {
+  check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
+            max.length=NULL)
+  result <- numeric(length(tree))
+  for (i in 1:length(tree))
+    result[i] <- .Call("rph_tree_branchlen", tree[i])
+  result
+}
+
+
+##' Get the distance from a node to the root of a tree
+##' @param tree A vector of character strings, each containing a newick tree
+##' @param node A vector of character strings, giving the node name to
+##' use for each tree.  Will be recycled to the length of the first argument.
+##' @return A numeric vector containing the distance from each given
+##' node to the root of the corresponding tree.
+##' @export
+depth.tree <- function(tree, node) {
+  check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
+            max.length=NULL)
+  node <- rep(node, length.out = length(tree))
+  result <- numeric(length(tree))
+  for (i in 1:length(tree))
+    result[i] <- .Call("rph_tree_depth", tree[i], node[i])
+  result
+}
+
 
 
 ##' Prune sequences from a file
@@ -60,7 +93,7 @@ name.ancestors <- function(tree) {
             min.length=1, max.length=NULL)
   result <- character(length(tree))
   for (i in 1:length(tree)) {
-    result[i] <- .Call("rph_tree_name_ancestors", tree[i]);
+    result[i] <- .Call("rph_tree_name_ancestors", tree[i])
   }
   result
 }
@@ -72,22 +105,27 @@ name.ancestors <- function(tree) {
 ##' @param node A vector of character strings, each representing the name
 ##' of the node which will be the new root of the tree.  If node is shorter
 ##' than tree, values will be recycled, and a warning produced if \code{length(tree) \%\% length(node) != 0}
+##' @param super.tree A vector of logical values.  If TRUE, then remove all
+##' nodes which are descendants of node, rather than keeping them.
 ##' @return A vector of trees which have been pruned, removing all nodes
 ##' which are not descendants of the given node.
 ##' @export
-subtree <- function(tree, node) {
+subtree <- function(tree, node, super.tree=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
             min.length=1, max.length=NULL)
   check.arg(node, "node", "character", null.OK=FALSE,
             min.length=1, max.length=length(tree))
+  check.arg(super.tree, "super.tree", "logical", null.OK=FALSE,
+            min.length=1, max.length=length(tree))
   if (length(tree) %% length(node) != 0)
     warning("number of trees is not multiple of number of given nodes")
-  nodeIdx <- 1
+  node <- rep(node, length.out = length(tree))
+  super.tree <- rep(super.tree, length.out = length(tree))
   result <- character(length(tree))
   for (i in 1:length(tree)) {
-    result[i] <- .Call("rph_tree_subtree", tree[i], node[nodeIdx])
-    nodeIdx <- nodeIdx+1
-    if (nodeIdx > length(node)) nodeIdx <- 1
+    if (super.tree[i]) {
+      result[i] <- .Call("rph_tree_supertree", tree[i], node[i])
+    } else result[i] <- .Call("rph_tree_subtree", tree[i], node[i])
   }
   result
 }
@@ -129,8 +167,6 @@ scale.tree <- function(tree, scale, subtree=NULL) {
   }
   result
 }
-
-
 
 ##' Rename nodes of trees
 ##' @title Tree Node Renaming

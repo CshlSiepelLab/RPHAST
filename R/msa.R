@@ -1,5 +1,6 @@
 # make barebones msa obj
 #' @nord
+#' @export
 .makeObj.msa <- function() {
   msa <- list()
   class(msa) <- "msa"
@@ -25,6 +26,7 @@ copy.msa <- function(msa) {
 }
 
 
+##' @export
 is.msa <- function(msa) {
   if (is.null(msa$externalPtr)) {
     
@@ -66,6 +68,7 @@ is.msa <- function(msa) {
 ##' @param pointer.only a boolean indicating whether MSA should be stored by
 ##' reference (see Details)
 ##' @useDynLib rphast
+##' @aliases is.msa
 ##' @export
 msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
                     offset=NULL, pointer.only=FALSE) {
@@ -132,6 +135,17 @@ ncol.msa <- function(x, refseq=NULL) {
   for (i in 1:length(refseq)) 
     result[i] <- .Call("rph_msa_seqlen", msa$externalPtr, refseq[i])
   result
+}
+
+##' The number of informative columns in an alignment
+##' @param msa An object of type \code{msa}
+##' @return The number of "informative" columns in the msa.  An informative
+##' column has at least two non-missing and non-gap characters.
+##' @export
+ninf.msa <- function(msa) {
+  if (is.null(msa$externalPtr))
+    msa <- as.pointer.msa(msa)
+  .Call("rph_msa_ninformative_sites", msa$externalPtr)
 }
 
 ##' Returns the number of sequence in an MSA alignment.
@@ -348,7 +362,7 @@ summary.msa <- function(object, ...,
   if (is.null(msa$externalPtr)) cat(" in R") else cat(" as a pointer to a C structure")
   cat("\n")
 
-  if (!is.null(format)) {
+  if (!is.null(format) || pretty.print) {
     print.seq=TRUE
   }
   
@@ -364,7 +378,7 @@ summary.msa <- function(object, ...,
   if (!is.null(alphabet)) printMsa$alphabet <- alphabet
   if (!is.null(is.ordered)) printMsa$is.ordered <- is.ordered
   if (!is.null(offset) && offset!=0) printMsa$offset <- offset
-  if (print.seq && is.null(pointer) && is.null(format)) {
+  if (print.seq && is.null(pointer) && is.null(format) && !pretty.print) {
     printMsa$seq <- msa$seq
     printed <- TRUE
   }
@@ -449,6 +463,14 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' "filled in" whereever missing from the alignment.
 ##' @param offset An integer giving offset of reference sequence from
 ##' beginning of chromosome.  Not used for MAF format.
+##' @param seqnames A character vector.  If provided, discard any sequence
+##' in the msa that is not named here.  This is only implemented efficiently
+##' for MAF input files, but in this case, the reference sequence must be
+##' named.
+##' @param discard.seqnames A character vector.  If provided, discard
+##' sequenced named here.  This is only implemented efficiently for MAF
+##' input files, but in this case, the reference sequenced must NOT be
+##' discarded.
 ##' @param pointer.only If \code{TRUE}, MSA will be stored by reference as
 ##' an external pointer to an object created by C code, rather than
 ##' directly in R memory.  This improves performance and may be necessary
@@ -470,6 +492,7 @@ read.msa <- function(filename,
                      do.cats=NULL,
                      refseq=NULL,
                      offset=0,
+                     seqnames=NULL, discard.seqnames=NULL,
                      pointer.only=FALSE) {
 
   check.arg(filename, "filename", "character", null.OK=FALSE)
@@ -483,6 +506,10 @@ read.msa <- function(filename,
             min.length=NULL, max.length=NULL)
   check.arg(refseq, "refseq", "character", null.OK=TRUE)
   check.arg(offset, "offset", "integer", null.OK=TRUE)
+  check.arg(seqnames, "seqnames", "character", null.OK=TRUE,
+            min.length=NULL, max.length=NULL)
+  check.arg(discard.seqnames, "discard.seqnames", "character", null.OK=TRUE,
+            min.length=NULL, max.length=NULL)
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
 
   if (!validFormatStr.msa(format))
@@ -511,8 +538,13 @@ read.msa <- function(filename,
   msa$externalPtr <- .Call("rph_msa_read", filename, format,
                            gff$externalPtr, do.4d, alphabet,
                            tuple.size, refseq, ordered, do.cats,
-                           offset)
-  
+                           offset, seqnames, discard.seqnames)
+  if (format != "MAF") {
+    if (!is.null(seqnames))
+      msa <- sub.msa(msa, seqnames, keep=TRUE)
+    if (!is.null(discard.seqnames))
+      msa <- sub.msa(msa, discard.seqnames, keep=FALSE)
+  }
   if (pointer.only == FALSE) 
     msa <- from.pointer.msa(msa)
   msa
@@ -528,6 +560,19 @@ read.msa <- function(filename,
 ##' @export
 complement <- function(x) {
   chartr("ACGTacgt", "TGCAtgca", x)
+}
+
+
+##' Reverse complement a multiple sequence alignment
+##' @param msa An object of type \code{msa}.
+##' @return The reverse complement of msa.
+##' @export
+reverse.complement <- function(msa) {
+  if (is.null(msa$externalPtr))
+    msa <- as.pointer.msa(msa)
+  rv <- .makeObj.msa()
+  rv$externalPtr <- .Call("rph_msa_reverse_complement", msa$externalPtr)
+  from.pointer.msa(rv)
 }
 
        
@@ -619,13 +664,11 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
   }
   if (copy.to.R) 
     msa <- from.pointer.msa(msa)
-  
   msa
 }
 
 
 
-######## TODO! #########
 ##' Extract, replace, reorder MSA
 ##'
 ##' Treat multiple sequence alignment as a matrix where each row
@@ -635,10 +678,65 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 ##' The bracket notation can return a subset of the alignment,
 ##' or re-order rows and columns.
 ##'
-##' @seealso \code\{link{sub.msa}} for more general sub-setting of
-##' alignments which can take genomic positions rather than 
-"[.msa" <- function(msa, rows, cols=NULL) {
-  NULL
+##' @param msa An object of type \code{msa}
+##' @param rows A numeric vector of sequence indices,
+##' character vector (containing sequence name), or
+##' logical vector (containing sequences to keep).  If logical vector it
+##' will be recycled as necessary to the same length as \code{nrow.msa(msa)}.
+##' @param cols A numeric vector of alignment columns, or a logical vector
+##' containing columns to keep.  If logical vector it will be recycled as
+##' necessary to the same lenth as \code{ncol.msa}.  Note that these are
+##' in coordinates with respect to the entire alignment.  msa$idx.offset
+##' is ignored here.
+##' @seealso \code\{link{sub.msa}} which can subset columns based on genomic
+##' coordinates.
+##' @seealso \code{link{extract.feature.msa} which can subset based on
+##' genomic coordinates denoted in a features object.
+##' @S3method "[" msa
+##' @export "["
+"[.msa" <- function(msa, rows, cols) {
+  if (!missing(rows)) {
+    if (is.null(rows)) stop("rows cannot be empty")
+  } else rows=NULL
+  if (!missing(cols)) {
+    if (is.null(cols)) stop("cols cannot be empty")
+  } else cols=NULL
+
+  if (!is.null(rows)) {
+    # if rows are given by names, convert to integer
+    if (is.character(rows)) {# names are given
+      names <- names.msa(msa)
+      rows <- as.numeric(sapply(rows, function(x) {which(x ==  names)}))
+      if (sum(is.na(rows)) > 0L)
+        stop("unknown names in first dimension subset")
+    }
+  }
+
+  # check if arguments are given as logicals.
+  if (is.logical(rows)) {
+    cat("is.logical rows")
+    rows = which(rep(rows, length.out = nrow.msa(msa)))
+  }
+  if (is.logical(cols)) 
+    cols = which(rep(cols, length.out = ncol.msa(msa)))
+
+  # if msa is stored in R, sampling rows is easier and more efficient to do here
+  if (!is.null(rows) && is.null(msa$externalPtr)) {
+    msa$names <- msa$names[rows]
+    msa$seqs <- msa$seqs[rows]
+    rows=NULL
+  }
+  if (is.null(rows) && is.null(cols)) return(msa)
+  check.arg(rows, "rows", "integer", null.OK=TRUE,
+            min.length=NULL, max.length=NULL)
+  check.arg(cols, "cols", "integer", null.OK=TRUE,
+            min.length=NULL, max.length=NULL)
+  if (is.null(msa$externalPtr))
+    msa <- as.pointer.msa(msa)
+  rv <- .makeObj.msa()
+  rv$externalPtr <- .Call("rph_msa_square_brackets", msa$externalPtr,
+                          rows, cols)
+  from.pointer.msa(rv)
 }
 
 
@@ -676,15 +774,12 @@ likelihood.msa <- function(msa, tm, by.column=FALSE) {
 ##' @param nsites The number of columns in the simulated alignment.
 ##' @param hmm an object of type HMM describing transitions between the
 ##' tree models across the columns of the alignment.
-##' @param seed A value for initializing the random number generator used
-##' by phast.  If set to "time", grab a seed based on the current time.
-##' Otherwise, the value should be an integer.
 ##' @param pointer.only (Advanced use only). If TRUE, return only a pointer
 ##' to the simulated alignment.  Possibly useful for very (very) large
 ##' alignments.
 ##' @return An object of type MSA containing the simulated alignment.
 ##' @export
-simulate.msa <- function(mod, nsites, hmm=NULL, seed="time", pointer.only=FALSE) {
+simulate.msa <- function(mod, nsites, hmm=NULL, pointer.only=FALSE) {
   nstate <- 1L
   if (!is.null(hmm)) {
     nstate <- nstate.hmm(hmm)
@@ -701,17 +796,32 @@ simulate.msa <- function(mod, nsites, hmm=NULL, seed="time", pointer.only=FALSE)
   }
   if (nstate != nmod) 
     stop("number of states in HMM (", nstate, ") does not match number of models (", nmod,")")
-  if (seed == "time") {
-    seed=NULL
-  } else {
-    check.arg(seed, "seed", "integer", max.length=1L, null.OK=FALSE)
-  }
   msa <- .makeObj.msa()
-  msa$externalPtr <- .Call("rph_msa_base_evolve", tmlist, nsites, hmm, seed)
+  msa$externalPtr <- .Call("rph_msa_base_evolve", tmlist, nsites, hmm)
   if (pointer.only == FALSE) msa <- from.pointer.msa(msa)
   msa
 }
 
+
+##' Sample columns from an MSA
+##' @param x An object of type \code{msa}
+##' @param size The number of columns to sample
+##' @param replace Whether to sample with replacement
+##' @param prob A vector of probability weights for sampling each column;
+##' \code{prob=NULL} implies equal probability for all columns.  Probabilities
+##' need not sum to one but should be non-negative and can not all be zero.
+##' @return An object of type \code{msa} with columns randomly
+##' re-sampled from the original
+##' @S3method sample msa
+##' @export
+sample.msa <- function(x, size, replace=FALSE, prob=NULL) {
+  check.arg(size, "size", "integer", null.OK=FALSE)
+  check.arg(replace, "replace", "logical", null.OK=FALSE)
+  if (!is.null(prob)) prob <- rep(prob, length.out=ncol.msa(x))
+  if (size > ncol.msa(x) && replace==FALSE)
+    stop("cannot sample more columns than in msa unless replace=TRUE")
+  x[,sample(1:ncol.msa(x), replace=replace, prob=prob)]
+}
 
 ##' Extract fourfold degenerate sites from an MSA object
 ##' @param msa An object of type MSA
@@ -754,54 +864,76 @@ extract.feature.msa <- function(msa, gff, do4d=FALSE) {
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
 
-  if (is.null(gff$externalPtr))
-    gff <- as.pointer.gff(gff)
-
   if (do4d) {
     if (sum(gff$feature=="CDS")==0L) 
       stop("gff has no features labelled \"CDS\"... cannot extract 4d sites")
-    msa <- get4d.msa(msa, gff)
-  } else msa$externalPtr <- .Call("rph_msa_extract_feature",
-                                  msa$externalPtr,
-                                  gff$externalPtr)
-
+    rv <- get4d.msa(msa, gff)
+  } else {
+    
+    if (is.null(gff$externalPtr)) 
+      gff <- as.pointer.gff(gff)
+    rv <- .makeObj.msa()
+    rv$externalPtr <- .Call("rph_msa_extract_feature",
+                            msa$externalPtr,
+                            gff$externalPtr)
+  }
+  if (!is.null(rv$externalPtr))
+    rv <- from.pointer.msa(rv)
+  rv$is.ordered=FALSE
+  rv
 }
 
 
 ##' Concatenate msa objects
 ##'
-##' Each MSA object must contain the same sequences in the same order.
-##' The names of sequences for the first MSA will be used in the com
+##' If the MSAs do not contain the same set of sequences, the sequences
+##' will be added to each MSA and filled with missing data.  The order
+##' of sequences is taken from the first MSA, and sequences are added to
+##' this as necessary.
 ##' @param msa A list of MSA objects to concatenate together.
 ##' @param ordered If FALSE, disregard the order of columns in the combined
 ##' MSA.
 ##' @param pointer.only (Advanced use only, for very large MSA objects) If
 ##' TRUE, return object will be a pointer to an object stored in C.
 ##' @param return An object of type MSA
+##' @export
 concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
-  if (pointer.only == FALSE) {
-    aggMsa <- msas[[1]]
-    if (!is.null(aggMsa$externalPtr))
-      aggMsa <- from.pointer.msa(aggMsa)
-    for (i in 2:length(msas)) {
-      currMsa <- msas[[i]]
-      if (!is.null(currMsa$externalPtr))
-        currMsa <- from.pointer.msa(currMsa)
-      aggMsa$seqs <- sprintf("%s%s", aggMsa$seqs, currMsa$seqs)
-    }
-    if (ordered==FALSE) aggMsa$is.ordered = FALSE
-  } else {
-    aggMsa <- copy.msa(msas[[1]])
-    if (is.null(aggMsa$externalPtr))
-      aggMsa <- as.pointer.msa(aggMsa)
-    for (i in 2:length(msas)) {
-      currMsa <- msas[[i]]
-      if (is.null(currMsa$externalPtr))
-        currMsa <- as.pointer.msa(currMsa)
-      aggMsa$externalPtr <- .Call("rph_msa_concat",
-                                  aggMsa$externalPtr,
-                                  currMsa$externalPtr)
-    }
+  aggMsa <- copy.msa(msas[[1]])
+  if (is.null(aggMsa$externalPtr))
+    aggMsa <- as.pointer.msa(aggMsa)
+  for (i in 2:length(msas)) {
+    currMsa <- msas[[i]]
+    if (is.null(currMsa$externalPtr))
+      currMsa <- as.pointer.msa(currMsa)
+    aggMsa$externalPtr <- .Call("rph_msa_concat",
+                                aggMsa$externalPtr,
+                                currMsa$externalPtr)
   }
+  if (pointer.only == FALSE) 
+    aggMsa <- from.pointer.msa(aggMsa)
   aggMsa
+}
+
+
+##' Split an MSA by feature
+##' @param msa An object of type \code{msa}
+##' @param gff A feature object
+##' @return A list of msa objects, representing the sub-alignments for
+##' each feature in the gff object
+##' @export
+split.by.feature.msa <- function(msa, gff) {
+  if (is.null(msa$externalPtr)) msa <- as.pointer.msa(msa)
+  if (is.null(gff$externalPtr)) gff <- as.pointer.gff(gff)
+  l <- list()
+  l$externalPtr <- .Call("rph_msa_split_by_gff", msa$externalPtr,
+                         gff$externalPtr)
+  lst.size <- .Call("rph_list_len", l$externalPtr)
+  rv <- list()
+  for (i in 1:lst.size) {
+    cat(i, "\n")
+    m <- .makeObj.msa()
+    m$externalPtr <- .Call("rph_msaList_get", l$externalPtr, i)
+    rv[[i]] <- from.pointer.msa(m)
+  }
+  rv
 }
