@@ -87,6 +87,7 @@ phyloFit <- function(msa,
     stop("need tree if MSA has more than two sequences")
   if (!isSubstMod.tm(subst.mod))
     stop("invalid substitution model ", subst.mod)
+  check.arg(tree, "tree", "character", null.OK=TRUE)
   check.arg(scale.only, "scale.only", "logical", null.OK=FALSE)
   check.arg(scale.subtree, "scale.subtree", "character", null.OK=TRUE)
   check.arg(nrates, "nrates", "integer", null.OK=FALSE)

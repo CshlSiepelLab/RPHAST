@@ -1,0 +1,231 @@
+%
+% NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+% likely to be overwritten.
+%
+% \VignetteIndexEntry{rphast}
+% \VignetteDepends{ape,multtest}
+% \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
+% \VignettePackage{rphast}
+
+\documentclass[11pt]{article}
+\usepackage{Sweave}
+
+
+\begin{document}
+\title{Detection of Accelerated Regions}
+\author{M. J. Hubisz K. S. Pollard, and A. Siepel}
+%\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,invlude=TRUE,engine=R}
+\maketitle
+
+This example will go through the basic steps of detecting
+accelerated evolution in a subtree.  In this case we will look
+for accelerated regions in the mouse-rat subtree, and we will focus
+on alignments from human chromosome 22.  The ideal way to go about this
+would be to first identify conserved elements using the same procedure
+as in example 1, but in a subset of the alignment which excludes the 
+species of interest.  Then we can look in the full alignment at these
+elements for signs of acceleration in mouse-rat.
+
+Instead we will just use the conserved elements from the UCSC genome
+browser.  They can be downloaded through the table browser for
+the hg18 assembly, as well as the multiple alignment.
+
+
+<<rarAnalysis1>>=
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, c("placentalMammals.mod", "chr22-elements.bed"))
+
+# read the neutral model.  This file is also available
+# through the UCSC genome browser
+neutralMod <- read.tm("placentalMammals.mod") #read the neutral model
+
+elements <- read.gff("chr22-elements.bed")
+unique(elements$seqname)
+elements$seqname <- "hg18.chr22"  # need species name encoded in features
+
+@  
+
+We want to regularize the lengths of the conserved elements,
+so that we do not have to worry that the significance of the tests
+are confounded by length.  So we split the conserved elements
+into fragments of size 100, and remove remaining fragments that
+are too small
+<<rarAnalysis2>>=
+splitLength <- 100
+splitElements <- split.gff(elements, max.length=splitLength)
+splitElements <- splitElements[splitElements$end - splitElements$start + 1 == splitLength,]
+
+@ 
+
+Now, read the alignment.  By using the gff argument we get an un-ordered
+alignment containing sites from the conserved elements only.  For simplicity
+we will use a a subset of the full species set.
+
+
+<<rarAnalysis4>>=
+seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "mm9", "rn4", "canFam2")
+align <- read.msa("/home/melissa/rphast/chr22.maf", 
+                  seqnames=seqnames, gff=elements)
+@ 
+
+For these short elements with a fairly small species set, we do not necessarily
+want to rely on asymptotics to calculate p-values.  Instead we will use 
+non-parametric simulations to calculate p-values.  At the end of the vignette
+we will also show a parametric alternative.
+
+<<<rarAnalysis6>>=
+nrep <- 5000
+
+# we could simulate 5000 different MSAs but it is more efficient to simulate
+# one long MSA and then split it up later
+# simulate by sampling with replacement from orignal alignment
+simMsa <- sample.msa(align, nrep*splitLength, replace=TRUE)
+
+
+# now we create a feature object which splits the simulated alignment into
+# 5000 pieces of length 100
+startIdx <- (0:(nrep-1))*splitLength + 1
+feat <- gff(seqname=names.msa(simMsa)[1], src="sim", feat=".",
+            start=startIdx, end=startIdx+(splitLength-1))
+
+nonpara.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
+                         gff=feat, subtree="mm9-rn4")
+@ 
+
+Now we want to run phyloP on the real data.  To do this we need
+to read an ordered version of the alignment from the MAF file, then
+run phyloP on our elements:
+<<<rarAnalyiss8>>=
+align <- read.msa("/home/melissa/rphast/chr22.maf",
+                  seqnames=seqnames)
+obs.phyloP <- phyloP(neutralMod, msa=align, mode="ACC", gff=splitElements,
+                     subtree="mm9-rn4")
+
+# free up some memory to keep R speedy
+rm(align)
+gc()
+@ 
+
+We can plot the distribution of likelihood ratios, as well as the 
+distribution expected under chi-squared approximation:
+<<<rarAnalyis9>>=
+qqplot(obs.phyloP$lnlratio, nonpara.phyloP$lnlratio)
+plot(density(2*obs.phyloP$lnlratio), ylab="Density", xlab="2*(likelihood ratio)", col="red")
+lines(density(2*nonpara.phyloP$lnlratio), col="blue")
+curve(0.5*dchisq(x, 1), xlim=range(obs.phyloP$lnlratio), add=TRUE)
+legend(x="topright", inset=0.05, c("obs", "non-para sim", "chi-square"), 
+       lty=1, col=c("red", "blue", "black"))
+@ 
+
+Calculate p-values for the observed for each simulation set:
+<<<rarAnalysis10>>=
+
+empirical.pval <- function(x, dist) {
+  sum(x > dist)/length(dist)
+}
+
+nonpara.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, nonpara.phyloP$lnlratio)
+hist(nonpara.pval, breaks=100)
+
+@ 
+We can use 5\% FDR to correct for multiple testing:
+<<rarAnalysis11>>=
+
+require("multtest")
+# which method to use?
+nonpara.fdr <- mt.rawp2adjp(nonpara.pval, proc="BH")
+nonpara.fdr <- nonpara.fdr$adjp[order(nonpara.fdr$index),2]
+
+sum(nonpara.fdr < 0.05)
+
+# this gets the indices of elements with adjusted p-values < 0.05
+nonpara.sigIdx <- which(nonpara.fdr < 0.05)
+length(nonpara.sigIdx)
+nonpara.sigFeats <- splitElements[nonpara.sigIdx,]
+nonpara.sigFeats$feature <- "RAR"  # for rodent-accelerated region
+coverage.gff(nonpara.sigFeats)
+plot.track(list(gffTrack(nonpara.sigFeats, "RAR"),
+                gffTrack(elements, "Conserved elements")))
+
+# can print out a features file that can be displayed on browser
+write.gff("RAR.gff", nonpara.sigFeats)
+
+@ 
+
+phyloP was the most efficient function for calculating the p-values in this
+example, but phyloFit can be used to construct more general likelihood
+ratio tests.  Here is how the test above could have been constructed
+using phyloFit:
+<<>>=
+
+branchTest <- function(msa, mod, subtree) {
+  null.mod <- phyloFit(msa, init.mod=mod, scale.only=TRUE, 
+                       no.freqs=TRUE, no.rates=TRUE, 
+                       quiet=TRUE)
+  alt.mod <- phyloFit(msa, init.mod=mod, scale.only=TRUE, scale.subtree=subtree,
+                      no.freqs=TRUE, no.rates=TRUE,
+                      quiet=TRUE)
+  alt.mod$likelihood - null.mod$likelihood
+}
+
+# note this method is slower
+nrep <- 100
+lr <- numeric(nrep)
+for (i in 1:nrep) {
+  startIdx <- (i-1)*splitLen+1
+  lr[i] <- branchTest(msa[,startIdx:(startIdx+splitLen)], neutralMod,
+                      "mm9-rn4")
+}
+
+@ 
+
+We can also do a parametric test.  First we have to create a scaled 
+neutral model, which represents a model for a conserved element without
+any acceleration in rodents.  So we estimate a scale factor using 
+the conserved elements, after removing the rodent branches.
+
+<<<rarAnalysis5>>=
+
+keepSeqs <- align$names[align$names != "mm9" & align$names != "rn4"]
+prunedMod <- neutralMod
+prunedMod$tree <- prune.tree(neutralMod$tree, keepSeqs, all.but=TRUE)
+superTreeMod <- phyloFit(subAlign, init.mod=neutralMod, scale.only=TRUE,
+                         no.freqs=TRUE, no.rates=TRUE)
+superTreeScale <- branchlen.tree(superTreeMod$tree)/branchlen.tree(prunedMod$tree)
+superTreeScale
+
+scaledNeutralModel <- neutralMod
+scaledNeutralModel$tree <- scale.tree(neutralMod$tree, scale=superTreeScale)
+
+# also remove species from model which are not in alignment
+scaledNeutralModel$tree <- prune.tree(scaledNeutralModel$tree, 
+                                      seqs=align$names, all.but=TRUE)
+
+# now we can do parametric simulations using our scaled
+# nuetral model.  Again we will just simulate one big
+# alignment, and split it up later, for efficiency.
+simMsa <- simulate.msa(scaledNeutralModel, nrep*splitLength)
+
+# now run phyloP on parametric simulation
+para.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
+                      gff=feat, subtree="mm9-rn4")
+
+para.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, para.phyloP$lnlratio)
+para.fdr <- mt.rawp2adjp(para.pval, proc="BH")
+para.fdr <- para.fdr$adjp[order(para.fdr$index),2]
+sum(para.fdr < 0.05)
+
+# this gets the indices of elements with adjusted p-values < 0.05
+para.sigIdx <- which(para.fdr < 0.05)
+length(para.sigIdx)
+para.sigFeats <- splitElements[para.sigIdx,]
+para.sigFeats$feature <- "RAR"  # for rodent-accelerated region
+coverage.gff(para.sigFeats)
+plot.track(list(gffTrack(para.sigFeats, "parametric RARs")
+                gffTrack(nonpara.sigFeats, "non-parametric RAR"),
+                gffTrack(elements, "Conserved elements")))
+
+@ 
+
+\end{document}

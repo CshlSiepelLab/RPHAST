@@ -1,0 +1,204 @@
+%
+% NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+% likely to be overwritten.
+%
+% \VignetteIndexEntry{rphast}
+% \VignetteDepends{ape,multtest}
+% \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
+% \VignettePackage{rphast}
+
+\documentclass[11pt]{article}
+\usepackage{Sweave}
+
+\begin{document}
+\title{Phylo-HMMs}
+\author{M. J. Hubisz K. S. Pollard, and A. Siepel}
+%\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,invlude=TRUE,engine=R}
+\maketitle
+
+
+In the last example we are going to create a custom phylo-HMM and try to use
+it to detect transcription factor binding sites. 
+
+We will once again use the multiple alignments available on UCSC, as well 
+as the neutral model from the second example.  The rphast package comes
+with a set of multiple alignments for identified NRSF binding sites,
+as well as a GFF describing their genomic positions.  We will use these
+to build the phylo-HMM.
+<<phyloHmm1>>=
+require("rphast")
+# lets use a subset of the full species
+seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "equCab2", 
+              "canFam2", "dasNov2", "mm9", "rn4", "galGal3", "xenTro2")
+neutralMod <- read.tm("/home/melissa/rphast/RPHAST/inst/extdata/placentalMammals.mod")
+neutralMod$tree <- prune.tree(neutralMod$tree, seqs=seqnames, all.but=TRUE)
+
+# get the NRSF maf files from rphast
+unzip(system.file("extdata", "NRSF.zip", package="rphast"))
+mafFiles <- list.files("NRSF", pattern="*.maf", full.names=TRUE)
+nrsfNames <- basename(mafFiles)
+nrsfNames <- substr(nrsfNames, 1, nchar(nrsfNames)-4) #remove .maf from end of names
+nrsfSites <- read.gff("NRSF/NRSF.gff")
+motifLen <- 21   # this is the length of the NRSF binding site
+msaList <- list()
+for (i in 1:length(mafFiles)) {
+  smallMsa <- read.msa(mafFiles[i])
+  
+  # remove gaps from hg18 so that alignments have exactly 21 columns
+  smallMsa <- strip.gaps.msa(smallMsa)
+  
+  # remove offset so that columns are numbered 1..21 instead of using genomic coords
+  smallMsa$offset <- 0 
+  
+  # get the feature corresponding to this alignment
+  feat <- nrsfSites[which(nrsfSites$feature == nrsfNames[i]),]
+  
+  # reverse the alignment if the binding site is on the minus strand
+  if (feat$strand == "-") {
+    cat(nrsfNames[i], " ", mafFiles[i], " neg strand\n")
+    smallMsa <- reverse.complement(smallMsa)
+  }
+  if (ncol.msa(smallMsa) != motifLen)
+    cat("wrong number of columns in ", nrsfNames[i], "\n")
+  msaList[[nrsfNames[i]]] <- smallMsa
+}
+# now concatenate all alignments
+aggMsa <- concat.msa(msaList)
+@ 
+
+Now we we have a concatenated alignment of 52 different 21-bp binding sites.  We want
+to create a feature set so that each position of the alignment has its own feature.  
+Then we can estimate models for each position using phyloFit.  Since we do not have
+very much data, we will only estimate a scale factor for each position.
+
+<<phyloHmm2>>=
+feats <- gff(seqname="hg18", src=as.character(sapply(nrsfNames, rep, motifLen)),
+             feature=rep(sprintf("site.%i", 1:motifLen), length(mafFiles)),
+             start=1:(motifLen*length(mafFiles)),
+             end=2:(motifLen*length(mafFiles)+1))
+mods <- phyloFit(aggMsa, init.mod=neutralMod, no.rates=TRUE, gff=feats,
+                 scale.only=TRUE, ninf.sites=10)
+# the warning about skipping category 0 just means that there are no sites
+# which don't belong to any category so it won't return a model for that
+
+nullLike <- numeric()
+lr  <- numeric()
+
+for (i in 1:21) {
+  nullLike[i] <- likelihood.msa(aggMsa[,(0:(length(mafFiles)-1))*21+i], neutralMod)
+  lr[i] <- mods[[i]]$likelihood - nullLike[i]
+}
+
+length(mods)
+
+# compute the scale factors for each position
+trees <- character()
+for (i in 1:length(mods)) trees[i] <- mods[[i]]$tree
+scale.factors <- branchlen.tree(trees)/branchlen.tree(neutralMod$tree)
+
+# plot motif
+require("seqLogo")
+m <- read.table("NRSF/NRSF.mtf")
+pwm <- makePWM(t(m))
+seqLogo(pwm)
+@ 
+<<>>=
+barplot(scale.factors, names.arg=1:21, ylab="scale factor")
+@ 
+<<>>=
+barplot(lr, names.arg=1:21, ylab="likelihood ratio")
+@ 
+
+Now we are going to make a 23-state phylo-HMM.  The 23 states are the 21
+states for each position in the motif, plus a conserved and a non-conserved state.
+We can then use phastCons to find possible binding sites using this phylo-HMM.
+We wil use some parameters from the phastCons track on UCSC to define the 
+phylo-HMM.
+
+<<phyloHmm3>>=
+mods[["neutral"]] <- neutralMod
+mods[["conserved"]] <- neutralMod
+mods[["conserved"]]$tree <- scale.tree(neutralMod$tree, 0.3)
+
+# define the transition matrix between states
+# lambda is the rate of transition to the motif 
+get.trans.mat <- function(lambda, state.names, motifLen) {
+  trans.mat <- matrix(0, nrow=length(state.names), ncol=length(state.names),
+                      dimnames=list(state.names, state.names))
+  mu <- 1/45  # 45 is the expected length of conserved elements
+  nu <- (mu*0.3)/(1.0-0.3)   #0.3 is the target coverage of conserved elements
+  trans.mat["conserved", "neutral"] <- mu
+  trans.mat["neutral", "conserved"] <- nu
+  trans.mat["conserved", "site.1"] <- lambda
+  trans.mat["neutral", "site.1"] <- lambda
+  lastSite <- sprintf("site.%i", motifLen)
+  trans.mat[lastSite, "conserved"] <- 0.5
+  trans.mat[lastSite, "neutral"] <- 0.5
+  trans.mat["conserved", "conserved"] <- 1 - lambda - mu
+  trans.mat["neutral", "neutral"] <- 1 - lambda - nu
+  for (i in 1:(motifLen-1)) 
+    trans.mat[sprintf("site.%i", i), sprintf("site.%i", i+1)] <- 1
+  trans.mat
+}
+
+# would like to show a plot but haven't found a good package yet
+# have tried Rgraphviz, but it requires some external software (GraphViz) 
+# which makes it problematic for the vignette.
+# Also looked at dagR but I don't think it can make the kind of plot we want,
+# and is also quite complicated - would take a half dozen commands at least
+
+# this is the rate of transition to motif states
+lambda <- 0.0001
+trans.mat <- get.trans.mat(lambda, names(mods), motifLen)
+# need equilibrium frequencies for the HMM
+eq.freq <- numeric(nrow(trans.mat))
+for (i in 1:nrow(trans.mat)) {
+  if (names(mods)[i] == "conserved") {
+    eq.freq[i] <- 0.3
+  } else if (names(mods)[i] == "neutral") {
+    eq.freq[i] <- 0.6999
+  } else {
+    eq.freq[i] <- 0.0001/motifLen
+  }
+}
+sum(eq.freq)  #make sure sums to 1
+
+# now create the HMM
+nrsf.hmm <- hmm(trans.mat, eq.freq, begin.freq=eq.freq)
+
+# now lets try simulating based on the hmm
+simLength <- 100000
+simData <- simulate.msa(mods, simLength, nrsf.hmm, get.features=TRUE)
+hmmScores <- score.hmm(msa=simData$msa, mod=mods, hmm=nrsf.hmm, viterbi=TRUE,
+                       states=sprintf("site.%i", 1:motifLen))
+predicted <- hmmScores$in.states
+correct <- simData$feats[substr(simData$feats$feature, 1, 4)=="site",]
+
+numSitePredicted <- coverage.gff(predicted)
+numSiteCorrect <- coverage.gff(correct)
+numSiteOverlap <- coverage.gff(predicted, correct)
+cat(numSitePredicted, numSiteCorrect, numSiteOverlap, "\n")
+
+
+wholeRegion <- gff("hg18", src=".", feature="all",start=1, end=simLength)
+specificity <- coverage.gff(correct, predicted, not=c(TRUE, TRUE), 
+                            region.bounds=wholeRegion)/
+  coverage.gff(correct, not=TRUE, region.bounds=wholeRegion)
+sensitivity <- coverage.gff(correct, predicted)/coverage.gff(correct)
+cat(specificity, sensitivity, "\n")
+
+
+tracks <- list(gffTrack(correct, "actual binding sites"),
+               gffTrack(predicted, "predicted binding sites", col="red"),
+               wigTrack(hmmScores$post.prob.wig$coord,
+                        hmmScores$post.prob.wig$post.prob,
+                        "hmm Posterior probilities",
+                        smooth=FALSE, col="red"), ylim=c(0,1))
+
+plot.track(tracks, xlim=c(0, 10000))
+
+
+
+@ 
+
+\end{document}
