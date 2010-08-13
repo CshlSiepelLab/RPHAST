@@ -1,60 +1,54 @@
-# don't export in the future, 
 ##' @nord
 ##' @export
 phastCons.call <- function(msa,
                            mod,
-                           rho=0.3,
-                           estimate.trees=FALSE,
-                           estimate.rho=FALSE,
-                           gc=NULL,
-                           nrates=NULL,
-                           transitions=NULL,
-                           init.transitions=NULL,
-                           target.coverage=NULL,
-                           expected.length=NULL,
-                           init.expected.length=NULL,
-                           viterbi=FALSE,
-                           score.viterbi=FALSE,
-                           compute.lnl=FALSE,
-                           suppress.probs=FALSE,
-                           ref.idx=1,
-                           hmm=NULL, states=NULL, reflect.strand=NULL) {
+                           rho,
+                           target.coverage,
+                           expected.length,
+                           transitions,
+                           estimate.rho,
+                           estimate.expected.length,
+                           estimate.transitions,
+                           estimate.trees,
+                           viterbi,
+                           score.viterbi,
+                           gc,
+                           nrates,
+                           compute.lnl,
+                           suppress.probs,
+                           ref.idx,
+                           hmm,
+                           states,
+                           reflect.strand) {
   # check parameters
-  check.arg(rho, "rho", "numeric", null.OK=FALSE)
-  if (rho < 0 || rho > 1) stop("rho should be in range [0,1]")
-  check.arg(estimate.trees, "estimate.trees", "logical", null.OK=FALSE)
-  check.arg(estimate.rho, "estimate.rho", "logical", null.OK=FALSE)
-  check.arg(gc, "gc", "numeric", null.OK=TRUE)
-  if (!is.null(gc) && (gc < 0 || gc > 1)) stop("gc should be in range [0,1]")
-  check.arg(nrates, "nrates", "integer", null.OK=TRUE, min.length=1L, max.length=2L)
-  if (!is.null(nrates) || sum(nrates <= 0) >= 1L) stop("nrates should be >=1")
-  check.arg(transitions, "transitions", "numeric", min.length=1L, max.length=2L,
-            null.OK=TRUE)
-  if (!is.null(transitions) && (sum(transitions > 1)>0L ||
-                                sum(transitions < 0)>0L))
-    stop("transitions values should be in range [0,1]")
-  if (!is.null(transitions) && length(transitions)==1L)
-    transitions <- rep(transitions, 2)
-  check.arg(init.transitions, "init.transitions", "numeric", min.length=1L,
-            max.length=2L, null.OK=TRUE)
-  if (!is.null(init.transitions) && (sum(init.transitions > 1)>0 ||
-                                     sum(init.transitions < 0)>0))
-    stop("init.transitions values should be in range [0,1]")
-  if (!is.null(init.transitions) && length(init.transitions)==1L)
-    init.transitions <- rep(init.transitions, 2)
+  check.arg(rho, "rho", "numeric", null.OK=TRUE )
+  if (!is.null(rho) && (rho < 0 || rho > 1)) stop("rho should be in range [0,1]")
   check.arg(target.coverage, "target.coverage", "numeric", null.OK=TRUE)
-  if (!is.null(target.coverage) && (target.coverage <= 0 ||
-                                    target.coverage >=1))
+  if (!is.null(target.coverage) && (target.coverage <= 0 || target.coverage >=1))
     stop("target.coverage should be in range (0,1)")
   check.arg(expected.length, "expected.length", "numeric", null.OK=TRUE)
   if (!is.null(expected.length) && expected.length <= 0)
     stop("expected.length should be greater than 0")
-  check.arg(init.expected.length, "init.expected.length", "numeric",
+  check.arg(transitions, "transitions", "numeric", min.length=1L, max.length=2L,
             null.OK=TRUE)
-  if (!is.null(init.expected.length) && init.expected.length <= 0)
-    stop("init.expected.length should be greater than 0")
+  if (!is.null(transitions)) {
+    if (sum(transitions > 1)>0L || sum(transitions < 0)>0L)
+      stop("transitions values should be in range [0,1]")
+    if (length(transitions)==1L)
+      transitions <- rep(transitions, 2)
+  }
+  if (!is.null(transitions) && !(is.null(target.coverage) && is.null(expected.length)))
+    stop("transitions cannot be used with target.coverage and expected.length")
+  check.arg(estimate.rho, "estimate.rho", "logical", null.OK=FALSE)
+  check.arg(estimate.expected.length, "estimate.expected.length", "logical", null.OK=FALSE)
+  check.arg(estimate.transitions, "estimate.transitions", "logical", null.OK=FALSE)
+  check.arg(estimate.trees, "estimate.trees", "logical", null.OK=FALSE)
   check.arg(viterbi, "viterbi", "logical", null.OK=FALSE)
   check.arg(score.viterbi, "score.viterbi", "logical", null.OK=FALSE)
+  check.arg(gc, "gc", "numeric", null.OK=TRUE)
+  if (!is.null(gc) && (gc < 0 || gc > 1)) stop("gc should be in range [0,1]")
+  check.arg(nrates, "nrates", "integer", null.OK=TRUE, min.length=1L, max.length=2L)
+  if (!is.null(nrates) || sum(nrates <= 0) >= 1L) stop("nrates should be >=1")
   check.arg(compute.lnl, "compute.lnl", "logical", null.OK=FALSE)
   check.arg(suppress.probs, "suppress.probs", "logical", null.OK=FALSE)
   check.arg(ref.idx, "ref.idx", "integer", null.OK=FALSE)
@@ -74,7 +68,7 @@ phastCons.call <- function(msa,
         nstate <- nrow(hmm$trans.mat)
         check.arg(states, "states", "integer", null.OK=FALSE,
                   min.length=1L, max.length=nstate)
-        if (sum(states <= 0 | states > max.length) > 0L)
+        if (sum(states <= 0 | states > nstate) > 0L)
           stop("invalid integers in states")
       }
     }
@@ -93,13 +87,13 @@ phastCons.call <- function(msa,
         nstate <- nrow(hmm$trans.mat)
         check.arg(reflect.strand, "reflect.strand", "integer", null.OK=FALSE,
                   min.length=1L, max.length=nstate)
-        if (sum(reflect.strand <= 0 | reflect.strand > max.length) > 0L)
+        if (sum(reflect.strand <= 0 | reflect.strand > nstate) > 0L)
           stop("invalid integers in reflect.strand")
       }
     }
   }
   if (!is.null(hmm)) hmm <- as.pointer.hmm(hmm)
-  if (is.null(states) && (!is.null(hmm)) && (!suppress || viterbi))
+  if (is.null(states) && (!is.null(hmm)) && (!suppress.probs || viterbi))
     warning("no states given; scoring state 2")
 
   # check for bad param combinations
@@ -107,15 +101,8 @@ phastCons.call <- function(msa,
     stop("cannot specify both estimate.trees and estimate.rho")
   if (!is.null(gc) && !estimate.trees && !estimate.rho)
     stop("can only specify gc if estimate.trees or estimate.rho")
-  if (!is.null(transitions) && !is.null(init.transitions))
-    stop("cannot specify both transitions and init.transitions")
-  if ((!is.null(transitions) || !is.null(init.transitions)) &&
-      (!is.null(target.coverage) || !is.null(expected.length) ||
-       !is.null(init.expected.length)))
-    stop("cannot specify transitions or init.transitions with target.coverage, expected.length, or init.expected.length")
   if (score.viterbi && !viterbi)
     stop("cannot specify score.viterbi without viterbi")
-
   
   if (is.null(mod$tree)) {
     l <- length(mod)
@@ -131,16 +118,28 @@ phastCons.call <- function(msa,
 
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
-  
-  result <- .Call("rph_phastCons", msa$externalPtr, modList,
-                  rho, estimate.trees, estimate.rho,
-                  gc, nrates, transitions, init.transitions,
-                  target.coverage, expected.length,
-                  init.expected.length, viterbi,
-                  score.viterbi, compute.lnl, suppress.probs,
+
+  result <- .Call("rph_phastCons",
+                  msa$externalPtr,
+                  modList,
+                  rho,
+                  target.coverage,
+                  expected.length,
+                  transitions,
+                  estimate.rho,
+                  estimate.expected.length,
+                  estimate.transitions,
+                  estimate.trees,
+                  viterbi,
+                  score.viterbi,
+                  gc,
+                  nrates,
+                  compute.lnl,
+                  suppress.probs,
                   ref.idx,
-                  if(is.null(hmm)) NULL else hmm$externalPtr,
-                  states, reflect.strand)
+                  if (is.null(hmm)) NULL else hmm$externalPtr,
+                  states,
+                  reflect.strand)
   rphast.simplify.list(result)
 }
 
@@ -166,15 +165,46 @@ phastCons.call <- function(msa,
 ##' conserved model is obtained by scaling the branches by a parameter
 ##' rho.
 ##' @param rho Set the scale (overall evolutionary rate) of the model for the
-##' conserved state to be <rho> times tht of the model for the non-conserved state
+##' conserved state to be <rho> times that of the model for the non-conserved state
 ##' ( 0 < rho < 1).  If used with estimate.trees or estimate.rho, the specified
 ##' value will be used for initialization only, and rho will be estimated.  This
 ##' argument is ignored if mod contains two tree model objects.
-##' @param estimate.trees A logical value.  If \code{TRUE}, estimate free
-##' parameters of tree models for conserved and non-conserved state.
-##' Estimated models are stored in return list.
+##' @param target.coverage A single numeric value, representing the fraction of
+##' sites in conserved elements. This argument sets a prior
+##' expectation rather than a posterior and assumes stationarity of the
+##' state-transition process.  Adding this constraint causes the ratio of
+##' between-state transitions to be fixed at (1-gamma)/gamma (where gamma is the
+##' target.coverage value).
+##' @param expected.length A single numeric value, representing the parameter omega,
+##' which describes the expected length of conserved elements.  This is an
+##' alternative to the transitions argument.  If provided with target.coverage, than
+##' transition rates are fully determined, otherwise the target-coverage parameter
+##' will be estimated by maximum likelihood.
+##' @param transitions (Alternative to target.coverage and expected.length; ignored if
+##' either of these are specified). A
+##' numeric vector of length one or two, representing the
+##' transition probabilities for the two-state HMM.  The first value represents mu, the
+##' transition rate from the conserved to the non-conserved state, and the second
+##' value is nu, the rate from non-conserved to conserved.  If only one value is
+##' provided then mu=nu.  The rate of self-transitions are then 1-mu and 1-nu, and
+##' the expected lengths of conserved and non-conserved elements are 1/mu and 1/nu,
+##' respectively.  If estimate.transition is \code{TRUE}, the provided values will be
+##' used for initialization.
 ##' @param estimate.rho A logical value.  If \code{TRUE}, Estimate the parameter
-##' rho (as described above).  Estimated value is reported in return list.
+##' rho (as described above), using maximum likelihood.  Estimated value is reported
+##' in return list.  This use is discouraged (see note below).
+##' @param estimate.expected.length A logical value.  If \code{TRUE}, estimate the
+##' expected length of conserved elements by maximum likelihood, and use the
+##' target.coverage parameter for initialization.  Setting this parameter to \code{TRUE}
+##' is discouraged (see note below).
+##' @param estimate.transitions A logical value.  If \code{TRUE}, estimate the transition
+##' rates between conserved and non-conserved states by maximum likelihood.  The parameter
+##' transitions is then used for initialization.  This argument is ignored if
+##' {estimate.expected.length==TRUE}.  Setting
+##' this argument to \code{TRUE} is discouraged (see note below).
+##' @param estimate.trees A logical value.  If \code{TRUE}, estimate free
+##' parameters of tree models for conserved and non-conserved state.  Setting this
+##' argument to \code{TRUE} is discouraged (see note below).
 ##' @param gc A single numeric value given the fraction of bases that are G or C, for
 ##' optional use with estimate.trees or estimate.rho.  This overrides the default
 ##' behavior of estimating the base composition empirically from the data.
@@ -183,50 +213,11 @@ phastCons.call <- function(msa,
 ##' rate categories, rather than the number given in the input tree model(s).  If
 ##' two values are given they apply to the conserved and nonconserved models,
 ##' respectively.
-##' @param transitions A numeric vector of length one or two, representing the
-##' transition probabilities for the two-state HMM.  If not provided transition rates
-##' will be estimated by maximum likelihood.  The first value represents mu, the
-##' transition rate from the conserved to the non-conserved state, and the second
-##' value is nu, the rate from non-conserved to conserved.  If only one value is
-##' provided then mu=nu.  The rate of self-transitions are then 1-mu and 1-nu, and
-##' the expected lengths of conserved and non-conserved elements are 1/mu and 1/nu,
-##' respectively.
-##' @param init.transitions Like the transitions argument (described above), but
-##' only specifies initial values for mu, and nu.  Transitions probabilities will
-##' then be estimated by maximum likelihood.
-##' @param target.coverage A single numeric value, representing the parameter gamma,
-##' which describes the fraction of sites in conserved elements.  This argument is
-##' an alternative to the transitions argument.  This argument sets a prior
-##' expectation rather than a posterior and assumes stationarity of the
-##' state-transition process.  Adding this constraint causes the ratio of
-##' between-state transitions to be fixed at (1-gamma)/gamma.  If used with the
-##' expected.length argument, the transition probailities will be completely fixed,
-##' otherwise the expected-length parameter will be estimated by maximum likelihood.
-##' @param expected.length A single numeric value, representing the parameter omega,
-##' which describes the expected length of conserved elements.  This is an
-##' alternative to the transitions argument.  If provided with target.coverage, than
-##' transition rates are fully determined, otherwise the target-coverage parameter
-##' will be estimated by maximum likelihood.
-##' @param init.expected.length Like expected.length above, but only sets the initial
-##' value of the expected length parameter, which will be estimated by maximum
-##' likelihood.
 ##' @param viterbi A logical value.  If \code{TRUE}, produce discrete elements
 ##' using the Viterbi algorithm.
 ##' @param ref.idx An integer value.  Use the coordinate frame of the given sequence.
 ##' Default is 1, indicating the first sequence in the alignment.
 ##' A value of 0 indicates the coordinate frame of the entire alignment.
-##' @param hmm An object of type \code{hmm} describing a custom HMM
-##' @param states (For use with hmm) A vector of characters naming
-##' the states of interest in the phylo-HMM, or a vector of integers
-##' corresponding to states in the transition matrix.  The post.probs will give
-##' the probability of any of these states, and the viterbi regions reflect
-##' regions where the state is predicted to be any of these states.
-##' @param reflect.strand (For use with hmm) Given an hmm describing
-##' the forward strand, create a larger HMM that allows for features
-##' on both strands by "reflecting" the original HMM about the specified
-##' states.  States can be described as a vector of integers or characters
-##' in the same manner as states argument (above).  The new hmm will be
-##' used for prediction on both strands.
 ##' @return A list containing parameter estimates.  The list may have any of the
 ##' following elements, depending on the arguments:
 ##' \item{transition.rates}{A numeric vector of length two giving the rates from the
@@ -241,35 +232,102 @@ phastCons.call <- function(msa,
 ##' \item{post.prob.wig}{A data frame giving a coordinate and score for individual
 ##' bases in the alignment}
 ##' \item{likelihood}{The likelihood of the data under the estimated model.}
+##' @note Estimating transition rates between states by maximum likelihood, or the
+##' parameters for the phylogenetic models, does not perform very well and is discouraged.
+##' See CITE PHASTCONS PAPER for more details.
 ##' @export
 phastCons <- function(msa,
                       mod,
                       rho=0.3,
-                      estimate.trees=FALSE,
+                      target.coverage=0.05,
+                      expected.length=10,
+                      transitions=NULL,
                       estimate.rho=FALSE,
+                      estimate.expected.length=FALSE,
+                      estimate.transitions=FALSE,
+                      estimate.trees=FALSE,
+                      viterbi=TRUE,
                       gc=NULL,
                       nrates=NULL,
-                      transitions=NULL,
-                      init.transitions=NULL,
-                      target.coverage=NULL,
-                      expected.length=NULL,
-                      init.expected.length=NULL,
-                      viterbi=FALSE,
-                      ref.idx=1, hmm=NULL,
-                      states=NULL,
-                      reflect.strand=NULL) {
+                      ref.idx=1) {
   score.viterbi <- viterbi
   compute.lnl <- TRUE
   suppress.probs <- FALSE
-  phastCons.call(msa,mod, rho=rho, estimate.trees=estimate.trees,
-                 estimate.rho=estimate.rho, gc=gc, nrates=nrates,
-                 transitions=transitions,
-                 init.transitions=init.transitions,
+  if (!is.null(transitions)) {
+    if (! (missing(target.coverage) && missing(expected.length)))
+      stop("target.coverage and expected.length cannot be used with transitions")
+    target.coverage <- NULL
+    expected.length <- NULL
+  }
+  phastCons.call(msa,
+                 mod,
+                 rho=rho,
                  target.coverage=target.coverage,
                  expected.length=expected.length,
-                 init.expected.length=init.expected.length,
-                 viterbi=viterbi, score.viterbi=score.viterbi,
+                 transitions=transitions,
+                 estimate.rho=estimate.rho,
+                 estimate.expected.length=estimate.expected.length,
+                 estimate.transitions=estimate.transitions,
+                 estimate.trees=estimate.trees,
+                 viterbi=viterbi,
+                 score.viterbi=score.viterbi,
+                 gc=gc,
+                 nrates=nrates,
                  compute.lnl=compute.lnl,
                  suppress.probs=suppress.probs,
-                 ref.idx=ref.idx, hmm=hmm, states, reflect.strand)
+                 ref.idx=ref.idx,
+                 hmm=NULL,
+                 states=NULL,
+                 reflect.strand=NULL)
+}
+
+
+##' Produce posterior probabilities of phylo-HMM states across an alignment,
+##' and predict states using Viterbi algorithm
+##' @title Score an alignment using a general phylo-HMM
+##' @param msa An object of type \code{msa}
+##' @param mod A list of tree model objects, corresponding to each state in the phylo-HMM
+##' @param hmm An object of type \code{hmm} describing transitions between states,
+##' equilbrium frequencies, initial frequencies, and optionally end frequencies
+##' @param states A vector of characters naming
+##' the states of interest in the phylo-HMM, or a vector of integers
+##' corresponding to states in the transition matrix.  The post.probs will give
+##' the probability of any of these states, and the viterbi regions reflect
+##' regions where the state is predicted to be any of these states.
+##' @param viterbi A logical value indicating whether to predict a path through the phylo-HMM
+##' using the Viterbi algorithm.
+##' @param ref.idx An integer value.  Use the coordinate frame of the given sequence.
+##' Default is 1, indicating the first sequence in the alignment.
+##' A value of 0 indicates the coordinate frame of the entire alignment.
+##' @param reflect.strand Given an hmm describing
+##' the forward strand, create a larger HMM that allows for features
+##' on both strands by "reflecting" the original HMM about the specified
+##' states.  States can be described as a vector of integers or characters
+##' in the same manner as states argument (above).  The new hmm will be
+##' used for prediction on both strands.
+##' @return A list with some or all of the
+##' following elements, depending on the arguments:
+##' \item{in.states}{An object of type gff which describes regions which
+##' fall within the interesting states specified in the states parameter,
+##' as determined by the Viterbi algorithm.}
+##' \item{post.prob.wig}{A data frame giving a coordinate and posterior probibility
+##' that each site falls within an interesting state.}
+##' \item{likelihood}{The likelihood of the data under the estimated model.}
+##' @export
+score.hmm <- function(msa, mod, hmm, states, viterbi=TRUE, ref.idx=1, reflect.strand=NULL) {
+  rv <- phastCons.call(msa, mod,
+                       rho=NULL, target.coverage=NULL, expected.length=NULL, transitions=NULL,
+                       estimate.rho=FALSE, estimate.expected.length=FALSE, estimate.transitions=FALSE,
+                       estimate.trees=FALSE,
+                       viterbi=viterbi, score.viterbi=viterbi,
+                       gc=NULL, nrates=NULL, compute.lnl=TRUE, suppress.probs=FALSE,
+                       ref.idx=ref.idx,
+                       hmm=hmm,
+                       states=states,
+                       reflect.strand=reflect.strand)
+  if (!is.null(rv$most.conserved)) {
+    w <- which(names(rv) == "most.conserved")
+    names(rv)[w] <- "in.states"
+  }
+  rv
 }

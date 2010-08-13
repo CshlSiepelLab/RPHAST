@@ -1,0 +1,198 @@
+%
+% NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+% likely to be overwritten.
+%
+% \VignetteIndexEntry{rphast}
+% \VignetteDepends{ape,multtest}
+% \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
+% \VignettePackage{rphast}
+
+\documentclass[11pt]{article}
+\usepackage{Sweave}
+\usepackage{url}
+
+\begin{document}
+
+\title{Conservation Analysis}
+\author{M. J. Hubisz K. S. Pollard, and A. Siepel}
+\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R,keep.source=TRUE}
+\maketitle
+
+
+Here we will show an example of conservation analysis in a non-model organism,
+\emph{S. lycopersicon} (tomato).  An alignment of tomato, potato,
+eggplant, pepper, and petunia is available through the table browser at 
+Cornell's UCSC genome browser mirror (\url{http://genome-mirror.bscb.cornell.edu}).
+The necessary files are also included in the rphast package's
+example data set.
+
+<<consAnalysis1>>=
+require("rphast")
+
+# extract the  alignment and annotation from the RPHAST package
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, c("sol1.maf", "sol1.gp"))
+
+# define tree using Newick string
+tomatoTree <- "((((tomato, potato), eggplant), pepper), petunia);"
+
+# read the alignment and switch to common names
+align <- read.msa("sol1.maf")
+names(align)
+align$names <- c("tomato", "potato", "pepper", "petunia", "eggplant")
+names(align)
+
+# load the features
+feats <- read.gff("sol1.gp")
+unique(feats$seqname)
+# they are all on chr2 so rename to "tomato" to cross-reference with alignment
+feats$seqname <- "tomato"
+
+# annotate UTRs and introns
+feats <- addUTRs.gff(feats)
+feats <- addIntrons.gff(feats)
+
+table(feats$feature)
+
+# note that there are no UTRs.. are CDS and exon the same?
+
+# pull out and sort CDS regions.
+feats.cds <- sort.gff(feats[feats$feature=="CDS",])
+
+# pull out and sort exons
+feats.exon <- sort.gff(feats[feats$feature=="exon",])
+
+# check if they are the same ... they are!
+sum(feats.cds$start != feats.exon$start |
+    feats.cds$end != feats.exon$end)
+
+# so remove redundant exon features
+feats <- feats[feats$feature != "exon",]
+
+table(feats$feature)
+
+# Now want to annotate non-coding regions.  First need to define
+# chromosome boundaries
+
+# make a feature that represents the entire chromosome
+wholeChrom <- gff(seq="tomato", src=".", feature="all",
+                  start=1, end=122080)
+
+# annotate non-coding regions
+coding.feats <- feats
+noncoding.feats <- inverse.gff(feats, region.bounds=wholeChrom)
+noncoding.feats$feature <- "noncoding"
+feats <- rbind.gff(feats, noncoding.feats)
+
+# now extract 4d sites from alignment using annotations
+align4d <- get4d.msa(align, feats)
+
+# estimate neutral model from 4d sites
+neutralMod <- phyloFit(align4d, tree=tomatoTree, subst.mod="REV")
+
+# now run phastCons to score/predict conserved elements
+pc <- phastCons(align, neutralMod, expected.length=6, 
+                target.coverage=0.125, viterbi=TRUE)
+
+names(pc)
+
+# the conserved elements are in a GFF object stored here:
+dim(pc$most.conserved)
+# this shows how many bases are predicted to be conserved
+coverage.gff(pc$most.conserved)
+
+# we get about 5% coverage of conserved elements
+coverage.gff(pc$most.conserved)/coverage.gff(wholeChrom)
+
+# the posterior probabilities for every base are here:
+names(pc$post.prob.wig)
+dim(pc$post.prob.wig)
+
+# and the overall likelihood is here:
+pc$likelihood
+
+
+# now run phyloP to get base-by-base scores
+pp <- phyloP(neutralMod, align, method="LRT", mode="CONACC")
+
+# examine these results- it is a data frame giving
+# statistics for every base in the alignment
+names(pp)
+dim(pp)
+
+geneTrack <- gffTrack(feats[feats$feature=="CDS",], "genes")
+phastConsElTrack <- gffTrack(pc$most.conserved, "phastCons most conserved", col="red")
+phastConsScoreTrack <- wigTrack(coord=pc$post.prob.wig$coord,
+                                score=pc$post.prob.wig$post.prob,
+                                name="phastCons post prob", col="red")
+phyloPTrack <- wigTrack(coord=pp$coord, score=pp$score, name="phyloP score", col="blue",
+                        smooth=TRUE, horiz.line=0)
+plot.track(list(geneTrack, phastConsElTrack, phastConsScoreTrack, phyloPTrack),
+           xlim=c(61000, 68000))
+
+@ 
+<<hist>>=
+
+# now examine conserved elements
+ce <- pc$most.conserved
+plot(density.gff(ce), type="l", ylim=c(0, 0.017), 
+     main="element length by type", xlab="length")
+
+# break conserved elements into coding/noncoding:
+
+# this returns all conserved elements that overlap with coding.feats 
+# by at least 50 percent
+ce.coding <- overlap.gff(ce, coding.feats, min.percent=0.5)
+# and this gets the ones which overlap by less than 50 percent:
+ce.noncoding <- overlap.gff(ce, coding.feats, min.percent=0.5, 
+                            overlapping=FALSE)
+lines(density.gff(ce.coding), col="red")
+lines(density.gff(ce.noncoding), col="blue")
+legend(c("all", "coding", "noncoding"), x="topright", inset=0.01, 
+       lty=1, col=c("black", "red", "blue"))
+@ 
+<<>>=
+# so coding elements tend to be longer
+
+# look at fold-enrichment of each annotation type by conserved element
+enrich <- enrichment.gff(ce, feats, wholeChrom)
+barplot(enrich$enrichment, names.arg=enrich$type, 
+        col=rainbow(nrow(enrich)),
+        main="enrichment of annotation\types by conserved elements")
+@ 
+<<>>=
+# look at the composition of the conserved elements
+comp <- composition.gff(ce, feats)
+pie(comp$composition, labels=comp$type, col=rainbow(nrow(comp)), radius=1.0,
+    main="composition of conserved elements")
+@ 
+<<>>=
+
+# Run phastCons again, this time try to estimate the fraction of sites which
+# are conserved
+pcEM <- phastCons(align, neutralMod, viterbi=TRUE, estimate.rho=TRUE) 
+names(pcEM)
+# note this has the same elements as pc, plus an estimate for rho
+pcEM$rho
+
+# and the likelihood is higher since we estimate rho
+pcEM$likelihood
+
+# now coverage is a bit higher, at 23%
+# (note rho only defines a prior expectation for coverage)
+coverage.gff(pcEM$most.conserved)/coverage.gff(wholeChrom)
+
+# compare the results with and without --estimate-rho
+coverage.gff(pcEM$most.conserved, pc$most.conserved)
+coverage.gff(pcEM$most.conserved, pc$most.conserved, or=TRUE)
+coverage.gff(pcEM$most.conserved, pc$most.conserved, 
+             not=c(FALSE, TRUE), region.bounds=wholeChrom)
+coverage.gff(pcEM$most.conserved, pc$most.conserved, 
+             not=c(TRUE, FALSE), region.bounds=wholeChrom)
+             
+plot.track(list(gffTrack(pc$most.conserved, name="no estimation"),
+                gffTrack(pcEM$most.conserved, name="with estimation")))
+
+@ 
+
+\end{document}

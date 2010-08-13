@@ -161,7 +161,7 @@ gff2 <- gff(seqname=c("chr1","chr2"), src="test", feature=".", start=c(1,1), end
 #'
 overlap.gff(gff1, gff1)
 overlap.gff(gff1, gff2, min.percent=0.25)
-overlap.gff(gff1, gff2, min.percent=0.25, numbase=NULL, overlapping=FALSE)
+overlap.gff(gff1, gff2, min.percent=0.25, overlapping=FALSE)
 overlap.gff(gff1, gff2, get.fragments=TRUE)
 overlap.gff(gff1, gff2, get.fragments=TRUE)
 rm(gff1, gff2)

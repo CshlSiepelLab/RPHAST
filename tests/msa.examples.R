@@ -207,7 +207,7 @@ print(sub.msa(m, c("mouse"), keep=FALSE, refseq="human",
       print.seq=TRUE)
 ################################################
 
-#' "[.msa"
+#' [.msa
 require("rphast")
 m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
          names=c("human", "mouse", "rat"))
@@ -215,7 +215,7 @@ print(m[c("rat", "rat", "human"), ], print.seq=TRUE)
 print(m[c(3,3,1),], print.seq=TRUE)
 print(m[c(TRUE, FALSE, TRUE),], print.seq=TRUE)
 print(m[TRUE,], print.seq=TRUE)
-print(m"[.msa"("mouse",c(1,6,3,5)), print.seq=TRUE)
+print("[.msa"(m, "mouse",c(1,6,3,5)), print.seq=TRUE)
 
 
 ################################################
@@ -360,13 +360,15 @@ unlink(files)
 ####################################################
 
 #' simulate.msa
+filename <- "rev.mod"
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, filename)
 m <- matrix(nrow=3, ncol=3)
 m[1,] <- c(1,2,3)
 m[2,] <- c(1,5,10)
 m[3,] <- c(10,4,2)
 eq.freq <- c(1,2,3)
 h <- hmm(m, eq.freq)
-filename <- "rev.mod"
 tm <- read.tm(filename)
 tm2 <- tm
 tm2$backgd <- rep(0.25, 4)

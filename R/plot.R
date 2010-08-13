@@ -33,46 +33,82 @@ guessResultType.rphast <- function(l) {
 }
 
 
+##' Is this a track?
+##' @param x An object to test
+##' @param ... ignored
+##' @return A logical indicating whether x is an object of type track
+##' @export
+is.track <- function(x, ...) {
+  if (is.null(attr(x, "class"))) return(FALSE)
+  attr(x, "class") == "track"
+}
+
+
 ##' Get the coordinate range of a list of RPHAST results
-##' @param resultList a list of RPHAST results
+##' @param ... a list of tracks
 ##' @param resultType a vector of character strings, each should be either
 ##' "wig" or "gff"
 ##' @return a numeric vector of length two giving the minimum and maximum
 ##' coordinates in any element of the list
 ##' @export
-range.rphast <- function(resultList, resultType) {
-  xmin <- min(mapply(function(el,ty) {
-    if (nrow(el)==0) return(NA)
-    if (ty=="wig") return(min(el$coord))
-    return(min(el$start))},
-                     resultList, resultType), na.rm=TRUE)
-  xmax <- max(mapply(function(el, ty) {
-    if (nrow(el)==0) return(NA)
-    if (ty=="wig") return(max(el$coord))
-    return(max(el$end))},
-                     resultList, resultType), na.rm=TRUE)
-  c(xmin, xmax)
+range.track <- function(..., na.rm=TRUE) {
+  l <- list(...)
+  if (length(l)==1 && !is.track(l[[1]])) 
+    l <- l[[1]]
+  currrange <- c()
+  for (i in 1:length(l)) {
+    if (!is.track(l[[i]])) stop("element ", i, " is not a track")
+    if (l[[i]]$type == "wig") {
+      currrange <- c(currrange, range(l[[i]]$data$coord))
+    } else {
+      currrange <- c(currrange, range.gff(l[[i]]$data))
+    }
+  }
+  range(currrange)
 }
 
 
-##' Plot RPHAST results
-##' @param resultList a list of plottable features or RPHAST results.  Possible elemets are
-##' any object of type \code{gff}, lists with two elements: coord and a score (as output by phyloP)
+
+##' Smooth a wig plot in rphast
+##' @param coord The x coordinates of un-smoothed plot
+##' @param score The scores cooresponding to the x coordinates (should be same length as coord)
+##' @param numpoints The number of points to use in the new plot
+##' @return A data frame with numpoints rows and columns "coord" and "score"
+##' with smoothed values.  If \code{length(coord) <= numpoints}, it will contain the
+##' original data
+##' @export
+smooth.wig <- function(coord, score, numpoints=300) {
+  if (length(coord) != length(score)) stop("smooth.wig expects length(coord) == length(score)")
+  if (length(coord) <= numpoints) return(data.frame(coord=coord, score=score))
+
+  xlim <- range(coord)
+  windowSize <- (xlim[2]-xlim[1])/(numpoints-1)
+  newcoord <- seq(from=xlim[1], to=xlim[2], by=windowSize)
+
+  newscore <- sapply(newcoord, function(x) {
+    f <- (coord >= (x-windowSize) &
+          coord <= (x+windowSize))
+    if (sum(f)==0) return(NA)
+    sum(score[f])/sum(f)
+  })
+  f <- !is.na(newscore)
+  data.frame(coord=newcoord[f], score=newscore[f])
+}
+
+
+##' Make browser-like plot in rphast
+##' @param x a list of tracks, created by wigTrack or gffTrack.
 ##' @param doLabels Logical.  Whether to plot the label above each plot.  Will be
-##' recycled to the length of resultList.  Does not affect printing of shortLabels.
+##' recycled to the length of x.  Does not affect printing of shortLabels.
 ##' @param labels Labels to appear directly above each plot.
 ##' @param cex.labels The character expansion factor for the labels
 ##' @param shortLabels If not NULL, a character vector for each plot to print in the left margin.
 ##' @param cex.shortLabels The character expansion factor for the shortLabels
-##' @param col Colors to use for each plot.  Will be truncated/recycled to achieve the length of resultList.
-##' @param doStrand Logical.  Whether to plot strand info for \code{GFF} objects.  Can be single value or
-##' vector of \code{length(resultList)}.  If it is a vector, elements that do not correspond to feature
-##' plots will be ignored.
 ##' @param relWigSize The relative size of wig plots compared to feature plots
 ##' @param xlim The range of the x coordinate to be plotted.  If \code{NULL} (the default), will
 ##' use the entire range represented in the resultList.
 ##' @param xlab The label for the x axis
-##' @param  ylab The label for the y axis
+##' @param ylab The label for the y axis
 ##' @param blankSpace The amount of vertical blank space between each plot.  This should be a single numeric
 ##' value between 0 and 1, representing the total fraction of the plot occupied by blank space.
 ##' @param axisDigits The number of digits to use on the y-axis for wig plots.
@@ -83,32 +119,25 @@ range.rphast <- function(resultList, resultType) {
 ##' @param ... Other options to be passed to \code{plot}.  See \link{par}.
 ##' @seealso \code{plotPhast}, which may be easier to use but less flexible
 ##' @export
-plot.rphast <- function(resultList,
-                        doLabels=TRUE,
-                        labels=names(resultList),
-                        cex.labels=0.75,
-                        shortLabels=NULL,
-                        cex.shortLabels=0.5,
-                        col=c("red", "green", "blue"),
-                        doStrand=TRUE,
-                        relWigSize=5,
-                        xlim=NULL,
-                        xlab="coord", ylab="", blankSpace=0.25, axisDigits=3,
-                        labelSpace=min(length(resultList)*0.05, 0.25),
-                        belowLabelSpace=0.2, lmar=4, ...) {
-  numresult <- length(resultList)
+plot.track <- function(x,
+                       doLabels=TRUE,
+                       cex.labels=0.75,
+                       shortLabels=NULL,
+                       cex.shortLabels=0.5,
+                       relWigSize=5,
+                       xlim=NULL,
+                       xlab="coord", ylab="", blankSpace=0.25, axisDigits=3,
+                       labelSpace=min(length(x)*0.05, 0.25),
+                       belowLabelSpace=0.2, lmar=4, ...) {
+  tracks <- x
+  if (length(tracks) == 1 && is.track(tracks)) tracks <- list(tracks)
+  numresult <- length(tracks)
 
   doLabels <- rep(doLabels, length.out=numresult)
   check.arg(doLabels, "doLabels", "logical", null.OK=FALSE,
             min.length=numresult, max.length=numresult)
   numlabels <- sum(doLabels)
-  if (numlabels > 0L) 
-    check.arg(labels, "labels", "character", null.OK=FALSE,
-              min.length=numresult, max.length=numresult)
   
-  check.arg(col, "col", null.OK=FALSE, min.length=NULL, max.length=NULL)
-  col <- rep(col, length.out=numresult)
-
   check.arg(relWigSize, "relWigSize", "numeric", null.OK=FALSE)
   check.arg(xlim, "xlim", "numeric", null.OK=TRUE, min.length=2L, max.length=2L)
   check.arg(xlab, "xlab", "character", null.OK=FALSE)
@@ -117,16 +146,13 @@ plot.rphast <- function(resultList,
   if (blankSpace < 0 || blankSpace > 1) stop("blankSpace should be between 0 and 1")
   check.arg(axisDigits, "axisDigits", "integer", null.OK=FALSE)
 
-  resultType <- guessResultType.rphast(resultList)
-  if (sum(resultType=="gff") > 0L) {
-    doStrand <- rep(doStrand, length.out=numresult)
-    check.arg(doStrand, "doStrand", "logical", null.OK=FALSE, min.length=NULL, max.length=NULL)
-  }
+  resultType <- character(length(tracks))
+  for (i in 1:length(tracks)) resultType[i] <- tracks[[i]]$type
   plotScale <- as.numeric(ifelse(resultType=="wig", relWigSize, 1))
   plotScale <- plotScale/sum(plotScale)
 
   if (is.null(xlim))
-    xlim <- range.rphast(resultList, resultType)
+    xlim <- range.track(tracks)
 
   plot(c(0), c(0), type="n", xlim=xlim, ylim=c(0, 1), xlab=xlab,
        ylab=ylab, yaxt="n", bty="n", ...)
@@ -152,39 +178,46 @@ plot.rphast <- function(resultList,
   blankSpace <- blankSpace/numresult
   
   for (i in 1:numresult) {
-    el <- resultList[[i]]
+    el <- tracks[[i]]
     if (doLabels[i]) {
       miny <- maxy - labelSize
-      text(x=mean(xlim), y=miny, labels[i], pos=3, offset=belowLabelSpace, cex=cex.labels[i])
+      text(x=mean(xlim), y=miny, el$name, pos=3, offset=belowLabelSpace, cex=cex.labels[i])
       maxy <- miny
     }
     miny <- maxy - plotScale[i]
     yrange <- c(miny, maxy)
 
-    if (nrow(el) > 0) {
     if (resultType[[i]] == "wig") {
-      coord <- el$coord
-      othercols <- which(names(el)!="coord")
-      if (length(othercols)!=1L)
-        warning("element ", names(resultList)[i],
-                " has several statistics, using last item ", names(el)[othercols[length(othercols)]])
-      stat <- el[[othercols[length(othercols)]]]
-      oldrange <- range(stat[coord >= xlim[1] & coord <= xlim[2]])
-      newstat <- (stat - oldrange[1])*(maxy - yrange[1])/(oldrange[2]-oldrange[1]) + yrange[1]
-      lines(el$coord, newstat, col=col[i])
+      coord <- el$data$coord
+      f <- (coord >= xlim[1] & coord <= xlim[2])
+      coord <- coord[f]
+      score <- el$data$score[f]
+      if (el$smooth) {
+        if (is.null(el$numpoints)) smoothData <- smooth.wig(coord, score)
+        else smoothData <- smooth.wig(coord, score, el$numpoints)
+        coord <- smoothData$coord
+        score <- smoothData$score
+      }
+      if (is.null(el$ylim))
+        oldrange <- range(score)
+      else oldrange <- el$ylim
+      newscore <- (score - oldrange[1])*(maxy - yrange[1])/(oldrange[2]-oldrange[1]) + yrange[1]
+      lines(coord, newscore, col=el$col)
       axis(side=2, at=yrange, labels=FALSE)
       mtext(format(oldrange[1], digits=axisDigits), side=2, line=0.5, at=yrange[1], las=1, cex=0.75)
       mtext(format(oldrange[2], digits=axisDigits), side=2, line=0.5, at=yrange[2], las=1, cex=0.75)
+      if (!is.null(el$horiz.line)) {
+        horiz.line <- (el$horiz.line - oldrange[1])*(maxy - yrange[1])/(oldrange[2]-oldrange[1]) + yrange[1]
+        for (i in 1:length(el$horiz.line)) 
+          abline(h=horiz.line, lty=el$horiz.lty[i], col=el$horiz.col[i])
+      }
     } else {
-      plot.gff(el, doStrand=doStrand[i], y=mean(yrange), width=(yrange[2]-yrange[1]),
-               add=TRUE, col=col[i])
+      plot.gff(el$data, doStrand=doStrand[i], y=mean(yrange), width=(yrange[2]-yrange[1]),
+               add=TRUE, col=el$col)
     }
-  }
     if (!is.null(shortLabels))
       mtext(shortLabels[i], side=2, line=0.5, at=mean(yrange), las=1, cex=cex.shortLabels[i])
     maxy <- miny-blankSpace
-    
-      
   }
 
 }
@@ -232,3 +265,62 @@ getPlottableResults <- function(resultList, prefix=NULL) {
   }
   rv.list
 }
+
+##' Create a wig track
+##' @param coord A numeric vector of coordinates (to be used for x-axis)
+##' @param score A numeric vector of scores (y-axis coords), should be same length as coord
+##' @param name The name of the track (a character string)
+##' @param col The color to be used to plot this track.
+##' @param ylim The limits to be used on the y-axis.  If NULL use entire range
+##' of score.
+##' @param smooth A logical value indicating whether to perform smoothing when plotting
+##' this track
+##' @param numpoints (Only used if \code{smooth==TRUE}).  An integer value indicating how many
+##' points to display in the smoothed wig.
+##' @param horiz.line If non-NULL, draw horizontal lines on the display at the given y coordinates
+##' @param horiz.lty If horiz.line is defined, use this line type.
+##' @param horiz.col If horiz.line is defined, use this color
+##' @return An object of type \code{track} which can be plotted with the plot.track
+##' function
+##' @export
+wigTrack <- function(coord, score, name, col="black", ylim=NULL, smooth=FALSE, numpoints=250,
+                     horiz.line=NULL, horiz.lty=2, horiz.col="black") {
+  rv <- list()
+  attr(rv, "class") <- "track"
+  rv$data <- data.frame(coord=coord, score=score)
+  rv$name <- name
+  rv$col <- col
+  if (!is.null(ylim))
+    rv$ylim <- ylim
+  rv$smooth <- smooth
+  if (rv$smooth)
+    rv$numpoints <- numpoints
+  if (!is.null(horiz.line)) {
+    rv$horiz.line <- horiz.line
+    rv$horiz.lty <- rep(horiz.lty, length.out=length(horiz.line))
+    rv$horiz.col <- rep(horiz.col, length.out=length(horiz.line))
+  }
+  rv$type="wig"
+  rv
+}
+
+
+##' Create a features track
+##' @param gff An object of type \code{gff}
+##' @param name The name of the track (a character string)
+##' @param col The color to use plotting this track (can be a single
+##' color or a color for each element)
+##' @return An object of type \code{track} which can be plotted with plot.track
+##' function
+##' @export
+gffTrack <- function(gff, name, col="black") {
+  rv <- list()
+  attr(rv, "class") <- "track"
+  rv$data <- gff
+  rv$name <- name
+  rv$col <- col
+  rv$type="gff"
+  rv
+}
+
+

@@ -26,11 +26,12 @@ copy.msa <- function(msa) {
 }
 
 
+##' Check an MSA object
+##' @param msa An object to tests
+##' @return A logical indicating whether object is of type \code{msa}
 ##' @export
 is.msa <- function(msa) {
-  if (is.null(msa$externalPtr)) {
-    
-  }
+  attr(msa, "class")=="msa"
 }
 
 
@@ -68,10 +69,9 @@ is.msa <- function(msa) {
 ##' @param pointer.only a boolean indicating whether MSA should be stored by
 ##' reference (see Details)
 ##' @useDynLib rphast
-##' @aliases is.msa
-##' @export
+##' @export msa
 msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
-                    offset=NULL, pointer.only=FALSE) {
+                offset=NULL, pointer.only=FALSE) {
   #checks
   seqlen <-  unique(sapply(seqs, nchar))
   if (length(seqlen) > 1L) {
@@ -677,7 +677,6 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 ##'
 ##' The bracket notation can return a subset of the alignment,
 ##' or re-order rows and columns.
-##'
 ##' @param msa An object of type \code{msa}
 ##' @param rows A numeric vector of sequence indices,
 ##' character vector (containing sequence name), or
@@ -688,12 +687,13 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 ##' necessary to the same lenth as \code{ncol.msa}.  Note that these are
 ##' in coordinates with respect to the entire alignment.  msa$idx.offset
 ##' is ignored here.
-##' @seealso \code\{link{sub.msa}} which can subset columns based on genomic
+##' @seealso \code{\link{sub.msa}} which can subset columns based on genomic
 ##' coordinates.
-##' @seealso \code{link{extract.feature.msa} which can subset based on
+##' @seealso \code{\link{extract.feature.msa}} which can subset based on
 ##' genomic coordinates denoted in a features object.
+##' @usage \method{[}{msa}(rows, cols)
 ##' @S3method "[" msa
-##' @export "["
+##' @export "[.msa"
 "[.msa" <- function(msa, rows, cols) {
   if (!missing(rows)) {
     if (is.null(rows)) stop("rows cannot be empty")
@@ -774,12 +774,21 @@ likelihood.msa <- function(msa, tm, by.column=FALSE) {
 ##' @param nsites The number of columns in the simulated alignment.
 ##' @param hmm an object of type HMM describing transitions between the
 ##' tree models across the columns of the alignment.
+##' @param get.features (For use with hmm).  If \code{TRUE}, return object will
+##' be a list of length two.  The first element will be the alignment, and the
+##' second will be an object of type \code{gff} describing the path through
+##' the phylo-hmm in the simulated alignment.  
 ##' @param pointer.only (Advanced use only). If TRUE, return only a pointer
 ##' to the simulated alignment.  Possibly useful for very (very) large
-##' alignments.
+##' alignments.  Cannot be used if \code{get.features==TRUE}.
 ##' @return An object of type MSA containing the simulated alignment.
 ##' @export
-simulate.msa <- function(mod, nsites, hmm=NULL, pointer.only=FALSE) {
+simulate.msa <- function(mod, nsites, hmm=NULL, get.features=FALSE, pointer.only=FALSE) {
+  check.arg(get.features, "get.features", "logical", null.OK=FALSE, min.length=1L,
+            max.length=1L)
+  if (get.features && (!is.null(hmm)) && pointer.only) 
+    warning("pointer.only cannot be TRUE with get.features==TRUE; using pointer.only=FALSE")
+
   nstate <- 1L
   if (!is.null(hmm)) {
     nstate <- nstate.hmm(hmm)
@@ -796,8 +805,21 @@ simulate.msa <- function(mod, nsites, hmm=NULL, pointer.only=FALSE) {
   }
   if (nstate != nmod) 
     stop("number of states in HMM (", nstate, ") does not match number of models (", nmod,")")
+
+  if ((!is.null(hmm)) && get.features) {
+    temp <- list()
+    temp[[1]] <- .Call("rph_msa_base_evolve", tmlist, nsites, hmm, get.features)
+    result <- list()
+    msa <- .makeObj.msa()
+    msa$externalPtr <- .Call("rph_msa_base_evolve_struct_get_msa", temp[[1]])
+    result$msa <- from.pointer.msa(msa)
+    gff <- .makeObj.gff()
+    gff$externalPtr <- .Call("rph_msa_base_evolve_struct_get_labels", temp[[1]], nsites)
+    result$feats <- as.data.frame.gff(gff)
+    return(result)
+  }
   msa <- .makeObj.msa()
-  msa$externalPtr <- .Call("rph_msa_base_evolve", tmlist, nsites, hmm)
+  msa$externalPtr <- .Call("rph_msa_base_evolve", tmlist, nsites, hmm, get.features)
   if (pointer.only == FALSE) msa <- from.pointer.msa(msa)
   msa
 }
@@ -890,12 +912,12 @@ extract.feature.msa <- function(msa, gff, do4d=FALSE) {
 ##' will be added to each MSA and filled with missing data.  The order
 ##' of sequences is taken from the first MSA, and sequences are added to
 ##' this as necessary.
-##' @param msa A list of MSA objects to concatenate together.
+##' @param msas A list of MSA objects to concatenate together.
 ##' @param ordered If FALSE, disregard the order of columns in the combined
 ##' MSA.
 ##' @param pointer.only (Advanced use only, for very large MSA objects) If
 ##' TRUE, return object will be a pointer to an object stored in C.
-##' @param return An object of type MSA
+##' @return An object of type MSA
 ##' @export
 concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
   aggMsa <- copy.msa(msas[[1]])
@@ -916,12 +938,16 @@ concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
 
 
 ##' Split an MSA by feature
-##' @param msa An object of type \code{msa}
-##' @param gff A feature object
+##' @param x An object of type \code{msa}
+##' @param f A feature object
+##' @param drop Not currently used
+##' @param ... Not currently used
 ##' @return A list of msa objects, representing the sub-alignments for
 ##' each feature in the gff object
 ##' @export
-split.by.feature.msa <- function(msa, gff) {
+split.by.feature.msa <- function(x, f, drop=FALSE, ...) {
+  msa <- x
+  gff <- f
   if (is.null(msa$externalPtr)) msa <- as.pointer.msa(msa)
   if (is.null(gff$externalPtr)) gff <- as.pointer.gff(gff)
   l <- list()

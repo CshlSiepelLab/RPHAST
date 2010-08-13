@@ -260,18 +260,29 @@ dim.gff <- function(x) {
 
 ##' Get the range of a GFF feature object
 ##' @title GFF range
-##' @param x An object of type GFF
+##' @param ... Objects of type \code{gff}
 ##' @param na.rm Whether to remove values of NA before calculating range.
 ##' @return A vector of size 2 indicating minimum and maximum coord in
 ##' the GFF object
 ##' @S3method range gff
 ##' @export
-range.gff <- function(x, na.rm=FALSE) {
-  gff <- x
-  if (is.data.frame(gff)) 
-    return(range(c(gff$start, gff$end), na.rm=na.rm))
-  c(.Call("rph_gff_minCoord", gff$externalPtr),
-    .Call("rph_gff_maxCoord", gff$externalPtr))
+range.gff <- function(..., na.rm=FALSE) {
+  gffs <- list(...)
+  mins <- numeric(length(gffs))
+  maxs <- numeric(length(gffs))
+  for (i in 1:length(gffs)) {
+    gff <- gffs[[i]]
+    if (is.data.frame(gff)) {
+      r <- range(c(gff$start, gff$end), na.rm=na.rm)
+    } else {
+      r <- c(.Call("rph_gff_minCoord", gff$externalPtr),
+             .Call("rph_gff_maxCoord", gff$externalPtr))
+    }
+    mins[i] <- r[1]
+    maxs[i] <- r[2]
+  }
+  c(min(mins, na.rm=na.rm),
+    max(maxs, na.rm=na.rm))
 }
 
 
@@ -298,6 +309,8 @@ range.gff <- function(x, na.rm=FALSE) {
 ##' @param add if \code{TRUE}, add to existing plot
 ## @param labels whether to label the boxes.  If a vector of strings gives
 ## the lables for each element.  If \code{TRUE}, use gff$feature for labels.
+##' @param xlim A numerical vector of length 2 giving the range for the x-axis.
+##' @param ylim A numerical vector of length 2 giving the range for the y-axis.
 ##' @S3method plot gff
 ##' @param ... graphical parameters to be passed to \code{plot}.
 ##' @export
@@ -345,6 +358,32 @@ plot.gff <- function(x, y=0, width=1, plottype="r",
   invisible(NULL)
 }
 
+
+##' GFF kernel density
+##' @param x An object of type \code{gff}
+##' @param type a character string, denoting the value to compute
+##' the density for.  Currently the only valid types are "length"
+##' and "score"
+##' @param ... additional arguments to be passed to \code{density}
+##' @return A kernel density object as defined by \link{\code{density}}
+##' @export
+density.gff <- function(x, type="length", ...) {
+  if (type == "length") {
+    if (!is.null(x$externalPtr)) {
+      vals <- .Call("rphast_gff_lengths", x$externalPtr)
+    } else {
+      vals <- x$end - x$start
+    }
+  } else if (type == "score") {
+    if (!is.null(x$externalPtr)) {
+      vals <- .Call("rphast_gff_getScores", x$externalPtr)
+    } else {
+      vals <- x$score
+    }
+  } else stop("unknown type (should be \"length\" or \"score\")")
+  density(vals, ...)
+}
+
 ##' plot histogram of feature lengths
 ##' @param x an object of type \code{gff}
 ##' @param type a character string, denoting the value to make the histogram with.
@@ -385,7 +424,7 @@ hist.gff <- function(x, type="length", ...) {
 ##' selected by multiple entries in filterGff.  numbase and min.percent apply in either case.
 ##' @return an object of type GFF containing the selected entries from gff.
 ##' @export
-overlap.gff <- function(gff, filterGff, numbase=NULL, min.percent=NULL,
+overlap.gff <- function(gff, filterGff, numbase=1, min.percent=NULL,
                         overlapping=TRUE, get.fragments=FALSE) {
   check.arg(numbase, "numbase", "integer", null.OK=TRUE)
   check.arg(min.percent, "min.percent", "numeric", null.OK=TRUE)
@@ -450,7 +489,7 @@ inverse.gff <- function(gff, region.bounds) {
 ##' provided gff objects.  Used for taking inverses of the gff objects as
 ##' required by the argument \code{not}.  If \code{not==NULL} or
 ##' \code{not==FALSE} for all gff objects, then this argument is not used.
-##' @param return The number of bases covered by the gff arguments, or the
+##' @return The number of bases covered by the gff arguments, or the
 ##' combined gff object if \code{get.feats==TRUE}.
 ##' @export
 coverage.gff <- function(..., or=FALSE, get.feats=FALSE,
@@ -530,7 +569,7 @@ rbind.gff <- function(...) {
   as.data.frame.gff(gff)
 }
 
-##' Split a GFF
+##' Split the elements of a GFF
 ##' @param gff An object of type GFF
 ##' @param max.length the maximum length of features in new object.  Can
 ##' be a vector giving a different length for each row, or a single numeric
@@ -555,15 +594,82 @@ split.gff <- function(gff, max.length) {
 
 
 ##' Sort a GFF
-##' @param gff An object of type \code{gff}
+##' @param x An object of type \code{gff}
+##' @param decreasing Set to TRUE to sort from highest to lowest coordinates
+##' @param ... Currently not used
 ##' @return An object of type \code{gff} sorted primarily by
 ##' start position, then by end position.
 ##' @export
-sort.gff <- function(gff) {
+##' @S3method sort gff
+sort.gff <- function(x, decreasing = FALSE, ...) {
+  gff <- x
   if (is.null(gff$externalPtr))
     gff <- as.pointer.gff(gff)
   rv <- .makeObj.gff()
   rv$externalPtr <- .Call("rph_gff_sort", gff$externalPtr)
-  as.data.frame.gff(rv)
+  rv <- as.data.frame.gff(rv)
+  if (decreasing) 
+    rv <- rv[dim(rv)[1]:1,]
+  rv
 }
   
+
+##' Composition of features with respect to annotations
+##' @param features An object of type \code{gff}.
+##' @param annotations An object of type \code{gff} containing
+##' some annotations.
+##' @return A data frame with two columns and a row for
+##' each type of element in the annotations.  The second
+##' column gives the fraction of 
+##' features which fall in the corresponding annotation type.
+##' Assuming non-overlapping annotations which cover the
+##' entire range of interest, the second column should sum
+##' to 1.
+##' @export
+composition.gff <- function(features, annotations) {
+  if (!is.null(annotations$externalPtr))
+    annotations <- as.data.frame.gff(annotations)
+  if (!is.null(features$externalPtr))
+    features <- as.data.frame.gff(features)
+  annTypes <- unique(annotations$feature)
+  rv <- list()
+  for (anntype in annTypes) {
+    annfeat <- annotations[annotations$feature == anntype,]
+    rv[[anntype]] <- coverage.gff(features, annfeat)/coverage.gff(features)
+  }
+  data.frame(type=names(rv), composition=as.numeric(rv), stringsAsFactors=TRUE)
+}
+
+
+##' Enrichment of features with respect to annotation types
+##' @param features An object of type \code{gff}
+##' @param annotations An object of type \code{gff} containing
+##' some annotations.
+##' @param region.bounds An object of type \code{gff} representing
+##' the boundary coordinates of the regions of interest (such as chromosome
+##' boundaries).  All elements from the first two arguments should fall
+##' entirely within region.bounds.
+##' @return A data frame with two columns and a row for each type of
+##' element in the annotations.  The second column gives the 
+##' fold-enrichment
+##' of the features across the corresponding annotation type,
+##' which is equal to the
+##' fraction of the features which fall within the annotation type,
+##' divided by the fraction of the entire region covered by the
+##' annotation type.
+##' @export
+enrichment.gff <- function(features, annotations, region.bounds) {
+  if (!is.null(annotations$externalPtr))
+    annotations <- as.data.frame.gff(annotations)
+  if (!is.null(features$externalPtr))
+    features <- as.data.frame.gff(feature)
+  annTypes <- unique(annotations$feature)
+  rv <- list()
+  totalNumBase <- coverage.gff(region.bounds)
+  for (anntype in annTypes) {
+    annfeat <- annotations[annotations$feature == anntype,]
+    cat(dim(annfeat),"\n")
+    rv[[anntype]] <- coverage.gff(features, annfeat)*totalNumBase/(coverage.gff(annfeat)*coverage.gff(features))
+  }
+  data.frame(type=names(rv), enrichment=as.numeric(rv), stringsAsFactors=TRUE)
+}

@@ -3,15 +3,15 @@
 % likely to be overwritten.
 %
 % \VignetteIndexEntry{rphast}
-% \VignetteDepends{tools, cluster}
+% \VignetteDepends{ape,multtest}
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
 \documentclass[11pt]{article}
 
 \title{Rphast vignettes}
-\author{M. J. Hubisz and A. Siepel}
-\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,invlude=TRUE,engine=R}
+\author{M. J. Hubisz K. S. Pollard, and A. Siepel}
+%\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,invlude=TRUE,engine=R}
 
 \usepackage{Sweave}
 
@@ -31,7 +31,7 @@ exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 unzip(exampleArchive, c("sol1.maf", "sol1.gp"))
 
 #also define tree
-tomatoTree <- "((((tomato,potato), eggplant), pepper), petunia);"
+tomatoTree <- "((((tomato, potato), eggplant), pepper), petunia);"
 
 # read the alignment and give common names
 align <- read.msa("sol1.maf")
@@ -74,7 +74,7 @@ table(feats$feature)
 wholeChrom <- gff(seq="tomato", src=".", feature="all",
                   start=1, end=122080)
 
-# annotate non-coding reginos
+# annotate non-coding regions
 coding.feats <- feats
 noncoding.feats <- inverse.gff(feats, region.bounds=wholeChrom)
 noncoding.feats$feature <- "noncoding"
@@ -87,68 +87,40 @@ align4d <- get4d.msa(align, feats)
 neutralMod <- phyloFit(align4d, tree=tomatoTree, subst.mod="REV")
 
 # now run phastCons to score/predict conserved elements
-pc1 <- phastCons(align, neutralMod, viterbi=TRUE)
+pc <- phastCons(align, neutralMod, expected.length=6, target.coverage=0.125, viterbi=TRUE)
 
-names(pc1)
-
-# examine the results
-# the transition rates between conserved and non-conserved are here:
-pc1$transition.rates
+names(pc)
 
 # the conserved elements are in a GFF object stored here:
-dim(pc1$most.conserved)
+dim(pc$most.conserved)
 # this shows how many bases are predicted to be conserved
-coverage.gff(pc1$most.conserved)
+coverage.gff(pc$most.conserved)
 
-# we get about 19.2% coverage of conserved elements without estimating rho
-# (here rho was held constant at 0.3, but is only a prior)
-coverage.gff(pc1$most.conserved)/coverage.gff(wholeChrom)
+# we get about 5% coverage of conserved elements
+coverage.gff(pc$most.conserved)/coverage.gff(wholeChrom)
 
 # the posterior probabilities for every base are here:
-names(pc1$post.prob.wig)
-dim(pc1$post.prob.wig)
+names(pc$post.prob.wig)
+dim(pc$post.prob.wig)
 
 # and the overall likelihood is here:
-pc1$likelihood
-
-# Run phastCons again, this time try to estimate the fraction of sites which
-# are conserved
-pcEM <- phastCons(align, neutralMod, viterbi=TRUE, estimate.rho=TRUE) 
-names(pcEM)
-# note this has the same elements as pc1, plus an estimate for rho
-pcEM$rho
-
-# and the likelihood is higher since we estimate rho
-pcEM$likelihood
-
-# now coverage is a bit higher, at 23%
-# (note rho only defines a prior expectation for coverage)
-coverage.gff(pcEM$most.conserved)/coverage.gff(wholeChrom)
-
-# compare the results with and without --estimate-rho
-coverage.gff(pcEM$most.conserved, pc1$most.conserved)
-coverage.gff(pcEM$most.conserved, pc1$most.conserved, or=TRUE)
-coverage.gff(pcEM$most.conserved, pc1$most.conserved, 
-             not=c(FALSE, TRUE), region.bounds=wholeChrom)
-coverage.gff(pcEM$most.conserved, pc1$most.conserved, 
-             not=c(TRUE, FALSE), region.bounds=wholeChrom)
+pc$likelihood
 
 
 # now run phyloP to get base-by-base scores
-p <- phyloP(neutralMod, align, method="LRT", mode="CON")
+pp <- phyloP(neutralMod, align, method="LRT", mode="CON")
 
 # examine these results- it is a data frame giving
 # statistics for every base in the alignment
-names(p)
-dim(p)
+names(pp)
+dim(pp)
 
 # this function will pull out all the elements of
 # feats, phastCons results, and phyloP results that
 # are plottable
-plotData <- getPlottableResults(list(feats=coding.feats,
-                                     phastCons1=pc1,
-                                     phastConsEM=pcEM,
-                                     phyloP=p))
+plotData <- getPlottableResults(list(feats=feats[feats$feature=="CDS",],
+                                     phastCons=pc,
+                                     phyloP=pp))
 names(plotData)
  
 # plot out the entire region
@@ -166,7 +138,7 @@ plot.rphast(plotData, xlim=c(6.58e+04, 6.6e+04))
 
 
 # now look a bit more at conserved elements
-ce <- pc1$most.conserved
+ce <- pc$most.conserved
 hist.gff(ce, breaks=100)
 
 # break conserved elements into coding/noncoding:
@@ -175,17 +147,20 @@ hist.gff(ce, breaks=100)
 # by at least 50 percent
 ce.coding <- overlap.gff(ce, coding.feats, min.percent=0.5)
 # and this gets the ones which overlap by less than 50 percent:
-ce.noncoding <- overlap.gff(ce, coding.feats, min.percent=0.5, overlapping=FALSE)
+ce.noncoding <- overlap.gff(ce, coding.feats, min.percent=0.5, 
+                            overlapping=FALSE)
 hist.gff(ce.coding, add=TRUE, col="red", breaks=100)
 hist.gff(ce.noncoding, add=TRUE, col="blue", breaks=50)
-legend(c("all", "coding", "noncoding"), x="topright", inset=0.01, fill=c("white", "red", "blue"))
+legend(c("all", "coding", "noncoding"), x="topright", inset=0.01, 
+       fill=c("white", "red", "blue"))
 # so coding elements tend to be longer
 
 # can also plot histograms of scores
 hist.gff(ce, type="score", breaks=100)
 hist.gff(ce.coding, type="score", add=TRUE, col="red", breaks=100)
 hist.gff(ce.noncoding, type="score", add=TRUE, col="blue", breaks=50)
-legend(c("all", "coding", "noncoding"), x="topright", inset=0.01, fill=c("white", "red", "blue"))
+legend(c("all", "coding", "noncoding"), x="topright", inset=0.01, 
+       fill=c("white", "red", "blue"))
 # coding elements also score much higher
 
 # look at coverage of each annotation type by conserved element
@@ -214,17 +189,28 @@ mtext("rho=0.3", side=3, line=-3, outer=TRUE, cex=1.5)
 mtext("rho estimated by EM", side=3, line=-27, outer=TRUE, cex=1.5)
 
 
-# also take a look at consered and nonconserved trees using ape
-require("ape")
-cons.tree <- pcEM$tree.models$cons.mod$tree
-noncons.tree <- pcEM$tree.models$noncons.mod$tree
-par(mfrow=c(1,2))
-plot(read.tree(text = noncons.tree))
-axisPhylo()
-plot(read.tree(text = cons.tree))
-axisPhylo()
+# Run phastCons again, this time try to estimate the fraction of sites which
+# are conserved
+pcEM <- phastCons(align, neutralMod, viterbi=TRUE, estimate.rho=TRUE) 
+names(pcEM)
+# note this has the same elements as pc, plus an estimate for rho
+pcEM$rho
 
-branchlen.tree(c(noncons.tree, cons.tree))
+# and the likelihood is higher since we estimate rho
+pcEM$likelihood
+
+# now coverage is a bit higher, at 23%
+# (note rho only defines a prior expectation for coverage)
+coverage.gff(pcEM$most.conserved)/coverage.gff(wholeChrom)
+
+# compare the results with and without --estimate-rho
+coverage.gff(pcEM$most.conserved, pc$most.conserved)
+coverage.gff(pcEM$most.conserved, pc$most.conserved, or=TRUE)
+coverage.gff(pcEM$most.conserved, pc$most.conserved, 
+             not=c(FALSE, TRUE), region.bounds=wholeChrom)
+coverage.gff(pcEM$most.conserved, pc$most.conserved, 
+             not=c(TRUE, FALSE), region.bounds=wholeChrom)
+
 @ 
 
 \section{Detection of Accelerated Regions}
@@ -425,7 +411,7 @@ require("rphast")
 # lets use a subset of the full species
 seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "equCab2", "canFam2", "dasNov2", "mm9", "rn4",
               "galGal3", "xenTro2")
-neutralMod <- read.tm("placentalMammals.mod")
+neutralMod <- read.tm("/home/melissa/rphast/RPHAST/inst/extdata/placentalMammals.mod")
 neutralMod$tree <- prune.tree(neutralMod$tree, seqs=seqnames, all.but=TRUE)
 
 # get the NRSF maf files from rphast
@@ -497,12 +483,12 @@ scale.factors <- branchlen.tree(trees)/branchlen.tree(neutralMod$tree)
 # is there another pacakge for plotting logos? 
 require("seqLogo")
 m <- read.table("NRSF/NRSF.mtf")
-#barplot(scale.factors, density=1)
+barplot(scale.factors, density=1)
 barplot(lr, density=1)
 pwm <- makePWM(t(m))
 seqLogo(pwm)
 barplot(lr, density=1, add=TRUE)
-#barplot(scale.factors, add=TRUE, density=1)
+barplot(scale.factors, add=TRUE, density=1)
 abline(h=1,lty=2)
 
 @ 
@@ -546,7 +532,7 @@ get.trans.mat <- function(lambda, state.names, motifLen) {
 # and is also quite complicated - would take a half dozen commands at least
 
 # this is the rate of transition to motif states
-lambda <- 0.00001
+lambda <- 0.01
 trans.mat <- get.trans.mat(lambda, names(mods), motifLen)
 # need equilibrium frequencies for the HMM
 eq.freq <- numeric(nrow(trans.mat))
@@ -564,34 +550,26 @@ sum(eq.freq)  #make sure sums to 1
 # now create the HMM
 nrsf.hmm <- hmm(trans.mat, eq.freq, begin.freq=eq.freq)
 
-# now we are going to test the HMM on a 1 MB region of chromosome 19 which has
-# several known NRSF sites.  We are cheating here though because these sites
-# were used to define the HMM.  Maybe we should do something else?
-align <- read.msa("/home/melissa/rphast/chr19.59000000-60000000.maf",
-                  seqnames=seqnames)
-align <- strip.gaps.msa(align)
-pc <- phastCons(msa=align, mod=mods, hmm=nrsf.hmm, viterbi=TRUE,
-                states=sprintf("site.%i", 1:motifLen),
-                reflect.strand=c("neutral", "conserved"))
-knownSites <- nrsfSites[nrsfSites$seqname=="hg18.chr19",]
-plotL <- getPlottableResults(list(NRSFSites=knownSites,
-                                  phastConsResults=pc))
-plot.rphast(plotL)
+# now lets try simulating based on the hmm
+simLength <- 100000
+simData <- simulate.msa(mods, simLength, nrsf.hmm, get.features=TRUE)
+hmmScores <- score.hmm(msa=simData$msa, mod=mods, hmm=nrsf.hmm, viterbi=TRUE,
+                       states=sprintf("site.%i", 1:motifLen))
+predicted <- hmmScores$in.states
+correct <- simData$feats[substr(simData$feats$feature, 1, 4)=="site",]
 
-# zoom in on the 9 sites we expected to find
-par(mfrow=c(3, 3))
-for (i in 1:nrow(knownSites)) {
-  start <- knownSites[i,]$start
-  end <- knownSites[i,]$end
-  plot.rphast(plotL, xlim=c(start-100, end+100))
-}
+numSitePredicted <- coverage.gff(predicted)
+numSiteCorrect <- coverage.gff(correct)
+numSiteOverlap <- coverage.gff(predicted, correct)
+cat(numSitePredicted, numSiteCorrect, numSiteOverlap, "\n")
 
-# lets just see if this has something to do with the pivot.states
-pcPlus <- phastCons(msa=align, mod=mods, hmm=nrsf.hmm, viterbi=TRUE,
-                    states=sprintf("site.%i", 1:motifLen))
-plotL <- getPlottableResults(list(NRSFSites=knownSites,
-                                  phastConsResultsPlus=pcPlus))
-plot.rphast(plotL)
+
+wholeRegion <- gff("hg18", src=".", feature="all",start=1, end=simLength)
+specificity <- coverage.gff(correct, predicted, not=c(TRUE, TRUE), region.bounds=wholeRegion)/
+  coverage.gff(correct, not=TRUE, region.bounds=wholeRegion)
+sensitivity <- coverage.gff(correct, predicted)/coverage.gff(correct)
+cat(specificity, sensitivity, "\n")
+
 
 @ 
 
