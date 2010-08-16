@@ -9,8 +9,8 @@ rphast.simplify.list <- function(lol) {
   # this is a little ugly but I can't think of a better way to deal with special
   # conversion issues.  No way to assign "NA" in C so if frames are undefined
   # they are -1, set to NA here.
-  isGff <- (!is.null(currClass) && currClass=="gff")
-  if (isGff) {
+  isFeat <- (!is.null(currClass) && currClass=="feat")
+  if (isFeat) {
     if (!is.null(lol$frame)) {
       lol$frame[lol$frame < 0] <- NA
     }
@@ -18,7 +18,7 @@ rphast.simplify.list <- function(lol) {
     isMatrix <- FALSE
   } else {
     isMatrix <- (!is.null(currClass) && currClass=="matrix")
-    isDataFrame <- isGff || (!is.null(currClass) && currClass=="data.frame")
+    isDataFrame <- isFeat || (!is.null(currClass) && currClass=="data.frame")
   }
   if (isMatrix || isDataFrame) {
     if (!is.null(lol$row.names)) {

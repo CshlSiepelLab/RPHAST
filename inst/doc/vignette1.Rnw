@@ -3,7 +3,6 @@
 % likely to be overwritten.
 %
 % \VignetteIndexEntry{rphast}
-% \VignetteDepends{ape,multtest}
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
@@ -14,7 +13,7 @@
 \begin{document}
 
 \title{Conservation Analysis}
-\author{M. J. Hubisz K. S. Pollard, and A. Siepel}
+\author{M. J. Hubisz, K. S. Pollard, and A. Siepel}
 \SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R,keep.source=TRUE}
 \maketitle
 
@@ -45,29 +44,14 @@ names(align)
 # load the features
 feats <- read.gff("sol1.gp")
 unique(feats$seqname)
+# in these features, UTRs are not annotated, so CDS is the same as exon.  So
+# remove the exon features
+feats <- feats[feats$features != "exon",]
 # they are all on chr2 so rename to "tomato" to cross-reference with alignment
 feats$seqname <- "tomato"
 
 # annotate UTRs and introns
-feats <- addUTRs.gff(feats)
 feats <- addIntrons.gff(feats)
-
-table(feats$feature)
-
-# note that there are no UTRs.. are CDS and exon the same?
-
-# pull out and sort CDS regions.
-feats.cds <- sort.gff(feats[feats$feature=="CDS",])
-
-# pull out and sort exons
-feats.exon <- sort.gff(feats[feats$feature=="exon",])
-
-# check if they are the same ... they are!
-sum(feats.cds$start != feats.exon$start |
-    feats.cds$end != feats.exon$end)
-
-# so remove redundant exon features
-feats <- feats[feats$feature != "exon",]
 
 table(feats$feature)
 
@@ -96,13 +80,13 @@ pc <- phastCons(align, neutralMod, expected.length=6,
 
 names(pc)
 
-# the conserved elements are in a GFF object stored here:
-dim(pc$most.conserved)
+# the conserved elements are in a features object stored here:
+cons.elements <- pc$most.conserved
 # this shows how many bases are predicted to be conserved
-coverage.gff(pc$most.conserved)
+coverage.gff(cons.elements)
 
 # we get about 5% coverage of conserved elements
-coverage.gff(pc$most.conserved)/coverage.gff(wholeChrom)
+coverage.gff(cons.elements)/coverage.gff(wholeChrom)
 
 # the posterior probabilities for every base are here:
 names(pc$post.prob.wig)
@@ -120,13 +104,13 @@ pp <- phyloP(neutralMod, align, method="LRT", mode="CONACC")
 names(pp)
 dim(pp)
 
-geneTrack <- gffTrack(feats[feats$feature=="CDS",], "genes")
-phastConsElTrack <- gffTrack(pc$most.conserved, "phastCons most conserved", col="red")
-phastConsScoreTrack <- wigTrack(coord=pc$post.prob.wig$coord,
-                                score=pc$post.prob.wig$post.prob,
-                                name="phastCons post prob", col="red")
-phyloPTrack <- wigTrack(coord=pp$coord, score=pp$score, name="phyloP score", col="blue",
-                        smooth=TRUE, horiz.line=0)
+geneTrack <- gene.track(feats, "genes")
+consElTrack <- feat.track(cons.elements, "phastCons most conserved", col="red")
+phastConsScoreTrack <- wig.track(coord=pc$post.prob.wig$coord,
+                                 score=pc$post.prob.wig$post.prob,
+                                 name="phastCons post prob", col="red")
+phyloPTrack <- wig.track(coord=pp$coord, score=pp$score, name="phyloP score", 
+                         col="blue", smooth=TRUE, horiz.line=0)
 plot.track(list(geneTrack, phastConsElTrack, phastConsScoreTrack, phyloPTrack),
            xlim=c(61000, 68000))
 

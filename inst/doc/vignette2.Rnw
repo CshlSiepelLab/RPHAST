@@ -3,7 +3,7 @@
 % likely to be overwritten.
 %
 % \VignetteIndexEntry{rphast}
-% \VignetteDepends{ape,multtest}
+% \VignetteDepends{ape}
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
@@ -132,11 +132,7 @@ hist(nonpara.pval, breaks=100)
 We can use 5\% FDR to correct for multiple testing:
 <<rarAnalysis11>>=
 
-require("multtest")
-# which method to use?
-nonpara.fdr <- mt.rawp2adjp(nonpara.pval, proc="BH")
-nonpara.fdr <- nonpara.fdr$adjp[order(nonpara.fdr$index),2]
-
+nonpara.fdr <- p.adjust(nonpara.pval, method="BH")
 sum(nonpara.fdr < 0.05)
 
 # this gets the indices of elements with adjusted p-values < 0.05
@@ -212,8 +208,7 @@ para.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
                       gff=feat, subtree="mm9-rn4")
 
 para.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, para.phyloP$lnlratio)
-para.fdr <- mt.rawp2adjp(para.pval, proc="BH")
-para.fdr <- para.fdr$adjp[order(para.fdr$index),2]
+para.fdr <- p.adjust(para.pval, method="BH")
 sum(para.fdr < 0.05)
 
 # this gets the indices of elements with adjusted p-values < 0.05

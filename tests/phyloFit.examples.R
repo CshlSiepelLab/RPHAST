@@ -11,8 +11,9 @@ phyloFit(m, init.mod=tm)
 likelihood.msa(m, tm)
 tm$likelihood
 print(tm$likelihood, digits=10)
-g <- read.gff("gencode.ENr334.gff")
-t <- phyloFit(m, tree="((hg18, (mm9, rn4)), canFam2)", gff=g, quiet=TRUE)
+f <- read.feat("gencode.ENr334.gff")
+t <- phyloFit(m, tree="((hg18, (mm9, rn4)), canFam2)",
+              features=feat, quiet=TRUE)
 names(t)
 t$other
 t[["5'flank"]]

@@ -1,38 +1,3 @@
-#basic idea: take any of the following:
-# phyloP results
-# phastCons Results
-# gff
-
-# and plot all in one plot, vertically stacking each set of results with a
-# single x axis and local y-axis for wig-type plots.  Should be an argument
-# which optionally scales relative sizes of each plot.  Should also be able
-# to plot generic wig with "coord" and "score" or generic bed with
-# "start" "end"
-
-# question: what do we do about results, like phyloP results, that have
-# a coord column and several statistics (from base-by-base type output)
-# always plot the last statistic?
-
-
-##' Guess the contents of a list containing RPHAST results
-##' @param l a list containing plottable results, such as wig or gff
-##' @return a character vector of plot types, the same length as the input
-##' list, each element is either "wig" for lists that have a coord element,
-##' "gff" for lists that have start and end elements, or "unknown" for others
-##' @export
-guessResultType.rphast <- function(l) {
-  lapply(l, function(x) {
-    if (!is.null(x$coord)) {
-      return("wig")
-    } else if ((!is.null(x$start)) && (!is.null(x$end))) {
-      return("gff")
-    }
-    "unknown"
-  }
-         )
-}
-
-
 ##' Is this a track?
 ##' @param x An object to test
 ##' @param ... ignored
@@ -46,12 +11,11 @@ is.track <- function(x, ...) {
 
 ##' Get the coordinate range of a list of RPHAST results
 ##' @param ... a list of tracks
-##' @param resultType a vector of character strings, each should be either
-##' "wig" or "gff"
+##' @param na.rm logical, indicating if \code{NA}'s should be omitted
 ##' @return a numeric vector of length two giving the minimum and maximum
 ##' coordinates in any element of the list
 ##' @export
-range.track <- function(..., na.rm=TRUE) {
+range.track <- function(..., na.rm=FALSE) {
   l <- list(...)
   if (length(l)==1 && !is.track(l[[1]])) 
     l <- l[[1]]
@@ -59,9 +23,9 @@ range.track <- function(..., na.rm=TRUE) {
   for (i in 1:length(l)) {
     if (!is.track(l[[i]])) stop("element ", i, " is not a track")
     if (l[[i]]$type == "wig") {
-      currrange <- c(currrange, range(l[[i]]$data$coord))
+      currrange <- c(currrange, range(l[[i]]$data$coord, na.rm=na.rm))
     } else {
-      currrange <- c(currrange, range.gff(l[[i]]$data))
+      currrange <- c(currrange, range.feat(l[[i]]$data, na.rm=na.rm))
     }
   }
   range(currrange)
@@ -97,7 +61,7 @@ smooth.wig <- function(coord, score, numpoints=300) {
 
 
 ##' Make browser-like plot in rphast
-##' @param x a list of tracks, created by wigTrack or gffTrack.
+##' @param x a list of tracks, created by the wig.track or feat.track
 ##' @param doLabels Logical.  Whether to plot the label above each plot.  Will be
 ##' recycled to the length of x.  Does not affect printing of shortLabels.
 ##' @param labels Labels to appear directly above each plot.
@@ -211,60 +175,39 @@ plot.track <- function(x,
         for (i in 1:length(el$horiz.line)) 
           abline(h=horiz.line, lty=el$horiz.lty[i], col=el$horiz.col[i])
       }
-    } else {
-      plot.gff(el$data, doStrand=doStrand[i], y=mean(yrange), width=(yrange[2]-yrange[1]),
-               add=TRUE, col=el$col)
-    }
+    } else if (resultType[[i]] == "feat") {
+      plot.feat(el$data,
+                y=mean(yrange), width=(yrange[2]-yrange[1]),
+                add=TRUE, col=el$col)
+    } else if (resultType[[i]] == "gene") {
+      if (!is.null(el$data$externalPtr)) 
+        el$data <- as.data.frame.gff(el$data)
+      f <- el$data$feature == "intron"
+      if (sum(f) > 0L) {
+        plot.feat(el$data[f,], plottype="a", arrow.length=0,
+                  y=mean(yrange), width=(yrange[2]-yrange[1]),
+                  lty=2, col=el$col)
+      }
+      f <- el$data$feature == "exon"
+      if (sum(f) > 0L) {
+        plot.feat(el$data[f,], plottype="a", y=mean(yrange),
+                  width=yrange[2]-yrange[1], lty=1, col=el$col)
+      }
+      f <- el$data$feature == "CDS"
+      if (sum(f) > 0L) {
+        plot.feat(el$data[f,], plottype="b",
+                  width=yrange[2]-yrange[1],
+                  lty=1, col=el$col)
+      }
+    } else stop("don't know track type ", resultType[[i]])
     if (!is.null(shortLabels))
-      mtext(shortLabels[i], side=2, line=0.5, at=mean(yrange), las=1, cex=cex.shortLabels[i])
+      mtext(shortLabels[i], side=2, line=0.5, at=mean(yrange),
+            las=1, cex=cex.shortLabels[i])
     maxy <- miny-blankSpace
   }
 
 }
 
-
-
-# recursively "flatten" a list of lists, keeping only elements which are
-# wig-type (have coord/score) or are gff-type.
-##' Get a list suitable for sending to plot.rphast
-##' @param resultList a possibly recursive list of \code{GFF} objects, phastCons results, and/or
-##' phyloP results.  Can also contain generic data frames or lists.  If one column has name "coord",
-##' will use this column as the x-axis and the last column whose name isn't coord as the y-axis.
-##' If columns exist named "start" and "end", will plot as a \code{GFF}.  Other elements of the
-##' recursive list are ignored.
-##' @param prefix A character string to append to the names of all elements.  Usually \code{NULL}
-##' on the initial call (but used for the recursion).
-##' @export
-getPlottableResults <- function(resultList, prefix=NULL) {
-  rv.list <- list()
-  nextIdx <- 1
-  for (i in 1:length(resultList)) {
-    curr <- resultList[[i]]
-    if (is.null(names(resultList))) {
-      currName <- as.character(i)
-    } else currName <- names(resultList)[i]
-    if (!is.null(prefix)) 
-      currName <- paste(prefix, currName, sep=" ")
-    if (is.list(curr)) {
-      if (((!is.null(curr$coord)) && length(curr) >= 2L) ||
-          ((!is.null(curr$start)) && (!is.null(curr$end)))) {
-        rv.list[[nextIdx]] <- curr
-        names(rv.list)[nextIdx] <- currName
-        nextIdx <- nextIdx + 1
-      } else {
-        temp <- getPlottableResults(curr,prefix=currName)
-        if (length(temp) >= 1L) {
-          for (j in 1:length(temp)) {
-            rv.list[[nextIdx]] <- temp[[j]]
-            names(rv.list)[nextIdx] <- names(temp)[j]
-            nextIdx <- nextIdx + 1
-          }
-        }
-      }
-    }
-  }
-  rv.list
-}
 
 ##' Create a wig track
 ##' @param coord A numeric vector of coordinates (to be used for x-axis)
@@ -283,8 +226,8 @@ getPlottableResults <- function(resultList, prefix=NULL) {
 ##' @return An object of type \code{track} which can be plotted with the plot.track
 ##' function
 ##' @export
-wigTrack <- function(coord, score, name, col="black", ylim=NULL, smooth=FALSE, numpoints=250,
-                     horiz.line=NULL, horiz.lty=2, horiz.col="black") {
+wig.track <- function(coord, score, name, col="black", ylim=NULL, smooth=FALSE, numpoints=250,
+                      horiz.line=NULL, horiz.lty=2, horiz.col="black") {
   rv <- list()
   attr(rv, "class") <- "track"
   rv$data <- data.frame(coord=coord, score=score)
@@ -306,21 +249,32 @@ wigTrack <- function(coord, score, name, col="black", ylim=NULL, smooth=FALSE, n
 
 
 ##' Create a features track
-##' @param gff An object of type \code{gff}
+##' @param x An object of type \code{feat}
 ##' @param name The name of the track (a character string)
 ##' @param col The color to use plotting this track (can be a single
 ##' color or a color for each element)
+## @param show.strand If \code{NULL}, do not use strand data.  If "
 ##' @return An object of type \code{track} which can be plotted with plot.track
 ##' function
 ##' @export
-gffTrack <- function(gff, name, col="black") {
+feat.track <- function(x, name, col="black") {
   rv <- list()
   attr(rv, "class") <- "track"
-  rv$data <- gff
+  rv$data <- x
   rv$name <- name
   rv$col <- col
-  rv$type="gff"
+  rv$type="feat"
   rv
 }
 
 
+
+gene.track <- function(x, name, col="black") {
+  rv <- list()
+  attr(rv, "class") <- "track"
+  rv$data <- x
+  rv$name <- name
+  rv$col <- col
+  rv$type="gene"
+  rv
+}

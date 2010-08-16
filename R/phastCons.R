@@ -227,7 +227,7 @@ phastCons.call <- function(msa,
 ##' non-conserved state.}
 ##' \item{tree.models}{Tree model objects describing the evolutionary process in the
 ##' conserved and non-conserved states.}
-##' \item{most.conserved}{An object of type gff which describes conserved elements
+##' \item{most.conserved}{An object of type \code{feat} which describes conserved elements
 ##' detected by the Viterbi algorithm.}
 ##' \item{post.prob.wig}{A data frame giving a coordinate and score for individual
 ##' bases in the alignment}
@@ -307,7 +307,7 @@ phastCons <- function(msa,
 ##' used for prediction on both strands.
 ##' @return A list with some or all of the
 ##' following elements, depending on the arguments:
-##' \item{in.states}{An object of type gff which describes regions which
+##' \item{in.states}{An object of type \code{feat} which describes regions which
 ##' fall within the interesting states specified in the states parameter,
 ##' as determined by the Viterbi algorithm.}
 ##' \item{post.prob.wig}{A data frame giving a coordinate and posterior probibility

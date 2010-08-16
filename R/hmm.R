@@ -67,6 +67,7 @@ stopIfNotValidHmm <- function(hmm){
   invisible(NULL)
 }
 
+##' @export
 nstate.hmm <- function(hmm) {
   stopIfNotValidHmm(hmm)
   nrow(hmm$trans.mat)

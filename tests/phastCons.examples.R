@@ -1,6 +1,6 @@
 require("rphast")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
-files <- c("ENr334.fa", "gencode.ENr334.gff", "rev.mod")
+files <- c("ENr334.fa", "rev.mod")
 unzip(exampleArchive, files)
 tm <- read.tm("rev.mod")
 msa <- read.msa("ENr334.fa")

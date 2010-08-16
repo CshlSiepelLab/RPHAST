@@ -4,7 +4,7 @@ phyloP.call<- function(mod,
                        msa=NULL,
                        method="LRT",
                        mode="CON",
-                       gff=NULL,
+                       features=NULL,
                        basewise=FALSE,
                        subtree=NULL,
                        branches=NULL,
@@ -40,20 +40,20 @@ phyloP.call<- function(mod,
     stop("invalid method ", method)
   if (mode != "CON" & mode != "ACC" & mode != "NNEUT" & mode != "CONACC")
     stop("invalid mode ", mode)
-  if (!is.null(gff) && basewise) 
+  if (!is.null(features) && basewise) 
   if (is.null(msa) && (method!="SPH" || prior.only!=TRUE))
     stop("msa cannot be NULL unless method=SPH and prior.only==TRUE")
-  if (!is.null(gff) && basewise) 
-    stop("cannot use both basewise and gff")
+  if (!is.null(features) && basewise) 
+    stop("cannot use both basewise and features")
   if (!is.null(outfile)) {
     if ((outfile.format != "default" &&
          outfile.format != "wig" &&
          outfile.format != "gff") ||
-        (outfile.format=="gff" && is.null(gff)) ||
+        (outfile.format=="gff" && is.null(features)) ||
         (outfile.format=="wig" && basewise==FALSE))
       stop("invalid outfile.format")
   }
-  if (!is.null(fit.model) && fit.model && !is.null(gff)) {
+  if (!is.null(fit.model) && fit.model && !is.null(features)) {
     warning("cannot use fit.model with a features file.  Setting fit.model=FALSE")
     fit.model <- FALSE
   }
@@ -66,14 +66,14 @@ phyloP.call<- function(mod,
   } else {
     msaPtr <- msa$externalPtr
   }
-  if (!is.null(gff) && is.null(gff$externalPtr)) 
-    gff <- as.pointer.gff(gff)
+  if (!is.null(features) && is.null(features$externalPtr)) 
+    features <- as.pointer.feat(features)
   result <- .Call("rph_phyloP",
                   mod$externalPtr,
                   msaPtr,
                   method,
                   mode,
-                  gff$externalPtr,
+                  if (is.null(features)) NULL else features$externalPtr,
                   basewise,
                   subtree,
                   branches,
@@ -95,12 +95,12 @@ phyloP.call<- function(mod,
 
 
 ##' Conservation/acceleration p-values on an alignment and evolutionary model.
-##' Produces scores for every column in an alignment, or for every feature
-##' in a gff object.
+##' Produces scores for every column in an alignment, or for every element
+##' in a set of features.
 ##'
 ##' outfile.format options:
 ##' 
-##' If a GFF is provided, then outfile.format can be either "default" or
+##' If features is provided, then outfile.format can be either "default" or
 ##' "gff".  If it is "default", then the outfile will be a table in
 ##' zero-based coordinates, which includes start and 
 ##' end coordinates, feature name, parameter estimates, and p-values.
@@ -108,7 +108,7 @@ phyloP.call<- function(mod,
 ##' will be a GFF file (in 1-based coordinates) with a score equal to the
 ##' -log10 p-value for each element.
 ##'
-##' If a gff is not provided, then outfile.format can be either "default" or
+##' If features is not provided, then outfile.format can be either "default" or
 ##' "wig".  In either case the outfile will be in fixed step wig format
 ##' (see \url{http://genome.ucsc.edu/goldenPath/help/wiggle.html}).
 ##' If format is "default", then each row (corresponding to one alignment
@@ -122,8 +122,8 @@ phyloP.call<- function(mod,
 ##' @param method The scoring method.  One of "SPH", "LRT", "SCORE", or "GERP".
 ##' @param mode The type of p-value to compute.  One of "CON", "ACC",
 ##' "NNEUT", or "CONACC".
-##' @param gff A features object of type \code{gff}.  If given, compute
-##' p-values for each element of the gff.
+##' @param features An object of type \code{feat}.  If given, compute
+##' p-values for every feature.
 ##' @param subtree A character string giving the name of a node in the tree.
 ##' Partition the tree into the subtree beneath the node and the
 ##' complementary supertree, and consider conservation or acceleration in the
@@ -143,14 +143,14 @@ phyloP.call<- function(mod,
 ##' output.  Possible formats depend on other options (see description below).
 ##' Current options are "default", "gff", or "wig".
 ##' @return A data frame containing scores and parameter estimates for
-##' every feature (if gff is given) or for every base (otherwise).  All
+##' every feature (if features is given) or for every base (otherwise).  All
 ##' return objects are in 0-based coordinates.
 ##' @export
 phyloP <- function(mod,
                    msa,
                    method="LRT",
                    mode="CON",
-                   gff=NULL,
+                   features=NULL,
                    subtree=NULL,
                    branches=NULL,
                    ref.idx=1,
@@ -160,7 +160,7 @@ phyloP <- function(mod,
   if (is.null(msa)) stop("msa cannot be NULL")
   if (is.null(mod)) stop("mod cannot be NULL")
   phyloP.call(mod, msa=msa, method=method, mode=mode,
-              gff=gff, basewise=is.null(gff),
+              features=features, basewise=is.null(features),
               subtree=subtree, branches=branches, ref.idx=ref.idx,
               outfile=outfile, outfile.only=outfile.only,
               outfile.format=outfile.format)
@@ -210,10 +210,10 @@ phyloP.prior <- function(mod, nsites=100, subtree=NULL, branches=NULL,
 ##' @param msa The multiple alignment to be scored.
 ##' @param mode The type of p-value to compute.  One of "CON", "ACC",
 ##' "NNEUT", or "CONACC".
-##' @param gff A features object of type \code{gff}.  If given, compute
-##' p-values for each element of the gff.
+##' @param features A features object of type \code{feat}.  If given, compute
+##' p-values for each element.
 ##' @param basewise Logical.  If \code{TRUE}, compute scores for every base
-##' in reference sequence.  Cannot be \code{TRUE} if a gff is provided.
+##' in reference sequence.  Cannot be \code{TRUE} if features is provided.
 ##' @param subtree A character string giving the name of a node in the tree.
 ##' Partition the tree into the subtree beneath the node and the
 ##' complementary supertree, and consider conservation/acceleration in the
@@ -237,7 +237,7 @@ phyloP.prior <- function(mod, nsites=100, subtree=NULL, branches=NULL,
 ##' @param fit.model Logical.  If \code{TRUE}, re-scale the model (including
 ##' a separate scale for the subtree, if applicable) before computing the
 ##' posterior distribution.   This makes p-values less conservative.
-##' Cannot currently be used with gff.
+##' Cannot currently be used with features.
 ##' @param epsilon Numeric value indicating the thhreshold used in truncating
 ##' tails of distributions; tail probabilities less than this value are
 ##' discarded.  This only applies to the right tail.
@@ -257,7 +257,7 @@ phyloP.prior <- function(mod, nsites=100, subtree=NULL, branches=NULL,
 phyloP.sph <- function(mod,
                        msa=NULL,
                        mode="CON",
-                       gff=NULL,
+                       features=NULL,
                        basewise=FALSE,
                        subtree=NULL,
                        ref.idx=1,
@@ -272,7 +272,7 @@ phyloP.sph <- function(mod,
                        confidence.interval=NULL,
                        quantiles=FALSE) {
   phyloP.call(mod, msa=msa, method="SPH", mode=mode,
-              gff=gff, basewise=basewise,
+              features=features, basewise=basewise,
               subtree=subtree, ref.idx=ref.idx,
               outfile=outfile, outfile.only=outfile.only,
               outfile.format=outfile.format,

@@ -442,20 +442,21 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' "MPM", must be correctly specified.
 ##' @param alphabet the alphabet of non-missing-data chraracters in the
 ##' alignment.  Determined automatically from the alignment if not given.
-##' @param gff a GFF object.  If provided, the return value will only
-##' contain portions of the alignment which fall within a feature in the GFF.
+##' @param features An object of type \code{feat}.  If provided, the return
+##' value will only
+##' contain portions of the alignment which fall within a feature.
 ##' The alignment will not be ordered.
 ##' The loaded regions can be further constrained with the do.4d or
 ##' do.cats options.
 ##' @param do.4d Logical.  If \code{TRUE}, the return value will contain only
 ##' the columns corresponding to four-fold degenerate sties.  Requires
-##' gff to be specified.
+##' features to be specified.
 ##' @param ordered Logical.  If \code{FALSE}, the MSA object may not retain
 ##' the original column order.
 ##' @param tuple.size Integer.  If given, and if pointer.only is \code{TRUE},
 ##' MSA will be stored in sufficient statistics format, where each tuple
 ##' contains tuple.size consecutive columns of the alignment.
-##' @param do.cats Character vector.  If given, and if gff is specified,
+##' @param do.cats Character vector.  If given, and if features is specified,
 ##' then only the types of features named here will be represented in the
 ##' returned alignment.
 ##' @param refseq Character string specifying a FASTA format file with a
@@ -476,18 +477,18 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' directly in R memory.  This improves performance and may be necessary
 ##' for large alignments, but reduces functionality.  See
 ##' \code{\link{msa}} for more details on MSA object storage options.
-##' @note If the input is in "MAF" format and a gff is given, the
+##' @note If the input is in "MAF" format and features is specified, the
 ##' resulting alignment will be stripped of gaps in the reference (1st)
 ##' sequence.
 ##' @return an MSA object.  
-##' @seealso \code{\link{msa}}, \code{\link{read.gff}}
+##' @seealso \code{\link{msa}}, \code{\link{read.feat}}
 ##' @export
 read.msa <- function(filename,
                      format=c(guess.format.msa(filename), "FASTA")[1],
                      alphabet=NULL,                     
-                     gff=NULL,
+                     features=NULL,
                      do.4d=FALSE,
-                     ordered=ifelse(do.4d || !is.null(gff), FALSE, TRUE),
+                     ordered=ifelse(do.4d || !is.null(features), FALSE, TRUE),
                      tuple.size=(if(do.4d) 3 else NULL),
                      do.cats=NULL,
                      refseq=NULL,
@@ -498,7 +499,7 @@ read.msa <- function(filename,
   check.arg(filename, "filename", "character", null.OK=FALSE)
   check.arg(format, "format", "character", null.OK=FALSE)
   check.arg(alphabet, "alphabet", "character", null.OK=TRUE)
-  check.arg(gff, "gff", null.OK=TRUE, min.length=NULL, max.length=NULL)
+  check.arg(features, "feat", null.OK=TRUE, min.length=NULL, max.length=NULL)
   check.arg(do.4d, "do.4d", "logical", null.OK=FALSE)
   check.arg(ordered, "ordered", "logical", null.OK=FALSE)
   check.arg(tuple.size, "tuple.size", "integer", null.OK=TRUE)
@@ -520,23 +521,23 @@ read.msa <- function(filename,
   if (do.4d) {
     if (!is.null(do.cats))
       stop("should not specify do.cats if do.4d==TRUE")
-    if (is.null(gff))
-      stop("gff needs to be specified with do.4d")
+    if (is.null(features))
+      stop("features needs to be specified with do.4d")
     if (tuple.size != 3)
       stop("tuple.size must be 3 if do.4d==TRUE")
   }
 
-  if (!is.null(do.cats) && is.null(gff))
-    stop("gff required with do.cats")
+  if (!is.null(do.cats) && is.null(features))
+    stop("features required with do.cats")
 
-  if (!is.null(gff)) {
-    if (is.null(gff$externalPtr))
-      gff <- as.pointer.gff(gff)
+  if (!is.null(features)) {
+    if (is.null(features$externalPtr))
+      features <- as.pointer.feat(features)
   }
 
   msa <- .makeObj.msa()
   msa$externalPtr <- .Call("rph_msa_read", filename, format,
-                           gff$externalPtr, do.4d, alphabet,
+                           features$externalPtr, do.4d, alphabet,
                            tuple.size, refseq, ordered, do.cats,
                            offset, seqnames, discard.seqnames)
   if (format != "MAF") {
@@ -592,7 +593,7 @@ reverse.complement <- function(msa) {
 ##' @S3method sub msa
 ##' @export
 sub.msa <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
-                   refseq=NULL) {
+                    refseq=NULL) {
   check.arg(keep, "keep", "logical", null.OK=FALSE)
   check.arg(seqs, "seqs", "character", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
@@ -776,7 +777,7 @@ likelihood.msa <- function(msa, tm, by.column=FALSE) {
 ##' tree models across the columns of the alignment.
 ##' @param get.features (For use with hmm).  If \code{TRUE}, return object will
 ##' be a list of length two.  The first element will be the alignment, and the
-##' second will be an object of type \code{gff} describing the path through
+##' second will be an object of type \code{feat} describing the path through
 ##' the phylo-hmm in the simulated alignment.  
 ##' @param pointer.only (Advanced use only). If TRUE, return only a pointer
 ##' to the simulated alignment.  Possibly useful for very (very) large
@@ -813,9 +814,9 @@ simulate.msa <- function(mod, nsites, hmm=NULL, get.features=FALSE, pointer.only
     msa <- .makeObj.msa()
     msa$externalPtr <- .Call("rph_msa_base_evolve_struct_get_msa", temp[[1]])
     result$msa <- from.pointer.msa(msa)
-    gff <- .makeObj.gff()
-    gff$externalPtr <- .Call("rph_msa_base_evolve_struct_get_labels", temp[[1]], nsites)
-    result$feats <- as.data.frame.gff(gff)
+    features <- .makeObj.feat()
+    features$externalPtr <- .Call("rph_msa_base_evolve_struct_get_labels", temp[[1]], nsites)
+    result$feats <- as.data.frame.feat(features)
     return(result)
   }
   msa <- .makeObj.msa()
@@ -847,7 +848,7 @@ sample.msa <- function(x, size, replace=FALSE, prob=NULL) {
 
 ##' Extract fourfold degenerate sites from an MSA object
 ##' @param msa An object of type MSA
-##' @param gff an object of type GFF.  Should have defined coding regions
+##' @param features an object of type \code{feat}.  Should have defined coding regions
 ##' with feature type "CDS"
 ##' @return an unordered msa object containing only the sites which are
 ##' fourfold degenerate
@@ -855,49 +856,50 @@ sample.msa <- function(x, size, replace=FALSE, prob=NULL) {
 ##' very large MSA objects it is more efficient to use the do.4d option
 ##' in the read.msa function instead.
 ##' @export
-get4d.msa <- function(msa, gff) {
+get4d.msa <- function(msa, features) {
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
-  if (is.null(gff$externalPtr) && sum(gff$feature=="CDS")==0L) 
-    stop("gff has no features labelled \"CDS\"... cannot extract 4d sites")
-  if (is.null(gff$externalPtr))
-    gff <- as.pointer.gff(gff)
+  if (is.null(features$externalPtr) && sum(features$feature=="CDS")==0L) 
+    stop("features has no features labelled \"CDS\"... cannot extract 4d sites")
+  if (is.null(features$externalPtr))
+    features <- as.pointer.feat(features)
   msa$externalPtr <- .Call("rph_msa_reduce_to_4d",
                            msa$externalPtr,
-                           gff$externalPtr)
+                           features$externalPtr)
   msa <- from.pointer.msa(msa)
 }
 
 
 ##' Extract features from an MSA object
 ##'
-##' Returns the subset of the MSA which appears in the features (GFF) object.
+##' Returns the subset of the MSA which appears in the features object.
 ##' @param msa An object of type MSA
-##' @param gff A GFF object denoting the regions of the alignment to extract.
-##' @param do4d If TRUE, then gff must have features of type "CDS", and only
+##' @param features An object of type \code{features} denoting the regions
+##' of the alignment to extract.
+##' @param do4d If TRUE, then some elements of features must have type "CDS", and only
 ##' fourfold-degenerate sites will be extracted.
 ##' @return An msa object containing only the regions of the msa
-##' appearing in the GFF object.
+##' appearing in the features object.
 ##' @note if input msa is stored as a pointer it will be destroyed.
 ##' @export
-extract.feature.msa <- function(msa, gff, do4d=FALSE) {
+extract.feature.msa <- function(msa, features, do4d=FALSE) {
   if (!is.ordered.msa(msa))
     stop("extract.feature.msa requires ordered alignment")
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
 
   if (do4d) {
-    if (sum(gff$feature=="CDS")==0L) 
-      stop("gff has no features labelled \"CDS\"... cannot extract 4d sites")
-    rv <- get4d.msa(msa, gff)
+    if (sum(features$feature=="CDS")==0L) 
+      stop("features has no elements of type \"CDS\"... cannot extract 4d sites")
+    rv <- get4d.msa(msa, features)
   } else {
     
-    if (is.null(gff$externalPtr)) 
-      gff <- as.pointer.gff(gff)
+    if (is.null(features$externalPtr)) 
+      features <- as.pointer.feat(features)
     rv <- .makeObj.msa()
     rv$externalPtr <- .Call("rph_msa_extract_feature",
                             msa$externalPtr,
-                            gff$externalPtr)
+                            features$externalPtr)
   }
   if (!is.null(rv$externalPtr))
     rv <- from.pointer.msa(rv)
@@ -939,20 +941,18 @@ concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
 
 ##' Split an MSA by feature
 ##' @param x An object of type \code{msa}
-##' @param f A feature object
+##' @param f An object of type \code{feat}
 ##' @param drop Not currently used
 ##' @param ... Not currently used
 ##' @return A list of msa objects, representing the sub-alignments for
-##' each feature in the gff object
+##' each element in f
 ##' @export
 split.by.feature.msa <- function(x, f, drop=FALSE, ...) {
-  msa <- x
-  gff <- f
-  if (is.null(msa$externalPtr)) msa <- as.pointer.msa(msa)
-  if (is.null(gff$externalPtr)) gff <- as.pointer.gff(gff)
+  if (is.null(x$externalPtr)) x <- as.pointer.msa(x)
+  if (is.null(f$externalPtr)) f <- as.pointer.feat(f)
   l <- list()
-  l$externalPtr <- .Call("rph_msa_split_by_gff", msa$externalPtr,
-                         gff$externalPtr)
+  l$externalPtr <- .Call("rph_msa_split_by_gff", x$externalPtr,
+                         f$externalPtr)
   lst.size <- .Call("rph_list_len", l$externalPtr)
   rv <- list()
   for (i in 1:lst.size) {

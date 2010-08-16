@@ -14,7 +14,7 @@
 ##' @param no.rates (Only applies when init.mod provided). If \code{TRUE},
 ##' do not estimate transition rate parameters; just use the transition
 ##' matrix in init.mod.
-##' @param gff An object of class GFF.  If given, a separate model will be
+##' @param features An object of type \code{feat}.  If given, a separate model will be
 ##' estimated for each feature type.
 ##' @param scale.only A logical value. If \code{TRUE}, estimate only the
 ##' scale of the tree.  Branches will be held at initial values.  Useful in
@@ -53,7 +53,7 @@
 ##' @param quiet A logical value.  If \code{TRUE}, do not report progress
 ##' to screen.
 ##' @return An object of class \code{tm} (tree model), or (if several models
-##' are computed, as is possible with the gff or windows options), a list of
+##' are computed, as is possible with the features or windows options), a list of
 ##' objects of class \code{tm}.
 ##' @export
 phyloFit <- function(msa,
@@ -62,7 +62,7 @@ phyloFit <- function(msa,
                      init.mod=NULL,
                      no.freqs=FALSE,
                      no.rates=FALSE,
-                     gff=NULL,
+                     features=NULL,
 #                     do.cats=NULL,
 #                     reverse.groups=NULL,
                      scale.only=FALSE,
@@ -126,9 +126,9 @@ phyloFit <- function(msa,
 
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
-  if (!is.null(gff)) {
-    if (is.null(gff$externalPtr))
-      gff <- as.pointer.gff(gff)
+  if (!is.null(features)) {
+    if (is.null(features$externalPtr))
+      features <- as.pointer.feat(features)
   }
 
   result <- list()
@@ -149,7 +149,7 @@ phyloFit <- function(msa,
                               clock,
                               EM,
                               precision,
-                              gff$externalPtr,
+                              features$externalPtr,
                               ninf.sites,
                               quiet)
 
