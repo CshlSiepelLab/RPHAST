@@ -14,7 +14,7 @@
 \begin{document}
 \title{Detection of Accelerated Regions}
 \author{M. J. Hubisz K. S. Pollard, and A. Siepel}
-%\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,invlude=TRUE,engine=R}
+\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R}
 \maketitle
 
 This example will go through the basic steps of detecting

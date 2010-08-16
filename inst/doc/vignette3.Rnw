@@ -12,11 +12,11 @@
 \begin{document}
 \title{Phylo-HMMs}
 \author{M. J. Hubisz, K. S. Pollard, and A. Siepel}
-%\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,invlude=TRUE,engine=R}
+\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R}
 \maketitle
 
 
-In the last example we are going to create a custom phylo-HMM and try to use
+In this example we are going to create a custom phylo-HMM and try to use
 it to detect transcription factor binding sites. 
 
 We will once again use the multiple alignments available on UCSC, as well 
