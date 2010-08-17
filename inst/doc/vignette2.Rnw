@@ -229,9 +229,9 @@ length(para.sigIdx)
 para.sigFeats <- splitElements[para.sigIdx,]
 para.sigFeats$feature <- "RAR"  # for rodent-accelerated region
 coverage.feat(para.sigFeats)
-plot.track(list(feat.track(para.sigFeats, "parametric RARs")
+plot.track(list(feat.track(para.sigFeats, "parametric RARs"),
                 feat.track(nonpara.sigFeats, "non-parametric RAR"),
-                feat.rack(elements, "Conserved elements")))
+                feat.track(elements, "Conserved elements")), xlim=c(3e+07, 3.5e+07))
 
 @ 
 
