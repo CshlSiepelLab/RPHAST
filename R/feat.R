@@ -361,7 +361,9 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
         start <- xplus[i,]$start
         end <- xplus[i,]$end
         xlen <- height/2/tan(angle)/upi[2]*upi[1]
-        x0 <- seq(from=end+xlen, to=start-xlen, by=-arrow.density)
+        x0 <- seq(from = end + arrow.density*floor(xlen/arrow.density),
+                  to = start-xlen, by=-arrow.density)
+#        x0 <- seq(from=end+xlen, to=start-xlen, by=-arrow.density)
         x1 <- x0 - xlen
         y0top <- rep(y, length(x0))
         y0bottom <- rep(y, length(x0))
@@ -394,7 +396,9 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
       for (i in 1:nrow.feat(xneg)) {
         start <- xneg[i,]$start
         end <- xneg[i,]$end
-        x0 <- seq(from=start-xlen, to=end+xlen, by=arrow.density)
+        x0 <- seq(from=start - arrow.density*floor(xlen/arrow.density),
+                  to = end+xlen, by=arrow.density)
+#        x0 <- seq(from=start-xlen, to=end+xlen, by=arrow.density)
         x1 <- x0 + xlen
         y0top <- rep(y, length(x0))
         y0bottom <- rep(y, length(x0))

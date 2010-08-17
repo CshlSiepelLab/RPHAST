@@ -9,6 +9,7 @@
 \documentclass[11pt]{article}
 \usepackage{Sweave}
 \usepackage{url}
+\usepackage{amsmath,epsfig,fullpage}
 
 \begin{document}
 
@@ -25,7 +26,7 @@ Cornell's UCSC genome browser mirror (\url{http://genome-mirror.bscb.cornell.edu
 The necessary files are also included in the rphast package's
 example data set.
 
-<<consAnalysis1>>=
+<<consAnalysis1,width=8,height=8>>=
 require("rphast")
 
 # extract the  alignment and annotation from the RPHAST package
@@ -109,20 +110,21 @@ geneTrack <- gene.track(feats, "genes")
 consElTrack <- feat.track(cons.elements, "phastCons most conserved", col="red")
 phastConsScoreTrack <- wig.track(coord=pc$post.prob.wig$coord,
                                  score=pc$post.prob.wig$post.prob,
-                                 name="phastCons post prob", col="red")
+                                 name="phastCons post prob", col="red", ylim=c(0, 1))
 phyloPTrack <- wig.track(coord=pp$coord, score=pp$score, name="phyloP score", 
                          col="blue", smooth=TRUE, horiz.line=0)
+
 plot.track(list(geneTrack, consElTrack, phastConsScoreTrack, phyloPTrack),
            xlim=c(60000, 68000))
 
+@
 
-@ 
 <<hist>>=
 
 # now examine conserved elements
 ce <- pc$most.conserved
-plot(density.feat(ce), type="l", ylim=c(0, 0.017), 
-     main="element length by type", xlab="length")
+plot(density.feat(ce), type="l", ylim=c(0, 0.018), 
+     main="Element Length by Type", xlab="Length")
 
 # break conserved elements into coding/noncoding:
 
@@ -134,23 +136,28 @@ ce.noncoding <- overlap.feat(ce, coding.feats, min.percent=0.5,
                             overlapping=FALSE)
 lines(density.feat(ce.coding), col="red")
 lines(density.feat(ce.noncoding), col="blue")
-legend(c("all", "coding", "noncoding"), x="topright", inset=0.01, 
+legend(c("All", "Coding", "Noncoding"), x="topright", inset=0.01, 
        lty=1, col=c("black", "red", "blue"))
 @ 
-<<>>=
+<<width=8,height=4>>=
 # so coding elements tend to be longer
 
+par(mfrow=c(1,3))
 # look at fold-enrichment of each annotation type by conserved element
 enrich <- enrichment.feat(ce, feats, wholeChrom)
 barplot(enrich$enrichment, names.arg=enrich$type, 
         col=rainbow(nrow(enrich)),
-        main="Enrichment of Conserved Elements")
-@ 
-<<>>=
+        main="Enrichment of\nConserved Elements", cex.main=1.5,
+        ylab="Fold Enrichment", cex.lab=1.5)
 # look at the composition of the conserved elements
 comp <- composition.feat(ce, feats)
 pie(comp$composition, labels=comp$type, col=rainbow(nrow(comp)), radius=1.0,
-    main="Composition of Conserved Elements")
+    main="Composition of\nConserved Elements", cex.main=1.5, cex.lab=1.5)
+# compare with background composition
+comp <- composition.feat(wholeChrom, feats)
+pie(comp$composition, labels=comp$type, col=rainbow(nrow(comp)), radius=1.0,
+    main="Background\nComposition", cex.main=1.5, cex.lab=1.5)
+
 @ 
 <<>>=
 
@@ -176,14 +183,16 @@ coverage.feat(pcEM$most.conserved, pc$most.conserved,
              not=c(FALSE, TRUE), region.bounds=wholeChrom)
 coverage.feat(pcEM$most.conserved, pc$most.conserved, 
              not=c(TRUE, FALSE), region.bounds=wholeChrom)
-             
-plot.track(list(feat.track(pc$most.conserved, name="no estimation"),
-                feat.track(pcEM$most.conserved, name="with estimation")))
+          
+@ 
+<<width=8,height=4>>=
+plot.track(list(feat.track(pc$most.conserved, name="No estimation"),
+                feat.track(pcEM$most.conserved, name="With estimation")))
 
 @ 
 <<>>=
 plot(density.feat(pc$most.conserved), type="l", 
-     main="Distribution of Element Lengths", xlab="length", xlim=c(0, 1000))
+     main="Distribution of Element Lengths", xlab="Length", xlim=c(0, 1000))
 lines(density.feat(pcEM$most.conserved), col="red")
 legend(x="topright", inset=0.01, c("without estimation", "with estimation"), 
        lty=1, col=c("black", "red"))

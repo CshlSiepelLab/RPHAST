@@ -162,8 +162,13 @@ plot.track <- function(x,
         coord <- smoothData$coord
         score <- smoothData$score
       }
-      if (is.null(el$ylim))
+      if (is.null(el$ylim)) {
         oldrange <- range(score)
+        span <- oldrange[2] - oldrange[1]
+        if (span >= 10) numDigits <- 0
+        numDigits <- 1 - floor(log10(span))
+        oldrange <- round(oldrange, digits=numDigits)
+      }
       else oldrange <- el$ylim
       newscore <- (score - oldrange[1])*(maxy - yrange[1])/(oldrange[2]-oldrange[1]) + yrange[1]
       lines(coord, newscore, col=el$col)
