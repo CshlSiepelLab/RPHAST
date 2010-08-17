@@ -93,8 +93,8 @@ plot.track <- function(x,
                        xlab="coord", ylab="", blankSpace=0.25, axisDigits=3,
                        labelSpace=min(length(x)*0.05, 0.25),
                        belowLabelSpace=0.2, lmar=4, ...) {
-  tracks <- x
-  if (length(tracks) == 1 && is.track(tracks)) tracks <- list(tracks)
+  if (is.track(x)) tracks <- list(x)
+  else tracks <- x
   numresult <- length(tracks)
 
   doLabels <- rep(doLabels, length.out=numresult)
@@ -177,28 +177,11 @@ plot.track <- function(x,
       }
     } else if (resultType[[i]] == "feat") {
       plot.feat(el$data,
-                y=mean(yrange), width=(yrange[2]-yrange[1]),
-                add=TRUE, col=el$col)
+                y=mean(yrange), height=(yrange[2]-yrange[1]),
+                add=TRUE, fill.col=el$col)
     } else if (resultType[[i]] == "gene") {
-      if (!is.null(el$data$externalPtr)) 
-        el$data <- as.data.frame.gff(el$data)
-      f <- el$data$feature == "intron"
-      if (sum(f) > 0L) {
-        plot.feat(el$data[f,], plottype="a", arrow.length=0,
-                  y=mean(yrange), width=(yrange[2]-yrange[1]),
-                  lty=2, col=el$col)
-      }
-      f <- el$data$feature == "exon"
-      if (sum(f) > 0L) {
-        plot.feat(el$data[f,], plottype="a", y=mean(yrange),
-                  width=yrange[2]-yrange[1], lty=1, col=el$col)
-      }
-      f <- el$data$feature == "CDS"
-      if (sum(f) > 0L) {
-        plot.feat(el$data[f,], plottype="b",
-                  width=yrange[2]-yrange[1],
-                  lty=1, col=el$col)
-      }
+      plot.gene(el$data, y=mean(yrange), height=(yrange[2]-yrange[1]),
+                add=TRUE, col=el$col, arrow.density=el$arrow.density)
     } else stop("don't know track type ", resultType[[i]])
     if (!is.null(shortLabels))
       mtext(shortLabels[i], side=2, line=0.5, at=mean(yrange),
@@ -269,12 +252,14 @@ feat.track <- function(x, name, col="black") {
 
 
 
-gene.track <- function(x, name, col="black") {
+##' @export
+gene.track <- function(x, name, col="black", arrow.density=10) {
   rv <- list()
   attr(rv, "class") <- "track"
   rv$data <- x
   rv$name <- name
   rv$col <- col
   rv$type="gene"
+  rv$arrow.density <- arrow.density
   rv
 }

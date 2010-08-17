@@ -42,16 +42,17 @@ align$names <- c("tomato", "potato", "pepper", "petunia", "eggplant")
 names(align)
 
 # load the features
-feats <- read.gff("sol1.gp")
+feats <- read.feat("sol1.gp")
 unique(feats$seqname)
-# in these features, UTRs are not annotated, so CDS is the same as exon.  So
-# remove the exon features
-feats <- feats[feats$features != "exon",]
+
 # they are all on chr2 so rename to "tomato" to cross-reference with alignment
 feats$seqname <- "tomato"
 
 # annotate UTRs and introns
-feats <- addIntrons.gff(feats)
+feats <- addIntrons.feat(feats)
+# in these features, UTRs are not annotated, so CDS is the same as exon.  So
+# remove the exon features
+feats <- feats[feats$feature != "exon",]
 
 table(feats$feature)
 
@@ -59,14 +60,14 @@ table(feats$feature)
 # chromosome boundaries
 
 # make a feature that represents the entire chromosome
-wholeChrom <- gff(seq="tomato", src=".", feature="all",
+wholeChrom <- feat(seq="tomato", src=".", feature="all",
                   start=1, end=122080)
 
 # annotate non-coding regions
 coding.feats <- feats
-noncoding.feats <- inverse.gff(feats, region.bounds=wholeChrom)
+noncoding.feats <- inverse.feat(feats, region.bounds=wholeChrom)
 noncoding.feats$feature <- "noncoding"
-feats <- rbind.gff(feats, noncoding.feats)
+feats <- rbind.feat(feats, noncoding.feats)
 
 # now extract 4d sites from alignment using annotations
 align4d <- get4d.msa(align, feats)
@@ -83,10 +84,10 @@ names(pc)
 # the conserved elements are in a features object stored here:
 cons.elements <- pc$most.conserved
 # this shows how many bases are predicted to be conserved
-coverage.gff(cons.elements)
+coverage.feat(cons.elements)
 
 # we get about 5% coverage of conserved elements
-coverage.gff(cons.elements)/coverage.gff(wholeChrom)
+coverage.feat(cons.elements)/coverage.feat(wholeChrom)
 
 # the posterior probabilities for every base are here:
 names(pc$post.prob.wig)
@@ -111,27 +112,28 @@ phastConsScoreTrack <- wig.track(coord=pc$post.prob.wig$coord,
                                  name="phastCons post prob", col="red")
 phyloPTrack <- wig.track(coord=pp$coord, score=pp$score, name="phyloP score", 
                          col="blue", smooth=TRUE, horiz.line=0)
-plot.track(list(geneTrack, phastConsElTrack, phastConsScoreTrack, phyloPTrack),
-           xlim=c(61000, 68000))
+plot.track(list(geneTrack, consElTrack, phastConsScoreTrack, phyloPTrack),
+           xlim=c(60000, 68000))
+
 
 @ 
 <<hist>>=
 
 # now examine conserved elements
 ce <- pc$most.conserved
-plot(density.gff(ce), type="l", ylim=c(0, 0.017), 
+plot(density.feat(ce), type="l", ylim=c(0, 0.017), 
      main="element length by type", xlab="length")
 
 # break conserved elements into coding/noncoding:
 
 # this returns all conserved elements that overlap with coding.feats 
 # by at least 50 percent
-ce.coding <- overlap.gff(ce, coding.feats, min.percent=0.5)
+ce.coding <- overlap.feat(ce, coding.feats, min.percent=0.5)
 # and this gets the ones which overlap by less than 50 percent:
-ce.noncoding <- overlap.gff(ce, coding.feats, min.percent=0.5, 
+ce.noncoding <- overlap.feat(ce, coding.feats, min.percent=0.5, 
                             overlapping=FALSE)
-lines(density.gff(ce.coding), col="red")
-lines(density.gff(ce.noncoding), col="blue")
+lines(density.feat(ce.coding), col="red")
+lines(density.feat(ce.noncoding), col="blue")
 legend(c("all", "coding", "noncoding"), x="topright", inset=0.01, 
        lty=1, col=c("black", "red", "blue"))
 @ 
@@ -139,44 +141,52 @@ legend(c("all", "coding", "noncoding"), x="topright", inset=0.01,
 # so coding elements tend to be longer
 
 # look at fold-enrichment of each annotation type by conserved element
-enrich <- enrichment.gff(ce, feats, wholeChrom)
+enrich <- enrichment.feat(ce, feats, wholeChrom)
 barplot(enrich$enrichment, names.arg=enrich$type, 
         col=rainbow(nrow(enrich)),
-        main="enrichment of annotation\types by conserved elements")
+        main="Enrichment of Conserved Elements")
 @ 
 <<>>=
 # look at the composition of the conserved elements
-comp <- composition.gff(ce, feats)
+comp <- composition.feat(ce, feats)
 pie(comp$composition, labels=comp$type, col=rainbow(nrow(comp)), radius=1.0,
-    main="composition of conserved elements")
+    main="Composition of Conserved Elements")
 @ 
 <<>>=
 
-# Run phastCons again, this time try to estimate the fraction of sites which
-# are conserved
-pcEM <- phastCons(align, neutralMod, viterbi=TRUE, estimate.rho=TRUE) 
+# Run phastCons again, this time try to estimate the transition rates
+# between conserved and non-conserved
+pcEM <- phastCons(align, neutralMod, viterbi=TRUE, estimate.transitions=TRUE) 
 names(pcEM)
 # note this has the same elements as pc, plus an estimate for rho
-pcEM$rho
+pcEM$transition.rates
 
-# and the likelihood is higher since we estimate rho
+# and the likelihood is higher since we estimate the rates by
+# maximum likelihood
 pcEM$likelihood
 
 # now coverage is a bit higher, at 23%
 # (note rho only defines a prior expectation for coverage)
-coverage.gff(pcEM$most.conserved)/coverage.gff(wholeChrom)
+coverage.feat(pcEM$most.conserved)/coverage.feat(wholeChrom)
 
 # compare the results with and without --estimate-rho
-coverage.gff(pcEM$most.conserved, pc$most.conserved)
-coverage.gff(pcEM$most.conserved, pc$most.conserved, or=TRUE)
-coverage.gff(pcEM$most.conserved, pc$most.conserved, 
+coverage.feat(pcEM$most.conserved, pc$most.conserved)
+coverage.feat(pcEM$most.conserved, pc$most.conserved, or=TRUE)
+coverage.feat(pcEM$most.conserved, pc$most.conserved, 
              not=c(FALSE, TRUE), region.bounds=wholeChrom)
-coverage.gff(pcEM$most.conserved, pc$most.conserved, 
+coverage.feat(pcEM$most.conserved, pc$most.conserved, 
              not=c(TRUE, FALSE), region.bounds=wholeChrom)
              
-plot.track(list(gffTrack(pc$most.conserved, name="no estimation"),
-                gffTrack(pcEM$most.conserved, name="with estimation")))
+plot.track(list(feat.track(pc$most.conserved, name="no estimation"),
+                feat.track(pcEM$most.conserved, name="with estimation")))
 
+@ 
+<<>>=
+plot(density.feat(pc$most.conserved), type="l", 
+     main="Distribution of Element Lengths", xlab="length", xlim=c(0, 1000))
+lines(density.feat(pcEM$most.conserved), col="red")
+legend(x="topright", inset=0.01, c("without estimation", "with estimation"), 
+       lty=1, col=c("black", "red"))
 @ 
 
 \end{document}

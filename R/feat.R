@@ -291,30 +291,175 @@ range.feat <- function(..., na.rm=FALSE) {
 ##' @title Features plot
 ##' @param x an object of type \code{feat}
 ##' @param y the location of the plot on the y axis
-##' @param width the width of the boxes
-##' @param plottype either "r" for rectangles or "a" for arrows or "b"
-##' for arrows within rectangles.
-##' @param arrow.length If plottype="a", this gives the length of arrowheads
-##' (as passed to the \code{arrow} function).  The default value of \code{NULL}
-##' chooses a length based on the size of the window.
-##' @param max.arrows If plottype=="a", this gives the maximum number of
-##' arrows to draw across the display region.  Increasing this number increases
-##' the density of arrows indicating strand.
-##' @param density the density of the shading lines if plottype=="r",
-##' in lines per inch.  The
-##' default of \code{NULL} implies no lines are drawn.  A zero value of
-##' density \code{density} means no shading lines whereas negative values
-##' (and \code{NA}) suppress shading (and so allow color filling).
-##' @param angle angle (in degrees) of the shading lines if plottpye=="r".
-##' @param col color(s) to fill or shade the boxes with, or to draw the arrows.  \
-##' If plottype=="r", the default \code{NA} (or also \code{NULL} ,
-##' do not fill, i.e., draw transparent rectangles, unless \code{density} is
-##' specified.  The default will result in black arrows if plottype=="a".
-##' @param border color for rectangle border(s) if plottype=="r".  The
-##' default means
-##' \code{par("fg")}.  Use \code{border = NA} to omit borders.  If there
-##' are shading lines, \code{border = TRUE} means use the same color for
-##' the border as for the shading lines
+##' @param height the height of the boxes
+##' @param plottype either "r" for rectangles or "a" for arrows, "b"
+##' for arrows within rectangles, or "l" for line segments only.
+##' @param arrow.density If plottype=="a" or "b", then this gives the density
+##' of arrows in arrows per inch.  Otherwise it gives the density of
+##' shading lines in the rectangles, and a value of \code{NULL} implies
+##' no shading lines.
+##' @param angle angle (in degrees) of the shading lines or arrows.
+##' @param col color to draw the boxes/lines/arrows with.
+##' @param fill.col Color to fill the rectangles with.  If \code{NULL}
+##' then do not fill.
+##' @param lty line type for lines, arrows, borders, and shading
+##' @param lwd line width for lines, arrows, borders and shading
+##' @param add if \code{TRUE}, add to existing plot
+## @param labels whether to label the boxes.  If a vector of strings gives
+## the lables for each element.  If \code{TRUE}, use x$feature for labels.
+##' @param xlim A numerical vector of length 2 giving the range for the x-axis.
+##' @param ylim A numerical vector of length 2 giving the range for the y-axis.
+##' @S3method plot feat
+##' @param ... graphical parameters to be passed to \code{plot}.
+##' @export
+plot.feat <- function(x, y=0, height=1, plottype="r",
+                      arrow.density=5,
+                      angle=30,
+                      col="black",
+                      fill.col=if (plottype == "r") col else NULL,
+                      lty=par("lty"),
+                      lwd=par("lwd"),
+                      add=FALSE,
+                      #                     labels=FALSE,
+                      xlim=range.feat(x),
+                      ylim=c(y-height*3/4, y+height*3/4), ...) {
+
+  if (!is.null(x$externalPtr))
+    x <- as.data.frame.feat(x)
+  if (is.null(x$start) || is.null(x$end))
+    stop("invalid features object")
+  if (plottype=="a" && is.null(x$strand))
+    stop("cannot plot feature arrows without strand data")
+
+  if (!add) 
+    plot(c(0), c(0), y, type="n", xlim=xlim, ylim=ylim, ...)
+
+  f <- x$end >= xlim[1] & x$start <= xlim[2]
+  if (sum(f)==0) return(invisibile(NULL))
+  x <- x[f,]
+  
+  if (plottype=="r" || plottype=="b") {
+    rect(x$start, y-height/2, x$end, y+height/2,
+         col=fill.col, border=col, lty=lty,
+         lwd=lwd)
+  }
+  if (plottype == "l")
+    segments(x$start, y, x$end, col=col, lty=lty, lwd=lwd)
+  if (plottype == "a" || plottype == "b") {
+    usr <- par("usr")
+    pin <- par("pin")
+    upi <- c(usr[2L] - usr[1L], usr[4L] - usr[3L])/pin
+    arrow.density <- upi[1L]/arrow.density  #convert from lines per inch
+                                            # to coordinates per line
+    f <- x$strand == "+"
+    angle <- angle*pi/180 #convert to radians
+    xlen <- height/2/tan(angle)/upi[2]*upi[1]
+
+    if (sum(f) > 0) {
+      xplus <- x[f,]
+      for (i in 1:nrow.feat(xplus)) {
+        start <- xplus[i,]$start
+        end <- xplus[i,]$end
+        xlen <- height/2/tan(angle)/upi[2]*upi[1]
+        x0 <- seq(from=end+xlen, to=start-xlen, by=-arrow.density)
+        x1 <- x0 - xlen
+        y0top <- rep(y, length(x0))
+        y0bottom <- rep(y, length(x0))
+        y1top <- rep(y + height/2, length(x0))
+        y1bottom <- rep(y - height/2, length(x0))
+
+        f <- x0 > end
+        if (sum(f) > 0L) {
+          y0top[f] <- y  + height/2*(x0[f] - end)/xlen
+          y0bottom[f] <- y - height/2*(x0[f]-end)/xlen
+          x0[f] <- end
+        }
+        f <- x1 < start
+        if (sum(f) > 0L) {
+          y1top[f] <- y + height/2*(1.0-(start - x1[f])/xlen)
+          y1bottom[f] <- y - height/2*(1.0-(start - x1[f])/xlen)
+          x1[f] <- start
+        }
+        f <- x1 < x0
+        if (sum(f) > 0L) {
+          segments(x0[f], y0top[f], x1[f], y1top[f], col=col, lty=lty, lwd=lwd)
+          segments(x0[f], y0bottom[f], x1[f], y1bottom[f], col=col, lty=lty, lwd=lwd)
+        }
+      }
+    }
+    
+    f <- x$strand == "-"
+    if (sum(f) > 0) {
+      xneg <- x[f,]
+      for (i in 1:nrow.feat(xneg)) {
+        start <- xneg[i,]$start
+        end <- xneg[i,]$end
+        x0 <- seq(from=start-xlen, to=end+xlen, by=arrow.density)
+        x1 <- x0 + xlen
+        y0top <- rep(y, length(x0))
+        y0bottom <- rep(y, length(x0))
+        y1top <- rep(y + height/2, length(x0))
+        y1bottom <- rep(y - height/2, length(x0))
+
+        f <- x1 > end
+        if (sum(f) > 0L) {
+          y1top[f] <- y  + height/2*(1.0-(x1[f] - end)/xlen)
+          y1bottom[f] <- y - height/2*(1.0-(x1[f]-end)/xlen)
+          x1[f] <- end
+        }
+        f <- x0 < start
+        if (sum(f) > 0L) {
+          y0top[f] <- y + height/2*(start - x0[f])/xlen
+          y0bottom[f] <- y - height/2*(start - x0[f])/xlen
+          x0[f] <- start
+        }
+        f <- x0 < x1
+        if (sum(f) > 0L) {
+          segments(x0[f], y0top[f], x1[f], y1top[f], col=col, lty=lty, lwd=lwd)
+          segments(x0[f], y0bottom[f], x1[f], y1bottom[f], col=col, lty=lty, lwd=lwd)
+        }
+      }
+    }
+  }
+  invisible(NULL)
+}
+
+oldcode <- function(x) {
+  #      if (plottype == "a") border <- NA else border <- col
+#      f <- x$strand == "+"
+#      if (sum(f) > 0) 
+#        rect(x[f,]$start,
+#             c(rep(y + height/2, sum(f)), rep(y, sum(f))),
+#             x[f,]$end,
+#             c(rep(y, sum(f)), rep(y - height/2, sum(f))),
+#             density=density,
+#             angle=c(rep(-angle, sum(f)), rep(angle, sum(f))),
+#             col=fill.col, border=border, lty=lty, lwd=lwd)
+#      f <- x$strand == "-"
+#      if (sum(f) > 0)
+#        rect(x[f,]$start,
+#             c(rep(y + height/2, sum(f)),
+#               rep(y, sum(f))),
+#             x[f,]$end,
+#             c(rep(y, sum(f)),
+#               rep(y - height/2, sum(f))),
+#             density=density,
+#             angle=c(rep(angle, sum(f)), rep(-angle, sum(f))),
+#             col=fill.col, border=border, lty=lty, lwd=lwd)
+#    }
+#  }
+
+}
+
+
+##' make gene plot
+##' @title Gene plot
+##' @param x An object of type \code{feat}
+##' @param y the location of the plot on the y axis
+##' @param height the height of the boxes
+##' @param arrow.density The density of the arrows in arrows per inch
+##' @param angle angle (in degrees) of the arrow heads
+##' @param col color to use for plotting
 ##' @param lty line type for arrows, borders, and shading
 ##' @param lwd line width for arrows, borders and shading
 ##' @param add if \code{TRUE}, add to existing plot
@@ -325,66 +470,55 @@ range.feat <- function(..., na.rm=FALSE) {
 ##' @S3method plot feat
 ##' @param ... graphical parameters to be passed to \code{plot}.
 ##' @export
-plot.feat <- function(x, y=0, width=1, plottype="r",
-                      arrow.length=NULL,
-                      max.arrows=100,
-                      density=NULL, angle=45,
-                      col=NA, border=NULL,
-                      lty=par("lty"), lwd=par("lwd"),
+plot.gene <- function(x, y=0, height=1,
+                      arrow.density=5,
+                      angle = 30,
+                      col="black",
+                      border=NULL,
+                      lty=par("lty"),
+                      lwd=par("lwd"),
                       add=FALSE,
                       #                     labels=FALSE,
                       xlim=range.feat(x),
-                      ylim=c(y-width*3/4, y+width*3/4), ...) {
-
+                      ylim=c(y-height*3/4, y+height*3/4), ...) {
   if (!is.null(x$externalPtr))
     x <- as.data.frame.feat(x)
   if (is.null(x$start) || is.null(x$end))
     stop("invalid features object")
-  if (plottype=="a" && is.null(x$strand))
-    stop("cannot plot feature arrows without strand data")
 
-  if (!add) {
-    coord <- c(0); y<-c(0)
-    plot(coord, y, type="n", xlim=xlim, ylim=ylim, ...)
-  }
-  if (plottype == "a" || plottype=="b") {
-    # arrows plot- just do lines if no strand
-    if (is.na(col)) arrow.col <- "black"
-    
-    # calculate length for arrow heads
-    if (type == "b") {
-      arrow.length <- width/2/sin(pi/6)
-    } else if (is.null(arrow.length))
-      arrow.length <- min((ylim[2]-ylim[1])/100, width/2)
+  seqname <- unique(x$seqname)
+  if (length(seqname) > 1L)
+    stop("feature has multiple sequences, can only plot 1")
 
-    f <- x$strand == "+" | x$strand == "-"
-    # calculate the length to split stranded features into
-    max.length <- max(1, floor((ylim[2]-ylim[1])/max.arrows))
-    if (sum(f) > 0L) {
-      strandedSegs <- x[f,]
-      splitSegs <- split.feat(strandSegs, max.length=max.length,
-                              start.from=ifelse(strandSeqs$strand=="+",
-                                "right", "left"))
-      if (sum(!f) > 0L)
-        x <- rbind(x[!f,], splitSegs)
-      else x <- splitSegs
-    }
-    arrows(x$start, y, x$end,
-           arrow.length=ifelse(((x$strand != "+" & x$strand != "-") |
-             (x$end - x$start + 1 != max.length)), 0, arrow.length),
-           code=ifelse(x$strand=="-", 1, 2),
-           col=arrow.col, lty=lty, lwd=lwd)
+  if (!add) 
+    plot(c(0), c(0), type="n", xlim=xlim, ylim=ylim, ...)
+
+  f <- x$end >= xlim[1] & x$start <= xlim[2]
+  if (sum(f) == 0) return(invisible(NULL))
+  x <- x[f,]
+
+  f <- x$feature == "intron"
+  if (sum(f) > 0L) 
+    plot.feat(x[f,], plottype="l", y=y, lty=1, col=col, add=TRUE)
+  fexon <- x$feature == "exon"
+  fcds <- x$feature == "CDS"
+  if (sum(fexon) > 0L) {
+    if (sum(fcds) > 0L) {
+      region.bounds <- feat(seqname=seqname, start=min(x$start), end=max(x$end))
+      exon <- coverage.feat(x[fexon,], x[fcds,],
+                            get.feats=TRUE,
+                            not=c(FALSE, TRUE),
+                            region.bounds=region.bounds)
+    } else exon <- x[fexon,]
+    if (nrow.feat(exon) > 0L)
+      plot.feat(exon, plottype="a", y=y, height=height/5, add=TRUE, col=col,
+                angle=angle, arrow.density=arrow.density)
   }
-  if (plottype=="r" || plottype=="b") {
-    rect(x$start, y-width/2, x$end, y+width/2,
-         density=density, angle=angle, col=col, border=border, lty=lty,
-         lwd=lwd)
-  }
-#  if (labels) {  #TODO
-    
-#  }
-  invisible(NULL)
+  if (sum(fcds) > 0L)
+    plot.feat(x[fcds,], plottype="b", y=y, height=height, add=TRUE, col=col,
+              angle=angle, arrow.density=arrow.density)
 }
+
 
 
 ##' Features kernel density
