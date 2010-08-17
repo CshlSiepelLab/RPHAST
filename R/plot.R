@@ -65,8 +65,8 @@ smooth.wig <- function(coord, score, numpoints=300) {
 ##' @param doLabels Logical.  Whether to plot the label above each plot.  Will be
 ##' recycled to the length of x.  Does not affect printing of shortLabels.
 ##' @param labels Labels to appear directly above each plot.
+##' @param cex.axis The character expansion factor for axis annotations.
 ##' @param cex.labels The character expansion factor for the labels
-##' @param shortLabels If not NULL, a character vector for each plot to print in the left margin.
 ##' @param cex.shortLabels The character expansion factor for the shortLabels
 ##' @param relWigSize The relative size of wig plots compared to feature plots
 ##' @param xlim The range of the x coordinate to be plotted.  If \code{NULL} (the default), will
@@ -85,9 +85,9 @@ smooth.wig <- function(coord, score, numpoints=300) {
 ##' @export
 plot.track <- function(x,
                        doLabels=TRUE,
-                       cex.labels=0.75,
-                       shortLabels=NULL,
-                       cex.shortLabels=0.5,
+                       cex.axis=1.0,
+                       cex.labels=1.0,
+                       cex.shortLabels=0.75,
                        relWigSize=5,
                        xlim=NULL,
                        xlab="coord", ylab="", blankSpace=0.25, axisDigits=3,
@@ -119,7 +119,7 @@ plot.track <- function(x,
     xlim <- range.track(tracks)
 
   plot(c(0), c(0), type="n", xlim=xlim, ylim=c(0, 1), xlab=xlab,
-       ylab=ylab, yaxt="n", bty="n", ...)
+       ylab=ylab, yaxt="n", bty="n", cex.axis=cex.axis, ...)
   
   maxy <- 1
   if (numlabels > 0L) {
@@ -131,13 +131,9 @@ plot.track <- function(x,
     labelSize <- sum(plotScale)*labelSpace/numlabels
     plotScale <- plotScale*(1.0-labelSpace)
   }
-  check.arg(shortLabels, "shortLabels", "character", null.OK=TRUE, 
-            min.length=numresult, max.length=numresult)
-  if (!is.null(shortLabels)) {
-    cex.shortLabels <- rep(cex.shortLabels, length.out=numresult)
-    check.arg(cex.shortLabels, "cex.shortLabels", "numeric", null.OK=FALSE,
-              min.length=NULL, max.length=NULL)
-  }
+  cex.shortLabels <- rep(cex.shortLabels, length.out=numresult)
+  check.arg(cex.shortLabels, "cex.shortLabels", "numeric", null.OK=FALSE,
+            min.length=NULL, max.length=NULL)
   plotScale <- plotScale*(1-blankSpace)
   blankSpace <- blankSpace/numresult
   
@@ -173,8 +169,8 @@ plot.track <- function(x,
       newscore <- (score - oldrange[1])*(maxy - yrange[1])/(oldrange[2]-oldrange[1]) + yrange[1]
       lines(coord, newscore, col=el$col)
       axis(side=2, at=yrange, labels=FALSE)
-      mtext(format(oldrange[1], digits=axisDigits), side=2, line=0.5, at=yrange[1], las=1, cex=0.75)
-      mtext(format(oldrange[2], digits=axisDigits), side=2, line=0.5, at=yrange[2], las=1, cex=0.75)
+      mtext(format(oldrange[1], digits=axisDigits), side=2, line=0.5, at=yrange[1], las=1, cex=cex.axis)
+      mtext(format(oldrange[2], digits=axisDigits), side=2, line=0.5, at=yrange[2], las=1, cex=cex.axis)
       if (!is.null(el$horiz.line)) {
         horiz.line <- (el$horiz.line - oldrange[1])*(maxy - yrange[1])/(oldrange[2]-oldrange[1]) + yrange[1]
         for (i in 1:length(el$horiz.line)) 
@@ -188,8 +184,8 @@ plot.track <- function(x,
       plot.gene(el$data, y=mean(yrange), height=(yrange[2]-yrange[1]),
                 add=TRUE, col=el$col, arrow.density=el$arrow.density)
     } else stop("don't know track type ", resultType[[i]])
-    if (!is.null(shortLabels))
-      mtext(shortLabels[i], side=2, line=0.5, at=mean(yrange),
+    if (!is.null(el$shortLabel))
+      mtext(el$shortLabel, side=2, line=0.5, at=mean(yrange),
             las=1, cex=cex.shortLabels[i])
     maxy <- miny-blankSpace
   }
@@ -201,6 +197,8 @@ plot.track <- function(x,
 ##' @param coord A numeric vector of coordinates (to be used for x-axis)
 ##' @param score A numeric vector of scores (y-axis coords), should be same length as coord
 ##' @param name The name of the track (a character string)
+##' @param short.label An optional character string to be displayed in left
+##' hand margin of track
 ##' @param col The color to be used to plot this track.
 ##' @param ylim The limits to be used on the y-axis.  If NULL use entire range
 ##' of score.
@@ -214,12 +212,14 @@ plot.track <- function(x,
 ##' @return An object of type \code{track} which can be plotted with the plot.track
 ##' function
 ##' @export
-wig.track <- function(coord, score, name, col="black", ylim=NULL, smooth=FALSE, numpoints=250,
+wig.track <- function(coord, score, name, short.label=NULL,
+                      col="black", ylim=NULL, smooth=FALSE, numpoints=250,
                       horiz.line=NULL, horiz.lty=2, horiz.col="black") {
   rv <- list()
   attr(rv, "class") <- "track"
   rv$data <- data.frame(coord=coord, score=score)
   rv$name <- name
+  rv$short.label <- short.label
   rv$col <- col
   if (!is.null(ylim))
     rv$ylim <- ylim
@@ -239,17 +239,20 @@ wig.track <- function(coord, score, name, col="black", ylim=NULL, smooth=FALSE, 
 ##' Create a features track
 ##' @param x An object of type \code{feat}
 ##' @param name The name of the track (a character string)
+##' @param short.label An optional character string to be displayed in
+##' left hand margin of track
 ##' @param col The color to use plotting this track (can be a single
 ##' color or a color for each element)
 ## @param show.strand If \code{NULL}, do not use strand data.  If "
 ##' @return An object of type \code{track} which can be plotted with plot.track
 ##' function
 ##' @export
-feat.track <- function(x, name, col="black") {
+feat.track <- function(x, name, short.label=NULL, col="black") {
   rv <- list()
   attr(rv, "class") <- "track"
   rv$data <- x
   rv$name <- name
+  rv$short.label <- short.label
   rv$col <- col
   rv$type="feat"
   rv
@@ -257,12 +260,27 @@ feat.track <- function(x, name, col="black") {
 
 
 
+##' Create a gene track
+##'
+##' This function expects a features object.  The features which will be
+##' plotted are the ones with types "CDS", "exon", or "intron".  All other
+##' features will be ignored.
+##' @param x An object of type \code{feat}
+##' @param name The name of the track (a character string)
+##' @param short.label An optional character string to be displayed in
+##' the left hand margin of the track
+##' @param col The color to use plotting this track
+##' @return An object of type \code{track} which can be plotted with
+##' the plot.track function
+##' @seealso addIntrons.feat to add intron annotations to a features object.
 ##' @export
-gene.track <- function(x, name, col="black", arrow.density=10) {
+gene.track <- function(x, name, short.label=NULL,
+                       col="black", arrow.density=10) {
   rv <- list()
   attr(rv, "class") <- "track"
   rv$data <- x
   rv$name <- name
+  rv$short.label <- short.label
   rv$col <- col
   rv$type="gene"
   rv$arrow.density <- arrow.density
