@@ -64,11 +64,10 @@ table(feats$feature)
 wholeChrom <- feat(seq="tomato", src=".", feature="all",
                   start=1, end=122080)
 
-# annotate non-coding regions
-coding.feats <- feats
-noncoding.feats <- inverse.feat(feats, region.bounds=wholeChrom)
-noncoding.feats$feature <- "noncoding"
-feats <- rbind.feat(feats, noncoding.feats)
+# annotate intergenic regions
+intergenic.feats <- inverse.feat(feats, region.bounds=wholeChrom)
+intergenic.feats$feature <- "intergenic"
+feats <- rbind.feat(feats, intergenic.feats)
 
 # now extract 4d sites from alignment using annotations
 align4d <- get4d.msa(align, feats)
@@ -127,9 +126,9 @@ plot(density.feat(ce), ylim=c(0, 0.018),
      main="Element Length by Type", xlab="Length")
 
 # break conserved elements into coding/noncoding:
-
-# this returns all conserved elements that overlap with coding.feats 
-# by at least 50 percent
+coding.feats <- feats[feats$feature=="CDS",]
+# the following returns all conserved elements that overlap with
+# coding.feats by at least 50 percent
 ce.coding <- overlap.feat(ce, coding.feats, min.percent=0.5)
 # and this gets the ones which overlap by less than 50 percent:
 ce.noncoding <- overlap.feat(ce, coding.feats, min.percent=0.5, 
