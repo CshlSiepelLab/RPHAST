@@ -15,7 +15,7 @@
 ##' @param filename the name of the file
 ##' @param pointer.only Whether to store object by reference instead of a
 ##' data.frame
-##' @return If pointer.only==FALSE, a data.frame with columns corresponding
+##' @return If \code{pointer.only==FALSE}, a data.frame with columns corresponding
 ##' to the GFF specification.  Otherwise, an object which is a pointer to
 ##' an object stored in C.
 ##' @seealso \code{\link{feat}} for more description of features objects.
@@ -428,33 +428,6 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
   invisible(NULL)
 }
 
-oldcode <- function(x) {
-  #      if (plottype == "a") border <- NA else border <- col
-#      f <- x$strand == "+"
-#      if (sum(f) > 0) 
-#        rect(x[f,]$start,
-#             c(rep(y + height/2, sum(f)), rep(y, sum(f))),
-#             x[f,]$end,
-#             c(rep(y, sum(f)), rep(y - height/2, sum(f))),
-#             density=density,
-#             angle=c(rep(-angle, sum(f)), rep(angle, sum(f))),
-#             col=fill.col, border=border, lty=lty, lwd=lwd)
-#      f <- x$strand == "-"
-#      if (sum(f) > 0)
-#        rect(x[f,]$start,
-#             c(rep(y + height/2, sum(f)),
-#               rep(y, sum(f))),
-#             x[f,]$end,
-#             c(rep(y, sum(f)),
-#               rep(y - height/2, sum(f))),
-#             density=density,
-#             angle=c(rep(angle, sum(f)), rep(-angle, sum(f))),
-#             col=fill.col, border=border, lty=lty, lwd=lwd)
-#    }
-#  }
-
-}
-
 
 ##' make gene plot
 ##' @title Gene plot
@@ -560,13 +533,15 @@ density.feat <- function(x, type="length", ...) {
 hist.feat <- function(x, type="length", ...) {
   if (type == "length") {
     if (!is.null(x$externalPtr)) {
-      vals <- .Call("rphast_gff_lengths", x$externalPtr)
+      starts <- .Call("rph_gff_starts", x$externalPtr)
+      ends <- .Call("rph_gff_ends", x$externalPtr)
+      vals <- ends - starts + 1
     } else {
-      vals <- x$end - x$start
+      vals <- x$end - x$start + 1
     }
   } else if (type == "score") {
     if (!is.null(x$externalPtr)) {
-      vals <- .Call("rphast_gff_getScores", x$externalPtr)
+      vals <- .Call("rph_gff_scores", x$externalPtr)
     } else {
       vals <- x$score
     }
@@ -575,20 +550,23 @@ hist.feat <- function(x, type="length", ...) {
 }
 
 ##' Feature overlap
+##'
+##' Creates a features object containing all the features from one set which overlap
+##' features from another.
 ##' @param x An object of type \code{feat} containing features to select
-##' @param filter An object of type \code{feat} which determines which elements of feat to select
-##' @param numbase The number of bases of overlap between feat and filter required to choose
+##' @param filter An object of type \code{feat} which determines which elements of x to select
+##' @param numbase The number of bases of overlap between x and filter required to choose
 ##' a record.  Use NULL to ignore (but then min.percent must be defined)
 ##' @param min.percent The minimum percent that a record must overlap with the combined records in filter
 ##' in order to be chosen
 ##' @param overlapping If \code{FALSE}, choose records with less than numbase overlapping bases,
 ##' and less than min.percent fraction overlap if min.percent is not \code{NULL}
-##' @param get.fragments If \code{FALSE}, entire records are selected from feat based on whether
+##' @param get.fragments If \code{FALSE}, entire records are selected from x based on whether
 ##' they meet selection criteria.   
-##' If \code{TRUE}, return only the fragments of \code{feat} that overlap
+##' If \code{TRUE}, return only the fragments of x that overlap
 ##' with filter.  In this case, the same fragments may be output multiple times, if they are
 ##' selected by multiple entries in filter.  numbase and min.percent apply in either case.
-##' @return an object of type feat containing the selected entries from feat.
+##' @return an object of type \code{feat} containing the selected entries from x.
 ##' @export
 overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
                          overlapping=TRUE, get.fragments=FALSE) {
@@ -681,7 +659,7 @@ coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
   if (get.feats) {
     rv <- .makeObj.feat()
     rv$externalPtr <- .Call("rph_gff_featureBits", featlist, or, get.feats)
-    return(as.pointer.feat(rv))
+    return(as.data.frame.feat(rv))
   }
   .Call("rph_gff_featureBits", featlist, or, get.feats)
 }

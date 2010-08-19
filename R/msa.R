@@ -589,28 +589,30 @@ reverse.complement <- function(msa) {
 ##' @param refseq the sequence in the alignment which determines the
 ##' coordinates for start.col and end.col.  If NULL, start.col and
 ##' end.col are column indices in the multiple alignment.
+##' @param pointer.only If \code{TRUE}, return an msa object which is only
+##' a pointer to a C structure (advanced use only).
 ##' @return A new MSA object containing a subset of the original MSA.
 ##' @S3method sub msa
 ##' @export
 sub.msa <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
-                    refseq=NULL) {
+                    refseq=NULL, pointer.only=FALSE) {
   check.arg(keep, "keep", "logical", null.OK=FALSE)
   check.arg(seqs, "seqs", "character", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
   check.arg(start.col, "start.col", "integer", null.OK=TRUE)
   check.arg(end.col, "end.col", "integer", null.OK=TRUE)
   check.arg(refseq, "refseq", "character", null.OK=TRUE)
+  check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
   
   result <- .makeObj.msa()
   if (is.null(msa$externalPtr)) {
     msa <- as.pointer.msa(msa)
-    copy.to.R<-TRUE
-  } else copy.to.R <- FALSE
+  }
   result$externalPtr <- .Call("rph_msa_sub_alignment",
                               msa$externalPtr, seqs, keep,
                               start.col, end.col, refseq)
 
-  if (copy.to.R) 
+  if (!pointer.only)
     result <- from.pointer.msa(result)
   result
 }
@@ -633,7 +635,11 @@ sub.msa <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
 ##' @param strip.mode Determines which gaps to strip.  See Details
 ##' @note if MSA is stored as a pointer, then changes will occur to the
 ##' input alignment
-##' @return an MSA object, with gaps stripped according to strip.mode
+##' @return an MSA object, with gaps stripped according to strip.mode.
+##' @note if the MSA object is passed as a pointer to a C structure (ie,
+##' it was created with pointer.only=TRUE), then this function will strip
+##' gaps from the object which was passed in.  The object will not be
+##' copied to R memory in this case (the return value will also be a pointer).
 ##' @export
 strip.gaps.msa <- function(msa, strip.mode=1) {
   names <- NULL
@@ -688,6 +694,11 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 ##' necessary to the same lenth as \code{ncol.msa}.  Note that these are
 ##' in coordinates with respect to the entire alignment.  msa$idx.offset
 ##' is ignored here.
+##' @param pointer.only If \code{TRUE}, return an object which is only
+##' a pointer to a structure stored in C (useful for large alignments;
+##' advanced use only).  In certain cases when the original alignment
+##' is stored in R, it may be more efficient return an object in R, in which
+##' case this argument will be ignored.
 ##' @seealso \code{\link{sub.msa}} which can subset columns based on genomic
 ##' coordinates.
 ##' @seealso \code{\link{extract.feature.msa}} which can subset based on
@@ -695,13 +706,14 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 ##' @usage \method{[}{msa}(rows, cols)
 ##' @S3method "[" msa
 ##' @export "[.msa"
-"[.msa" <- function(msa, rows, cols) {
+"[.msa" <- function(msa, rows, cols, pointer.only=FALSE) {
   if (!missing(rows)) {
     if (is.null(rows)) stop("rows cannot be empty")
   } else rows=NULL
   if (!missing(cols)) {
     if (is.null(cols)) stop("cols cannot be empty")
   } else cols=NULL
+  check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
 
   if (!is.null(rows)) {
     # if rows are given by names, convert to integer
@@ -725,7 +737,7 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
   if (!is.null(rows) && is.null(msa$externalPtr)) {
     msa$names <- msa$names[rows]
     msa$seqs <- msa$seqs[rows]
-    rows=NULL
+    rows <- NULL
   }
   if (is.null(rows) && is.null(cols)) return(msa)
   check.arg(rows, "rows", "integer", null.OK=TRUE,
@@ -737,7 +749,9 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
   rv <- .makeObj.msa()
   rv$externalPtr <- .Call("rph_msa_square_brackets", msa$externalPtr,
                           rows, cols)
-  from.pointer.msa(rv)
+  if (!pointer.only)
+    rv <- from.pointer.msa(rv)
+  rv
 }
 
 
@@ -784,7 +798,8 @@ likelihood.msa <- function(msa, tm, by.column=FALSE) {
 ##' alignments.  Cannot be used if \code{get.features==TRUE}.
 ##' @return An object of type MSA containing the simulated alignment.
 ##' @export
-simulate.msa <- function(mod, nsites, hmm=NULL, get.features=FALSE, pointer.only=FALSE) {
+simulate.msa <- function(mod, nsites, hmm=NULL, get.features=FALSE,
+                         pointer.only=FALSE) {
   check.arg(get.features, "get.features", "logical", null.OK=FALSE, min.length=1L,
             max.length=1L)
   if (get.features && (!is.null(hmm)) && pointer.only) 
@@ -833,17 +848,22 @@ simulate.msa <- function(mod, nsites, hmm=NULL, get.features=FALSE, pointer.only
 ##' @param prob A vector of probability weights for sampling each column;
 ##' \code{prob=NULL} implies equal probability for all columns.  Probabilities
 ##' need not sum to one but should be non-negative and can not all be zero.
+##' @param pointer.only If \code{TRUE}, return only a pointer to an alignment
+##' object stored in C (useful for large objects; advanced use only).
 ##' @return An object of type \code{msa} with columns randomly
 ##' re-sampled from the original
+##' @note This function is implemented using R's sample function in
+##' conjunction with "[.msa".
 ##' @S3method sample msa
 ##' @export
-sample.msa <- function(x, size, replace=FALSE, prob=NULL) {
+sample.msa <- function(x, size, replace=FALSE, prob=NULL, pointer.only=FALSE) {
   check.arg(size, "size", "integer", null.OK=FALSE)
   check.arg(replace, "replace", "logical", null.OK=FALSE)
   if (!is.null(prob)) prob <- rep(prob, length.out=ncol.msa(x))
   if (size > ncol.msa(x) && replace==FALSE)
     stop("cannot sample more columns than in msa unless replace=TRUE")
-  x[,sample(1:ncol.msa(x), replace=replace, prob=prob)]
+  x[,sample(1:ncol.msa(x), size, replace=replace, prob=prob),
+    pointer.only=pointer.only]
 }
 
 ##' Extract fourfold degenerate sites from an MSA object
@@ -852,8 +872,9 @@ sample.msa <- function(x, size, replace=FALSE, prob=NULL) {
 ##' with feature type "CDS"
 ##' @return an unordered msa object containing only the sites which are
 ##' fourfold degenerate
-##' @note if original msa is stored as a pointer it will be destroyed.  For
-##' very large MSA objects it is more efficient to use the do.4d option
+##' @note if original msa is stored as a pointer, that same object will be
+##' reduced to four-fold degenerate sites, so the original alignment will be lost.
+##' For very large MSA objects it is more efficient to use the do.4d option
 ##' in the read.msa function instead.
 ##' @export
 get4d.msa <- function(msa, features) {
@@ -880,7 +901,8 @@ get4d.msa <- function(msa, features) {
 ##' fourfold-degenerate sites will be extracted.
 ##' @return An msa object containing only the regions of the msa
 ##' appearing in the features object.
-##' @note if input msa is stored as a pointer it will be destroyed.
+##' @note if input msa was loaded with \code{pointer.only==TRUE}, then the
+##' object passed in will be modified to the return value of the function.
 ##' @export
 extract.feature.msa <- function(msa, features, do4d=FALSE) {
   if (!is.ordered.msa(msa))
@@ -943,11 +965,15 @@ concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
 ##' @param x An object of type \code{msa}
 ##' @param f An object of type \code{feat}
 ##' @param drop Not currently used
+##' @param pointer.only If \code{TRUE}, returned list elements are pointers to
+##' objects stored in C (advanced use only).
 ##' @param ... Not currently used
 ##' @return A list of msa objects, representing the sub-alignments for
 ##' each element in f
 ##' @export
-split.by.feature.msa <- function(x, f, drop=FALSE, ...) {
+split.by.feature.msa <- function(x, f, drop=FALSE, pointer.only=FALSE, ...) {
+  check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
+  
   if (is.null(x$externalPtr)) x <- as.pointer.msa(x)
   if (is.null(f$externalPtr)) f <- as.pointer.feat(f)
   l <- list()
@@ -959,7 +985,82 @@ split.by.feature.msa <- function(x, f, drop=FALSE, ...) {
     cat(i, "\n")
     m <- .makeObj.msa()
     m$externalPtr <- .Call("rph_msaList_get", l$externalPtr, i)
-    rv[[i]] <- from.pointer.msa(m)
+    if (pointer.only) {
+      rv[[i]] <- m
+    } else  {
+      rv[[i]] <- from.pointer.msa(m)
+    }
   }
   rv
+}
+
+
+##' Get informative regions of an alignment
+##' @param x An object of type \code{msa}.
+##' @param min.numspec The minimum number of species with non-missing data
+##' required for an alignment column to be considered informative.
+##' @param spec A character vector of species names, or an integer vector
+##' of species indices.  Only data in
+##' the named species count towards deciding if a site is informative.  The
+##' default value of \code{NULL} implies use all species in the alignment.
+##' @param refseq Defines the frame of reference for the return value.  A
+##' value of \code{1} means use the first sequence in the alignment.  A value
+##' of \code{0} or \code{NULL} means use the reference frame of the entire
+##' alignment.  Valid values are integers from \code{seq(0..ncol.msa(x))},
+##' \code{NULL}, or the name of a species in the alignment.
+##' @param gaps.inf Logical value indicating whether a gap should be considered
+##' informative.  The default value of \code{FALSE} indicates that gaps as
+##' well as missing data are not counted as informative.
+##' @return An object of type \code{feat} indicating the regions of the
+##' alignment which meet the informative criteria.  Note that unless
+##' \code{refseq==0 || refseq==NULL}, columns with gaps in the reference
+##' sequence will be ignored, and will fall in "informative" or "uninformative"
+##' features based on the informativeness of neighboring columns.
+##' @note If the msa object has an idx.offset, it is assumed to be a coordinate
+##' offset for the first species in the alignment.  So the idx.offset will
+##' be added to the coordinates in the returned features object only if
+##' \code{refseq==1}.
+##' @export
+informative.regions.msa <- function(x, min.numspec, spec=NULL, refseq=1,
+                                    gaps.inf=FALSE) {
+  numspec <- nrow.msa(x)
+  check.arg(min.numspec, "min.numspec", "integer", null.OK=FALSE)
+  check.arg(gaps.inf, "gaps.inf", "logical", null.OK=FALSE)
+  if (min.numspec <= 0L || min.numspec > numspec)
+    stop("min.numspec expected to be between 1 and ", numspec)
+  if (!is.null(spec)) {
+    if (is.integer(spec)) {
+      check.arg(spec, "spec", "integer", null.OK=TRUE, min.length=1L,
+                max.length=numspec)
+      if (sum(spec <= 0 | spec > numspec) > 0L)
+          stop("expected spec values between 1 and ", numspec)
+    } else {
+      check.arg(spec, "spec", "character", null.OK=TRUE, min.length=1L,
+                max.length=nrow.msa(x))
+      intspec <- as.integer(sapply(spec, function(s) {which(s==names(x))}))
+      if (sum(is.na(intspec)) > 0L)
+        stop("don't know species names ", spec[is.na(intspec)])
+      spec <- intspec
+    }
+  }
+  if (is.character(refseq)) {
+    check.arg(refseq, "refseq", "character", null.OK=FALSE)
+    intrefseq <- which(refseq==names(msa))
+    if (length(intrefseq) == 0L)
+      stop("don't know refseq name ", refseq)
+    refseq <- intrefseq
+  } else if (!is.null(refseq)) {
+    check.arg(refseq, "refseq", "integer", null.OK=FALSE)
+    if (refseq < 0L || refseq > numspec)
+      stop("expected refseq between 0 and ", numspec)
+  } else refseq <- 0
+
+  if (is.null(x$externalPtr))
+    x <- as.pointer.msa(x)
+
+  feats <- .makeObj.feat()
+  feats$externalPtr <- .Call("rph_msa_informative_feats",
+                             x$externalPtr, min.numspec, spec, refseq,
+                             gaps.inf)
+  as.data.frame.feat(feats)
 }

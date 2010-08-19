@@ -42,37 +42,60 @@ neutralMod <- read.tm("placentalMammals.mod") #read the neutral model
 
 elements <- read.feat("chr22-elements.bed")
 unique(elements$seqname)
-elements$seqname <- "hg18.chr22"  # need species name encoded in features
-
-@  
-
-We want to regularize the lengths of the conserved elements,
-so that we do not have to worry that the significance of the tests
-are confounded by length.  So we split the conserved elements
-into fragments of size 100, and remove remaining fragments that
-are too small
-<<rarAnalysis2>>=
-splitLength <- 50
-splitElements <- split.feat(elements, max.length=splitLength)
-splitElements <- splitElements[splitElements$end - splitElements$start + 1 == splitLength,]
+elements$seqname <- "hg18" # need seqname in features to match seqname in
+                           # alignment
 
 @ 
 
-Now, read the alignment.  By using the features argument we get an un-ordered
-alignment containing sites from the conserved elements only.  For simplicity
-we will use a a subset of the full species set.
-
+Now, read the alignment.  For simplicity we will use a a subset of the full species set.
 
 <<rarAnalysis4>>=
 seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "mm9", "rn4", 
               "canFam2", "loxAfr2")
 if (!file.exists("chr22.maf")) {
   if (!file.exists("chr22.maf.zip"))
-    download.file("http://compgen.bscb.cornell.edu/phast/chr22.maf.zip",
+    download.file("http://compgen.bscb.cornell.edu/rphast/chr22.maf.zip",
                   "chr22.maf.zip", method="auto")
   unzip("chr22.maf.zip", "chr22.maf")
 }
-elementAlign <- read.msa("chr22.maf", seqnames=seqnames, features=elements)
+align <- read.msa("chr22.maf", seqnames=seqnames)
+
+@ 
+
+In this type of analysis it is usually necessary to apply some filters to the data
+to control the rate of false positives.  In a real analysis we would suggest filters
+synteny, repeat, and missing data filters.  Here we will implement a missing data filter,
+which in this case, is probably the most important.  We want to only analyze regions
+which have data in both mouse and rat, as well a total of at least four species.
+<<>>=
+
+hasMouseRat <- informative.regions.msa(align, 2, c("mm9", "rn4"))
+hasAtLeastFour <- informative.regions.msa(align, 4)
+informativeElements <- coverage.feat(elements, hasMouseRat, hasAtLeastFour, get.feats=TRUE)
+
+elementAlign <- extract.feature.msa(align, informativeElements)
+
+@ 
+
+We want to regularize the lengths of the conserved elements,
+so that we do not have to worry that the significance of the tests
+are confounded by length.  So we split the conserved elements
+into fragments of size 50, and remove remaining fragments that
+are too small
+<<rarAnalysis2>>=
+splitLength <- 50
+splitElements <- split.feat(informativeElements, max.length=splitLength)
+splitElements <- splitElements[splitElements$end - splitElements$start + 1 == splitLength,]
+
+@ 
+
+Now we want to run phyloP on these split elements.  This calculates a likelihood
+ratio for every feature:
+
+<<<rarAnalyiss8>>=
+obs.phyloP <- phyloP(neutralMod, msa=align, mode="ACC", features=splitElements,
+                     subtree="mm9-rn4")
+
 @ 
 
 For these short elements with a fairly small species set, we do not necessarily
@@ -97,16 +120,6 @@ features <- feat(seqname=names.msa(simMsa)[1], src="sim", feat=".",
 
 nonpara.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
                          features=features, subtree="mm9-rn4")
-@ 
-
-Now we want to run phyloP on the real data.  To do this we need
-to read an ordered version of the alignment from the MAF file, then
-run phyloP on our elements:
-<<<rarAnalyiss8>>=
-align <- read.msa("chr22.maf",
-                  seqnames=seqnames)
-obs.phyloP <- phyloP(neutralMod, msa=align, mode="ACC", features=splitElements,
-                     subtree="mm9-rn4")
 
 @ 
 

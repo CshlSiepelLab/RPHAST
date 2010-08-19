@@ -393,3 +393,11 @@ m2 <- read.msa("ENr334.maf")
 m3 <- get4d.msa(m2, features=f)
 m4 <- get4d.msa(read.msa("ENr334.maf"), features=f)
 m5 <- get4d.msa(read.msa("ENr334.fa", offset=41405894), features=f)
+
+#' informative.regions.msa
+require("rphast")
+m <- msa(seqs=c("A--ACGTAT-", "AG-AGGTAA-", "AGGAGGTA--"),
+         names=c("human", "mouse", "rat"))
+informative.regions.msa(m, 1, refseq=0)
+informative.regions.msa(m, 3, refseq=0)
+informative.regions.msa(m, 3, refseq=2, spec=c("mouse", "rat"))
