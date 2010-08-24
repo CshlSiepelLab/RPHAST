@@ -1,5 +1,5 @@
 AC_INIT([rphast], 0.0.1, [mjhubisz@cornell.edu], [], [http://compgen.bscb.cornell.edu/phast])
-AC_CONFIG_SRCDIR([RPHAST/src/rph_init.c])
+#AC_CONFIG_SRCDIR([RPHAST/src/rph_init.c])
 
 : ${R_HOME=`R RHOME`}
 if test -z "${R_HOME}"; then
@@ -41,7 +41,7 @@ AC_CHECK_FUNCS([atexit bzero floor gethostname gettimeofday memset pow re_comp r
 
 # use -pthread if available otherwise -lpthread
 AC_MSG_CHECKING(for pthread)
-
+PTHREAD_FLAG=-DPHAST_PTHREAD
 OLD_LIBS=${LIBS}
 LIBS=""
 # first check if we need -pthread at all
@@ -69,7 +69,7 @@ int main() {
   pthread_join(x, NULL);
   return 0;
 ]}, AC_MSG_RESULT(${LIBS}), [AC_MSG_RESULT(no)
-                            AC_MSG_ERROR(pthread libs required)])])])
+                             PTHREAD_FLAG=""])])])
 
 PTHREAD_LIBS=${LIBS}
 LIBS=${OLD_LIBS}
@@ -117,6 +117,7 @@ AC_C_INLINE
 AC_SUBST(PHAST_VERSION)
 AC_SUBST(INLINE_FLAG)
 AC_SUBST(PTHREAD_LIBS)
+AC_SUBST(PTHREAD_FLAG)
 AC_SUBST(LAPACK_FLAG)
 AC_SUBST(LAPACK_LIBS)
 

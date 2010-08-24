@@ -13,7 +13,7 @@ tm$likelihood
 print(tm$likelihood, digits=10)
 f <- read.feat("gencode.ENr334.gff")
 t <- phyloFit(m, tree="((hg18, (mm9, rn4)), canFam2)",
-              features=feat, quiet=TRUE)
+              features=f, quiet=TRUE)
 names(t)
 t$other
 t[["5'flank"]]

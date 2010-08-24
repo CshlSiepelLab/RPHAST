@@ -24,7 +24,7 @@ as the neutral model from the second example.  The rphast package comes
 with a set of multiple alignments for identified NRSF binding sites,
 as well as a GFF describing their genomic positions.  We will use these
 to build the phylo-HMM.
-<<phyloHmm1>>=
+<<phyloHmm1,fig=FALSE>>=
 require("rphast")
 # lets use a subset of the full species
 seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "equCab2", 

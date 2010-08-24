@@ -270,6 +270,7 @@ feat.track <- function(x, name, short.label=NULL, col="black") {
 ##' @param short.label An optional character string to be displayed in
 ##' the left hand margin of the track
 ##' @param col The color to use plotting this track
+##' @param arrow.density The number of lines per inch used to denote strand.
 ##' @return An object of type \code{track} which can be plotted with
 ##' the plot.track function
 ##' @seealso addIntrons.feat to add intron annotations to a features object.

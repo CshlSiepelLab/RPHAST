@@ -1,7 +1,8 @@
 
 
 ##' Fit a Phylogenetic model to an alignment
-##' @param msa An alignment object
+##' @param msa An alignment object.  May be altered if passed in as a pointer to
+##' C memory (see Note).
 ##' @param tree A character string containing a Newick formatted tree
 ##' defining the topology.  Required if the number of species > 3, unles
 ##' init.mod is specified.  The topology must be rooted, although the
@@ -55,6 +56,9 @@
 ##' @return An object of class \code{tm} (tree model), or (if several models
 ##' are computed, as is possible with the features or windows options), a list of
 ##' objects of class \code{tm}.
+##' @note If msa or features object are passed in as pointers to C memory,
+##' they may be altered by this function!  Use \code{copy.msa(msa)} or
+##' \code{copy.feat(features)} to avoid this behavior!
 ##' @export
 phyloFit <- function(msa,
                      tree=NULL,
@@ -178,45 +182,3 @@ phyloFit <- function(msa,
 
 
 
-# NOTE THE Function below is NOT exported because it is probably better
-# to use phyloP for this test!
-
-##' Test a subtree for a change in evolutionary rate
-##' @param msa A multiple sequence alignment object
-##' @param subtree.msa The node name denoting the root of the
-##' subtree (also includes branch leading up to this node)
-##' @param neutral.mod An object of type tree model (\code{tm}) which
-##' describes the neutral evolutionary rate
-##' @param quiet Whether to proceed quietly
-##' @return A data.frame with the following columns (and 1 row): \enumerate{
-##' \item p.val The p-value based on a chi-square distribution with one d.f.
-##' \item like.null The likelihood of the null model
-##' \item null.scale The scale factor estimated in the null model
-##' \item like.alt The likelihood of the alternative model
-##' \item alt.subtree.scale The absolute scaling factor for the subtree in the alternative model
-##' \item alt.supertree.scale The absolute scaling factor for the super-tree in the alternative model
-##' \item null.tree The tree estimated in the null model
-##' \item alt.tree The tree estimated in the alternative model
-##' }
-##' @seealso \code{\link{name.ancestors}} to name internal nodes of
-##' trees
-phyloFit.subtree.test <- function(msa, subtree.name, neutral.mod, quiet=TRUE) {
-  m0 <- phyloFit(msa, scale.only=TRUE, no.freqs=TRUE, no.rates=TRUE, 
-                 init.mod=neutral.mod, quiet=TRUE)
-  m1 <- phyloFit(msa, scale.only=TRUE, no.freqs=TRUE, no.rates=TRUE,
-                 init.mod=neutral.mod, quiet=TRUE,
-                 scale.subtree=subtree.name)
-  orig.scale <- branchlen.tree(neutral.mod$tree)
-  m0scale <- branchlen.tree(m0$tree)/orig.scale
-  orig.superTree.scale <- branchlen.tree(subtree(neutral.mod$tree, subtree.name, super.tree=TRUE))
-  m1superScale <- branchlen.tree(subtree(m1$tree, subtree.name, super.tree=TRUE))/orig.superTree.scale
-  orig.subTree.scale <- branchlen.tree(subtree(neutral.mod$tree, subtree.name))
-  m1subScale <- branchlen.tree(subtree(m1$tree, subtree.name))/orig.subTree.scale
-  chisqStat <- 2.0*(m1$likelihood - m0$likelihood)
-  pval <- 1.0-pchisq(chisqStat, 1)
-  data.frame(p.value=pval, like.null=m0$likelihood, null.scale=m0scale,
-       like.alt=m1$likelihood, alt.subtree.scale=m1subScale,
-       alt.supertree.scale=m1superScale, null.tree=m0$tree,
-       alt.tree=m1$tree)
-}
-                 

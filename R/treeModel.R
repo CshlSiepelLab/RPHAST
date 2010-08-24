@@ -56,7 +56,7 @@ from.pointer.tm <- function(x) {
   tm$nratecats <- .Call("rph_tm_nratecats", x$externalPtr)
   tm$rate.consts <- .Call("rph_tm_rK", x$externalPtr)
   tm$rate.weights <- .Call("rph_tm_freqK", x$externalPtr)
-  tm$tree <- .Call("rph_tm_tree", x$externalPtr)
+  tm$tree <- fix.semicolon.tree(.Call("rph_tm_tree", x$externalPtr))
   tm$root.leaf <- .rootLeaf.from.pointer.tm(x, tm$tree)
   tm
 }
@@ -280,7 +280,7 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
   tm$nratecats <- nratecats
   tm$rate.consts <- rate.consts
   tm$rate.weights <- rate.weights
-  tm$tree <- tree
+  tm$tree <- fix.semicolon.tree(tree)
   tm$root.leaf <- root.leaf
   tm
 }

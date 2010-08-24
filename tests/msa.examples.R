@@ -379,7 +379,7 @@ m <- simulate.msa(list(tm, tm2, tm3), 20, h)
 m <- matrix(1, nrow=9, ncol=9)
 h <- hmm(m)
 m <- simulate.msa(list(tm, tm, tm, tm, tm, tm, tm, tm, tm), 20, h)
-
+unlink(filename)
 
 #' get4d.msa
 require("rphast")
@@ -393,6 +393,7 @@ m2 <- read.msa("ENr334.maf")
 m3 <- get4d.msa(m2, features=f)
 m4 <- get4d.msa(read.msa("ENr334.maf"), features=f)
 m5 <- get4d.msa(read.msa("ENr334.fa", offset=41405894), features=f)
+unlink(files)
 
 #' informative.regions.msa
 require("rphast")

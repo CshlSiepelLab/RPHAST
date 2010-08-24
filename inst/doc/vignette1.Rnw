@@ -62,7 +62,7 @@ table(feats$feature)
 
 # make a feature that represents the entire chromosome
 wholeChrom <- feat(seq="tomato", src=".", feature="all",
-                  start=1, end=122080)
+                  start=align$offset, end=122080)
 
 # annotate intergenic regions
 intergenic.feats <- inverse.feat(feats, region.bounds=wholeChrom)
@@ -165,7 +165,7 @@ pie(comp$composition, col=rainbow(nrow(comp)), radius=1.0,
 
 @ 
 
-<<>>=
+<<width=8,height=4>>=
 
 # Run phastCons again, this time try to estimate the transition rates
 # between conserved and non-conserved
@@ -190,8 +190,6 @@ coverage.feat(pcEM$most.conserved, pc$most.conserved,
 coverage.feat(pcEM$most.conserved, pc$most.conserved, 
              not=c(TRUE, FALSE), region.bounds=wholeChrom)
           
-@ 
-<<width=8,height=4>>=
 plot.track(list(feat.track(pc$most.conserved, name="No estimation"),
                 feat.track(pcEM$most.conserved, name="With estimation")))
 

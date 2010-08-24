@@ -21,7 +21,7 @@
 copy.msa <- function(msa) {
   if (is.null(msa$externalPtr)) return(msa)
   result <- .makeObj.msa()
-  result$externalPtr <- .Call("rph_msa_create_copy", msa$externalPtr)
+  result$externalPtr <- .Call("rph_msa_copy", msa$externalPtr)
   result
 }
 
@@ -47,14 +47,24 @@ is.msa <- function(msa) {
 ##' Alphabet generally does not have to be specified if working with
 ##' DNA alignments.
 ##'
-##' If pointer.only==FALSE, the MSA object will be stored in R and can be
+##' About storing objects as pointers:
+##' If \code{pointer.only==FALSE}, the MSA object will be stored in R and can be
 ##' viewed and modified by base R code as well as RPHAST functions.
-##' Setting pointer.only=TRUE will cause the MSA object to be stored by
+##' Setting \code{pointer.only=TRUE} will cause the object to be stored by
 ##' reference, as an external pointer to an object created by C code.  This
 ##' may be necessary to improve performance, but the object can then only
 ##' be viewed/manipulated via RPHAST functions.  Furthermore, if an object
-##' is stored as a pointer, the object can only be copied with copy.msa().
-##' See examples below.
+##' is stored as a pointer, then its value is liable to be changed when
+##' passed as an argument to a function.  All RPHAST functions which change
+##' the value of an external pointer make a note of this in the help pages
+##' for that function.  For example, extract.feature.msa will alter an
+##' alignment if it is passed in as an external pointer (the argument will
+##' be changed into the return value).  If this is undesireable, the copy.msa
+##' function can be used: extract.feature.msa(copy.msa(align)) will preserve
+##' the original alignment.  Simple copying, ie, \code{align2->align1} of
+##' objects stored as pointer will not behave like normal R objects: both objects
+##' will point to the same C structure, and both will be changed if either one
+##' is altered.  Instead \code{align2 <- copy.msa(align1)} should be used.
 ##' @title MSA Objects
 ##' @param seqs a character vector containing sequences, one per sample
 ##' @param names a character vector identifying the sample name for each
@@ -64,7 +74,8 @@ is.msa <- function(msa) {
 ##' @param is.ordered a logical indicating whether the alignment columns
 ##' are stored in order.  If NULL, assume columns are ordered.
 ##' @param offset an integer giving the offset of coordinates for the
-##' reference sequence from the beginning of the chromosome.  Not used
+##' reference sequence from the beginning of the chromosome.  The reference
+##' sequence is assumed to be the first sequence.  Not used
 ##' if is.ordered==FALSE.
 ##' @param pointer.only a boolean indicating whether MSA should be stored by
 ##' reference (see Details)
@@ -136,6 +147,22 @@ ncol.msa <- function(x, refseq=NULL) {
     result[i] <- .Call("rph_msa_seqlen", msa$externalPtr, refseq[i])
   result
 }
+
+
+##' Returns the dimensions of an msa object as (# of species, # of columns)
+##' @param x An object of type \code{msa}
+##' @param refseq A character vector giving name of reference sequence.  If
+##' not \code{NULL}, the number of columns is given as the number of non-gap
+##' characters in this sequence.  Otherwise it gives the total number of
+##' columns in the alignment.
+##' @return An integer vector of length two giving number of species and
+##' number of columns in the alignment
+##' @S3method dim msa
+##' @export
+dim.msa <- function(x, refseq=NULL) {
+  c(nrow.msa(x), ncol.msa(x, refseq))
+}
+
 
 ##' The number of informative columns in an alignment
 ##' @param msa An object of type \code{msa}
@@ -447,7 +474,8 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' contain portions of the alignment which fall within a feature.
 ##' The alignment will not be ordered.
 ##' The loaded regions can be further constrained with the do.4d or
-##' do.cats options.
+##' do.cats options.  Note that if this object is passed as a pointer to a
+##' structure stored in C, the values will be altered by this function!
 ##' @param do.4d Logical.  If \code{TRUE}, the return value will contain only
 ##' the columns corresponding to four-fold degenerate sties.  Requires
 ##' features to be specified.
@@ -480,6 +508,8 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' @note If the input is in "MAF" format and features is specified, the
 ##' resulting alignment will be stripped of gaps in the reference (1st)
 ##' sequence.
+##' @note If the features argument is an object stored in C, its values will
+##' be changed by this function!
 ##' @return an MSA object.  
 ##' @seealso \code{\link{msa}}, \code{\link{read.feat}}
 ##' @export
@@ -565,22 +595,30 @@ complement <- function(x) {
 
 
 ##' Reverse complement a multiple sequence alignment
-##' @param msa An object of type \code{msa}.
+##' @param x An object of type \code{msa}.
 ##' @return The reverse complement of msa.
+##' @note If x is stored as a pointer to an object in C, x will be changed to
+##' its reverse complement.  Use reverse.complement(copy.msa(x)) to avoid this
+##' behavior.  The return value will be a pointer if the input value was stored
+##' as a pointer.
 ##' @export
-reverse.complement <- function(msa) {
-  if (is.null(msa$externalPtr))
-    msa <- as.pointer.msa(msa)
+reverse.complement <- function(x) {
+  if (is.null(x$externalPtr)) {
+    pointer.only <- FALSE
+    x <- as.pointer.msa(x)
+  } else pointer.only <- TRUE
   rv <- .makeObj.msa()
-  rv$externalPtr <- .Call("rph_msa_reverse_complement", msa$externalPtr)
-  from.pointer.msa(rv)
+  rv$externalPtr <- .Call("rph_msa_reverse_complement", x$externalPtr)
+  if (!pointer.only)
+    rv <- from.pointer.msa(rv)
+  rv
 }
 
        
 ##' Get a subset of an alignment
 ##'
 ##' @title MSA Subset
-##' @param msa MSA object
+##' @param x An object of type \code{msa}
 ##' @param seqs The sequence names to keep (or to remove if keep is
 ##' \code{FALSE})
 ##' @param keep Whether to keep the named sequences or remove them
@@ -593,8 +631,9 @@ reverse.complement <- function(msa) {
 ##' a pointer to a C structure (advanced use only).
 ##' @return A new MSA object containing a subset of the original MSA.
 ##' @S3method sub msa
+##' @note This function will not modify x even if it is stored as a pointer.
 ##' @export
-sub.msa <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
+sub.msa <- function(x, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
                     refseq=NULL, pointer.only=FALSE) {
   check.arg(keep, "keep", "logical", null.OK=FALSE)
   check.arg(seqs, "seqs", "character", null.OK=TRUE,
@@ -605,11 +644,11 @@ sub.msa <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
   
   result <- .makeObj.msa()
-  if (is.null(msa$externalPtr)) {
-    msa <- as.pointer.msa(msa)
+  if (is.null(x$externalPtr)) {
+    x <- as.pointer.msa(x)
   }
   result$externalPtr <- .Call("rph_msa_sub_alignment",
-                              msa$externalPtr, seqs, keep,
+                              x$externalPtr, seqs, keep,
                               start.col, end.col, refseq)
 
   if (!pointer.only)
@@ -631,47 +670,46 @@ sub.msa <- function(msa, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
 ##' columns containing even a single gap.
 ##'
 ##' @title MSA Strip Gaps
-##' @param msa MSA object
+##' @param x MSA object
 ##' @param strip.mode Determines which gaps to strip.  See Details
-##' @note if MSA is stored as a pointer, then changes will occur to the
-##' input alignment
 ##' @return an MSA object, with gaps stripped according to strip.mode.
-##' @note if the MSA object is passed as a pointer to a C structure (ie,
-##' it was created with pointer.only=TRUE), then this function will strip
-##' gaps from the object which was passed in.  The object will not be
-##' copied to R memory in this case (the return value will also be a pointer).
+##' @note If x is passed as a pointer to a C structure (ie,
+##' it was created with pointer.only=TRUE), then this function will directly
+##' modify x.  Use strip.gaps.msa(copy.msa(x)) to avoid this behavior.  Also,
+##' the return value will be stored as a pointer if x is stored as a pointer;
+##' otherwise the return value will be stored in R.
 ##' @export
-strip.gaps.msa <- function(msa, strip.mode=1) {
+strip.gaps.msa <- function(x, strip.mode=1) {
   names <- NULL
   nseq <- NULL
-  if (is.null(msa$externalPtr)) {
-    names <- names.msa(msa)
-    nseq <- nrow.msa(msa)
-    msa <- as.pointer.msa(msa)
+  if (is.null(x$externalPtr)) {
+    names <- names.msa(x)
+    nseq <- nrow.msa(x)
+    x <- as.pointer.msa(x)
     copy.to.R <- TRUE
   } else copy.to.R <- FALSE
   for (s in strip.mode) {
     if (s=="all.gaps" || s=="any.gaps")
-      msa$externalPtr <- .Call("rph_msa_strip_gaps", msa$externalPtr, 0, s)
+      x$externalPtr <- .Call("rph_msa_strip_gaps", x$externalPtr, 0, s)
     else {
       if (!is.character(s)) {
-        if (is.null(nseq)) nseq <- nrow.msa(msa)
+        if (is.null(nseq)) nseq <- nrow.msa(x)
         if (as.integer(s) != s || s <=0 || s>nseq)
           stop(cat("invalid sequence index", s))
         w <- s
       } else {
         if (is.null(names))
-          names <- names.msa(msa)
+          names <- names.msa(x)
         w <- which(names==s)
         if (is.null(w))
           stop(cat("no sequence with name", s))
       }
-      msa$externalPtr <- .Call("rph_msa_strip_gaps", msa$externalPtr, w, NULL)
+      x$externalPtr <- .Call("rph_msa_strip_gaps", x$externalPtr, w, NULL)
     }
   }
   if (copy.to.R) 
-    msa <- from.pointer.msa(msa)
-  msa
+    x <- from.pointer.msa(x)
+  x
 }
 
 
@@ -684,15 +722,15 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 ##'
 ##' The bracket notation can return a subset of the alignment,
 ##' or re-order rows and columns.
-##' @param msa An object of type \code{msa}
+##' @param x An object of type \code{msa}
 ##' @param rows A numeric vector of sequence indices,
 ##' character vector (containing sequence name), or
 ##' logical vector (containing sequences to keep).  If logical vector it
-##' will be recycled as necessary to the same length as \code{nrow.msa(msa)}.
+##' will be recycled as necessary to the same length as \code{nrow.msa(x)}.
 ##' @param cols A numeric vector of alignment columns, or a logical vector
 ##' containing columns to keep.  If logical vector it will be recycled as
-##' necessary to the same lenth as \code{ncol.msa}.  Note that these are
-##' in coordinates with respect to the entire alignment.  msa$idx.offset
+##' necessary to the same length as \code{ncol.msa(x)}.  Note that these are
+##' in coordinates with respect to the entire alignment.  x$idx.offset
 ##' is ignored here.
 ##' @param pointer.only If \code{TRUE}, return an object which is only
 ##' a pointer to a structure stored in C (useful for large alignments;
@@ -703,10 +741,13 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 ##' coordinates.
 ##' @seealso \code{\link{extract.feature.msa}} which can subset based on
 ##' genomic coordinates denoted in a features object.
-##' @usage \method{[}{msa}(rows, cols)
+##' @usage \method{[}{msa}(x, rows, cols, pointer.only)
+## @usage \method{[}{msa}(x, rows, cols, pointer.only)
 ##' @S3method "[" msa
+##' @note This function will not alter the value of x even if it is stored as
+##' a pointer to a C structure.
 ##' @export "[.msa"
-"[.msa" <- function(msa, rows, cols, pointer.only=FALSE) {
+"[.msa" <- function(x, rows, cols, pointer.only=FALSE) {
   if (!missing(rows)) {
     if (is.null(rows)) stop("rows cannot be empty")
   } else rows=NULL
@@ -718,7 +759,7 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
   if (!is.null(rows)) {
     # if rows are given by names, convert to integer
     if (is.character(rows)) {# names are given
-      names <- names.msa(msa)
+      names <- names.msa(x)
       rows <- as.numeric(sapply(rows, function(x) {which(x ==  names)}))
       if (sum(is.na(rows)) > 0L)
         stop("unknown names in first dimension subset")
@@ -728,26 +769,26 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
   # check if arguments are given as logicals.
   if (is.logical(rows)) {
     cat("is.logical rows")
-    rows = which(rep(rows, length.out = nrow.msa(msa)))
+    rows = which(rep(rows, length.out = nrow.msa(x)))
   }
   if (is.logical(cols)) 
-    cols = which(rep(cols, length.out = ncol.msa(msa)))
+    cols = which(rep(cols, length.out = ncol.msa(x)))
 
-  # if msa is stored in R, sampling rows is easier and more efficient to do here
-  if (!is.null(rows) && is.null(msa$externalPtr)) {
-    msa$names <- msa$names[rows]
-    msa$seqs <- msa$seqs[rows]
+  # if x is stored in R, sampling rows is easier and more efficient to do here
+  if (!is.null(rows) && is.null(x$externalPtr)) {
+    x$names <- x$names[rows]
+    x$seqs <- x$seqs[rows]
     rows <- NULL
   }
-  if (is.null(rows) && is.null(cols)) return(msa)
+  if (is.null(rows) && is.null(cols)) return(x)
   check.arg(rows, "rows", "integer", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
   check.arg(cols, "cols", "integer", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
-  if (is.null(msa$externalPtr))
-    msa <- as.pointer.msa(msa)
+  if (is.null(x$externalPtr))
+    x <- as.pointer.msa(x)
   rv <- .makeObj.msa()
-  rv$externalPtr <- .Call("rph_msa_square_brackets", msa$externalPtr,
+  rv$externalPtr <- .Call("rph_msa_square_brackets", x$externalPtr,
                           rows, cols)
   if (!pointer.only)
     rv <- from.pointer.msa(rv)
@@ -759,8 +800,8 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 
 ##' Likelihood of an alignment given a tree model
 ##' @title MSA Likelihood
-##' @param msa An object of class msa representing the multiple alignment
-##' @param tm An object of class TM representing the tree and model of
+##' @param x An object of class \code{msa} representing the multiple alignment
+##' @param tm An object of class \code{tm} representing the tree and model of
 ##' substitution
 ##' @param by.column Logical indicating whether to get likelihoods for
 ##' each alignment column.  If FALSE, returns total likelihood
@@ -768,14 +809,14 @@ strip.gaps.msa <- function(msa, strip.mode=1) {
 ##' \code{FALSE}, or a numeric vecotr giving the likelihood of each
 ##' column in the alignment
 ##' @export
-likelihood.msa <- function(msa, tm, by.column=FALSE) {
+likelihood.msa <- function(x, tm, by.column=FALSE) {
   check.arg(by.column, "by.column", "logical", null.OK=FALSE)
-  if (is.null(msa$externalPtr)) 
-    msa <- as.pointer.msa(msa)
+  if (is.null(x$externalPtr)) 
+    x <- as.pointer.msa(x)
   tm <- as.pointer.tm(tm)
-  if (by.column && !is.ordered.msa(msa))
+  if (by.column && !is.ordered.msa(x))
     warning("by.column may not be a sensible option for unordered MSA")
-  .Call("rph_msa_likelihood", msa$externalPtr, tm$externalPtr, by.column)
+  .Call("rph_msa_likelihood", x$externalPtr, tm$externalPtr, by.column)
 }
 
 ##' Simulate a MSA given a tree model and HMM.
@@ -853,7 +894,8 @@ simulate.msa <- function(mod, nsites, hmm=NULL, get.features=FALSE,
 ##' @return An object of type \code{msa} with columns randomly
 ##' re-sampled from the original
 ##' @note This function is implemented using R's sample function in
-##' conjunction with "[.msa".
+##' conjunction with "[.msa".  It will not alter the value of x even if it
+##' is stored as a pointer.
 ##' @S3method sample msa
 ##' @export
 sample.msa <- function(x, size, replace=FALSE, prob=NULL, pointer.only=FALSE) {
@@ -867,63 +909,67 @@ sample.msa <- function(x, size, replace=FALSE, prob=NULL, pointer.only=FALSE) {
 }
 
 ##' Extract fourfold degenerate sites from an MSA object
-##' @param msa An object of type MSA
+##' @param x An object of type \code{msa}
 ##' @param features an object of type \code{feat}.  Should have defined coding regions
 ##' with feature type "CDS"
 ##' @return an unordered msa object containing only the sites which are
 ##' fourfold degenerate
-##' @note if original msa is stored as a pointer, that same object will be
+##' @note If x is stored as a pointer, it will be 
 ##' reduced to four-fold degenerate sites, so the original alignment will be lost.
-##' For very large MSA objects it is more efficient to use the do.4d option
+##' Use get4d.msma(copy.msa(x), features) to avoid this behavior.
+##' @note For very large MSA objects it is more efficient to use the do.4d option
 ##' in the read.msa function instead.
 ##' @export
-get4d.msa <- function(msa, features) {
-  if (is.null(msa$externalPtr))
-    msa <- as.pointer.msa(msa)
+get4d.msa <- function(x, features) {
+  if (is.null(x$externalPtr))
+    x <- as.pointer.msa(x)
   if (is.null(features$externalPtr) && sum(features$feature=="CDS")==0L) 
     stop("features has no features labelled \"CDS\"... cannot extract 4d sites")
   if (is.null(features$externalPtr))
     features <- as.pointer.feat(features)
-  msa$externalPtr <- .Call("rph_msa_reduce_to_4d",
-                           msa$externalPtr,
-                           features$externalPtr)
-  msa <- from.pointer.msa(msa)
+  x$externalPtr <- .Call("rph_msa_reduce_to_4d",
+                         x$externalPtr,
+                         features$externalPtr)
+  x <- from.pointer.msa(x)
 }
 
 
 ##' Extract features from an MSA object
 ##'
 ##' Returns the subset of the MSA which appears in the features object.
-##' @param msa An object of type MSA
+##' @param x An object of type MSA
 ##' @param features An object of type \code{features} denoting the regions
 ##' of the alignment to extract.
-##' @param do4d If TRUE, then some elements of features must have type "CDS", and only
+##' @param do4d If \code{TRUE}, then some elements of features must have type "CDS", and only
 ##' fourfold-degenerate sites will be extracted.
-##' @return An msa object containing only the regions of the msa
+##' @param pointer.only If \code{TRUE}, return only a pointer to an object
+##' stored in C (useful for large alignments; advanced use only)
+##' @return An msa object containing only the regions of x
 ##' appearing in the features object.
-##' @note if input msa was loaded with \code{pointer.only==TRUE}, then the
-##' object passed in will be modified to the return value of the function.
+##' @note If x was loaded with \code{pointer.only==TRUE}, then x
+##' will be modified to the return value of the function.
+##' Use \code{extract.feature.msa(copy.msa(x),...)} if you don't want this behavior!
 ##' @export
-extract.feature.msa <- function(msa, features, do4d=FALSE) {
-  if (!is.ordered.msa(msa))
+extract.feature.msa <- function(x, features, do4d=FALSE, pointer.only=FALSE) {
+  if (!is.ordered.msa(x))
     stop("extract.feature.msa requires ordered alignment")
-  if (is.null(msa$externalPtr))
-    msa <- as.pointer.msa(msa)
+  if (is.null(x$externalPtr))
+    x <- as.pointer.msa(x)
 
   if (do4d) {
     if (sum(features$feature=="CDS")==0L) 
       stop("features has no elements of type \"CDS\"... cannot extract 4d sites")
-    rv <- get4d.msa(msa, features)
+    rv <- get4d.msa(x, features)
   } else {
     
     if (is.null(features$externalPtr)) 
       features <- as.pointer.feat(features)
     rv <- .makeObj.msa()
     rv$externalPtr <- .Call("rph_msa_extract_feature",
-                            msa$externalPtr,
+                            x$externalPtr,
                             features$externalPtr)
   }
-  if (!is.null(rv$externalPtr))
+  if (!is.null(rv$externalPtr) && !pointer.only)
     rv <- from.pointer.msa(rv)
   rv$is.ordered=FALSE
   rv
@@ -942,6 +988,8 @@ extract.feature.msa <- function(msa, features, do4d=FALSE) {
 ##' @param pointer.only (Advanced use only, for very large MSA objects) If
 ##' TRUE, return object will be a pointer to an object stored in C.
 ##' @return An object of type MSA
+##' @note None of the msas passed to this function will be altered, even if
+##' they are stored as pointers to objects in C.
 ##' @export
 concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
   aggMsa <- copy.msa(msas[[1]])
@@ -970,6 +1018,11 @@ concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
 ##' @param ... Not currently used
 ##' @return A list of msa objects, representing the sub-alignments for
 ##' each element in f
+##' @note If f is stored as a pointer to an object in C, its values will
+##' be altered by this function.  Use
+##' \code{split.by.feature.msa(x, copy.feat(f), ...)} to avoid this behavior!
+##' @note x will not be altered even if it is stored as a pointer to an
+##' object in C.
 ##' @export
 split.by.feature.msa <- function(x, f, drop=FALSE, pointer.only=FALSE, ...) {
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
@@ -1020,6 +1073,8 @@ split.by.feature.msa <- function(x, f, drop=FALSE, pointer.only=FALSE, ...) {
 ##' offset for the first species in the alignment.  So the idx.offset will
 ##' be added to the coordinates in the returned features object only if
 ##' \code{refseq==1}.
+##' @note This function will not alter the value of x even if it is stored as
+##' a pointer.
 ##' @export
 informative.regions.msa <- function(x, min.numspec, spec=NULL, refseq=1,
                                     gaps.inf=FALSE) {

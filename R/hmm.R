@@ -67,6 +67,9 @@ stopIfNotValidHmm <- function(hmm){
   invisible(NULL)
 }
 
+##' HMM number of states
+##' @param hmm An object of type \code{hmm}
+##' @return The number of states in the hidden Markov Model
 ##' @export
 nstate.hmm <- function(hmm) {
   stopIfNotValidHmm(hmm)

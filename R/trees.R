@@ -1,3 +1,23 @@
+##' Add a semi-colon to end of tree string
+##'
+##' Check if tree string ends in semi-colon and if not add one.  This
+##' is mostly done for compatibility with ape, which requires them.
+##' @param x A character string or vector of character strings each
+##' representing a tree in Newick format.
+##' @return The same value, but with a semi-colon added to the end
+##' of any strings which did not already end in semi-colons.
+##' @export
+fix.semicolon.tree <- function(x) {
+  n <- nchar(x)
+  lastCh <- substr(x, n, n)
+  f <- lastCh != ";"
+  if (sum(f) > 0L)
+    x[f] <- paste(x[f], ";", sep="")
+  x
+}
+    
+
+
 ##' Read a tree from a file
 ##'
 ##' Reads a tree in newick format
@@ -7,7 +27,8 @@
 ##' @export
 read.newick.tree <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
-  .Call("rph_tree_read", filename)
+  tr <- .Call("rph_tree_read", filename)
+  fix.semicolon.tree(tr)
 }
 
 
@@ -78,7 +99,7 @@ prune.tree <- function(tree, seqs, all.but=FALSE) {
   for (i in 1:length(tree)) {
     result[i] <- .Call("rph_tree_prune", tree[i], seqs, all.but)
   }
-  result
+  fix.semicolon.tree(result)
 }
 
 
@@ -95,7 +116,7 @@ name.ancestors <- function(tree) {
   for (i in 1:length(tree)) {
     result[i] <- .Call("rph_tree_name_ancestors", tree[i])
   }
-  result
+  fix.semicolon.tree(result)
 }
 
 
@@ -127,7 +148,7 @@ subtree <- function(tree, node, super.tree=FALSE) {
       result[i] <- .Call("rph_tree_supertree", tree[i], node[i])
     } else result[i] <- .Call("rph_tree_subtree", tree[i], node[i])
   }
-  result
+  fix.semicolon.tree(result)
 }
 
 
@@ -165,7 +186,7 @@ scale.tree <- function(tree, scale, subtree=NULL) {
     scaleIdx <- scaleIdx+1
     if (scaleIdx > length(scale)) scaleIdx <- 1
   }
-  result
+  fix.semicolon.tree(result)
 }
 
 ##' Rename nodes of trees
@@ -184,5 +205,5 @@ rename.tree <- function(tree, old.names, new.names) {
             min.length=1, max.length=NULL)
   check.arg(new.names, "new.names", "character", null.OK=FALSE,
             min.length=length(old.names), max.length=length(old.names))
-  .Call("rph_tree_rename", tree, old.names, new.names)
+  fix.semicolon.tree(.Call("rph_tree_rename", tree, old.names, new.names))
 }

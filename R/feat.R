@@ -208,16 +208,16 @@ ncol.feat <- function(x) {
 
 ##' Prints a brief summary of a features object.
 ##' @title Features Summary
-##' @param x an object of type \code{feat}
+##' @param object an object of type \code{feat}
 ##' @param ... further arguments to be passed to or from other methods
 ##' @export
 ##' @S3method summary feat
-summary.feat <- function(x, ...) {
-  if (is.null(x$externalPtr)) {
+summary.feat <- function(object, ...) {
+  if (is.null(object$externalPtr)) {
     as <- "stored as data frame"
-    x <- as.pointer.feat(x)
+    object <- as.pointer.feat(object)
   } else as <- "stored as a pointer to a C structure"
-  nrow <- nrow.feat(x)
+  nrow <- nrow.feat(object)
   cat(paste("features object with", nrow, "rows", as))
   cat("\n")
 }
@@ -332,10 +332,10 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
     stop("cannot plot feature arrows without strand data")
 
   if (!add) 
-    plot(c(0), c(0), y, type="n", xlim=xlim, ylim=ylim, ...)
+    plot(c(0), c(0), type="n", xlim=xlim, ylim=ylim, xlab="Coordinate", ylab="", ...)
 
   f <- x$end >= xlim[1] & x$start <= xlim[2]
-  if (sum(f)==0) return(invisibile(NULL))
+  if (sum(f)==0) return(invisible(NULL))
   x <- x[f,]
   
   if (plottype=="r" || plottype=="b") {
@@ -451,7 +451,6 @@ plot.gene <- function(x, y=0, height=1,
                       arrow.density=5,
                       angle = 30,
                       col="black",
-                      border=NULL,
                       lty=par("lty"),
                       lwd=par("lwd"),
                       add=FALSE,
@@ -566,10 +565,15 @@ hist.feat <- function(x, type="length", ...) {
 ##' If \code{TRUE}, return only the fragments of x that overlap
 ##' with filter.  In this case, the same fragments may be output multiple times, if they are
 ##' selected by multiple entries in filter.  numbase and min.percent apply in either case.
+##' @param pointer.only If \code{TRUE}, the return object will only be a
+##' pointer to an object stored in C (useful for very large features; advanced use only).
 ##' @return an object of type \code{feat} containing the selected entries from x.
+##' @note If either x or filter are feature objects stored as a pointer to C memory,
+##' then this function may reorder the elements in these objects, but leave them
+##' otherwise unchanged.
 ##' @export
 overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
-                         overlapping=TRUE, get.fragments=FALSE) {
+                         overlapping=TRUE, get.fragments=FALSE, pointer.only=FALSE) {
   check.arg(numbase, "numbase", "integer", null.OK=TRUE)
   check.arg(min.percent, "min.percent", "numeric", null.OK=TRUE)
   if (is.null(numbase) && is.null(min.percent)) stop("one of numbase or min.percent should not be NULL")
@@ -587,7 +591,7 @@ overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
   rv <- .makeObj.feat()
   rv$externalPtr <- .Call("rph_gff_overlapSelect", x$externalPtr, filter$externalPtr,
                           numbase, min.percent, !overlapping, get.fragments)
-  if (!is.null(rv)) {
+  if (!is.null(rv) && !pointer.only) {
     rv <- as.data.frame.feat(rv)
   }
   if (nrow.feat(rv) == 0) return(NULL)
@@ -599,10 +603,14 @@ overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
 ##' @param x An object of type \code{feat}
 ##' @param region.bounds An object of type \code{feat} which defines
 ##' the boundaries of all relevant chromosomes in the first argument
+##' @param pointer.only If \code{TRUE}, return a pointer to a structure stored
+##' in C (advanced use only).
 ##' @return An object of type \code{feat} which contains all regions in
 ##' region.bounds that are not in the first argument
+##' @note If x is stored as a pointer to C memory, then its elements will
+##' be sorted by this function.  region.bounds will not be changed.
 ##' @export
-inverse.feat <- function(x, region.bounds) {
+inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
   if (is.null(x$externalPtr))
     x <- as.pointer.feat(x)
   if (is.null(region.bounds$externalPtr))
@@ -611,7 +619,9 @@ inverse.feat <- function(x, region.bounds) {
   rv$externalPtr <- .Call("rph_gff_inverse",
                           x$externalPtr,
                           region.bounds$externalPtr)
-  as.data.frame.feat(rv)
+  if (!pointer.only)
+    rv <- as.data.frame.feat(rv)
+  rv
 }
 
 
@@ -635,6 +645,8 @@ inverse.feat <- function(x, region.bounds) {
 ##' \code{not==FALSE} for all feat objects, then this argument is not used.
 ##' @return The number of bases covered by the feat arguments, or the
 ##' combined feat object if \code{get.feats==TRUE}.
+##' @note Any features object passed into this function which is stored as a
+##' pointer to an object stored in C may be reordered (sorted) by this function.
 ##' @export
 coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
                           not=NULL,
@@ -670,6 +682,8 @@ coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
 ##' the transcript_id must be indicated in the attribute field.
 ##' @return An object of type \code{feat}, with all the entries of the original object, but
 ##' also with UTR annotations.
+##' @note If x is stored as a pointer to an object stored in C, then UTRs will be added
+##' to x.
 ##' @export
 addUTRs.feat <- function(x) {
   if (is.null(x$externalPtr))
@@ -684,6 +698,8 @@ addUTRs.feat <- function(x) {
 ##' the transcript_id must be indicated in the attribute field.
 ##' @return An object of type \code{feat}, with all the entries of the original object, but
 ##' also with intron annotations.
+##' @note If x is stored as a pointer to an object stored in C, introns will be
+##' added to x.
 ##' @export
 addIntrons.feat <- function(x) {
   if (is.null(x$externalPtr))
@@ -727,22 +743,30 @@ rbind.feat <- function(...) {
 ##' (start split at smallest coordinate for each feature), or "right"
 ##' (start splitting at the last coordinate and work down).  Values will
 ##' be recycled to the length of \code{nrow.feat(x)}
+##' @param pointer.only If \code{TRUE}, return an object which is a pointer
+##' to a features object stored in C (advanced use only).
 ##' @return An object of type \code{feat} with the same features as x but
 ##' with all features of length > max.length broken into segments
 ##' (starting from the first position in feature).  The last piece
 ##' of each split segment may be smaller than max.length
 ##' @export
-split.feat <- function(x, max.length, start.from="left") {
+split.feat <- function(x, max.length, start.from="left", pointer.only=FALSE) {
   featSize <- nrow.feat(x)
   check.arg(max.length, "max.length", "integer", null.OK=FALSE,
             min.length = 1, max.length = NULL)
+  check.arg(start.from, "start.from", "character", null.OK=FALSE,
+            min.length=1L, max.length=nrow.feat(x))
+  if (sum(start.from!="left" & start.from!="right") > 0L)
+    stop("start.from invalid value (should be \"left\" or \"right\")")
   if (is.null(x$externalPtr))
     x <- as.pointer.feat(x)
   splitFeat <- .makeObj.feat()
   splitFeat$externalPtr <- .Call("rph_gff_split", x$externalPtr,
                                 max.length,
                                  ifelse(start.from=="left", 0, 1))
-  as.data.frame.feat(splitFeat)
+  if (!pointer.only)
+    splitFeat <- as.data.frame.feat(splitFeat)
+  splitFeat
 }
 
 
@@ -754,6 +778,9 @@ split.feat <- function(x, max.length, start.from="left") {
 ##' start position, then by end position.
 ##' @export
 ##' @S3method sort feat
+##' @note This function is not recommended if x is stored as a pointer to an
+##' object in C; in this case it may sort differently depending on how
+##' the object has been previously used.  x will be sorted if it is a pointer.
 sort.feat <- function(x, decreasing = FALSE, ...) {
   if (is.null(x$externalPtr))
     x <- as.pointer.feat(x)
@@ -778,6 +805,8 @@ sort.feat <- function(x, decreasing = FALSE, ...) {
 ##' entire range of interest, the second column should sum
 ##' to 1.
 ##' @export
+##' @note If x or annotations are passed to this function as pointers to objects
+##' stored in C, they will be sorted after the function call.
 composition.feat <- function(x, annotations) {
   if (!is.null(annotations$externalPtr))
     annotations <- as.data.frame.feat(annotations)
@@ -810,6 +839,8 @@ composition.feat <- function(x, annotations) {
 ##' divided by the fraction of the entire region covered by the
 ##' annotation type.
 ##' @export
+##' @note If any of the arguments to this function are passed as pointers to
+##' objects stored in C, they will be sorted after this function call.
 enrichment.feat <- function(x, annotations, region.bounds) {
   if (!is.null(annotations$externalPtr))
     annotations <- as.data.frame.feat(annotations)

@@ -2,10 +2,10 @@ library(rphast)
 
 #' read.feat
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
-featFile <- "gencode.ENr334.feat"
+featFile <- "gencode.ENr334.gff"
 unzip(exampleArchive, featFile)
 f <- read.feat(featFile)
-dim(g)
+dim(f)
 f[1:10,]
 unlink(featFile)
 
@@ -22,7 +22,7 @@ exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 featFile <- "gencode.ENr334.gff"
 unzip(exampleArchive, featFile)
 f <- read.feat(featFile)
-# note that plot(g) does not work because features are stored as data.frames
+# note that plot(f) does not work because features are stored as data.frames
 plot.feat(f[f$feature=="CDS",])
 unlink(featFile)
 
@@ -51,7 +51,7 @@ feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
 f1 <- feat(seq, src, feature, start, end)
-f2 <- as.pointer.feat(g1)
+f2 <- as.pointer.feat(f1)
 f1
 f2
 
