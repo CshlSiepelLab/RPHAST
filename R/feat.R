@@ -856,3 +856,33 @@ enrichment.feat <- function(x, annotations, region.bounds) {
   }
   data.frame(type=names(rv), enrichment=as.numeric(rv), stringsAsFactors=TRUE)
 }
+
+
+##' Remove overlapping genes
+##' @param x An object of type \code{feat}, usually read from a genepred
+##' file.  Should have attributes labelled "transcript_id" which identify
+##' features belonging to the same gene.
+##' @param incomparables Not currently used (present for S3 compatibility).
+##' @param ... Not currently used.
+##' @return An object of type \code{feat} with overlapping genes removed.
+##' If the features are scored, then the feature with the highest score
+##' is kept; otherwise the feature with the longest length.  If
+##' x is a pointer to an object stored in C, the return value will also
+##' be a pointer (and x will be altered to the return value).
+##' @note Long UTRs can have undesirable effects; may want to filter these
+##' out first.
+##' @note If x is a pointer to an object in C, it will be modified (to
+##' the return value).
+##' @S3method unique feat
+##' @export
+unique.feat <- function(x, incomparables=FALSE, ...) {
+  if (is.null(x$externalPtr)) {
+    x <- as.pointer.feat(x)
+    getDataFrame <- TRUE
+  } else getDataFrame <- FALSE
+  rv <- .makeObj.feat()
+  rv$externalPtr <- .Call("rph_gff_nonOverlapping_genes", x$externalPtr)
+  if (getDataFrame)
+    rv <- as.data.frame.feat(rv)
+  rv
+}

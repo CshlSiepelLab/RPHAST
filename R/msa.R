@@ -992,16 +992,30 @@ extract.feature.msa <- function(x, features, do4d=FALSE, pointer.only=FALSE) {
 ##' they are stored as pointers to objects in C.
 ##' @export
 concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
+  # have to do a little dance to make sure this behaves OK if
+  # some msas are empty
+  isZero <- logical(length(msas))
+  for (i in 1:length(msas)) {
+    if (is.null(msas[[i]]$externalPtr)) 
+      msas[[i]] <- as.pointer.msa(msas[[i]])
+    isZero[i] <- (ncol.msa(msas[[i]]) == 0L)
+  }
+  if (sum(isZero) > 0L) 
+    msas[isZero] <- NULL
+  if (length(msas) == 0L) return(NULL)
+
   aggMsa <- copy.msa(msas[[1]])
   if (is.null(aggMsa$externalPtr))
     aggMsa <- as.pointer.msa(aggMsa)
-  for (i in 2:length(msas)) {
-    currMsa <- msas[[i]]
-    if (is.null(currMsa$externalPtr))
-      currMsa <- as.pointer.msa(currMsa)
-    aggMsa$externalPtr <- .Call("rph_msa_concat",
-                                aggMsa$externalPtr,
-                                currMsa$externalPtr)
+  if (length(msas) >= 2L) {
+    for (i in 2:length(msas)) {
+      currMsa <- msas[[i]]
+      if (is.null(currMsa$externalPtr))
+        currMsa <- as.pointer.msa(currMsa)
+      aggMsa$externalPtr <- .Call("rph_msa_concat",
+                                  aggMsa$externalPtr,
+                                  currMsa$externalPtr)
+    }
   }
   if (pointer.only == FALSE) 
     aggMsa <- from.pointer.msa(aggMsa)
