@@ -886,3 +886,34 @@ unique.feat <- function(x, incomparables=FALSE, ...) {
     rv <- as.data.frame.feat(rv)
   rv
 }
+
+
+##' Extract value from tag-value formatted attributes
+##' @param x An object of type \code{feat}
+##' @param tag The attribute "tag" to be extracted.  This assumes
+##' that the features object attribute field is in tag-value format, ie:
+##' 'gene_id "geneName"; transcript_id "transcript"',
+##' then tag "transcript_id" will return "transcript".
+##' @return A list of values from the attribute field for that tag; NA
+##' if the tag is not found.  If multiple values for each tag, the result
+##' will be a list with an element for each feature, each element will
+##' be a list of length possibly greater than 1, or NA if that tag was not
+##' found for that feature.  If there is one or less element per feature,
+##' the return value will be a simple character vector of length nrow.feat(x)
+##' (with possible NAs where no results are found).
+##' @export
+tagval.feat <- function(x, tag) {
+  check.arg(tag, "tag", "character", null.OK=FALSE)
+  if (is.null(x$externalPtr)) {
+    if (is.null(x$attribute)) return(rep(NA, nrow(x)))
+    x <- as.pointer.feat(x)
+  }
+  rv <- rphast.simplify.list(.Call("rph_gff_one_attribute", x$externalPtr, tag))
+  maxlen <- max(sapply(rv, length))
+  if (maxlen == 1L)
+    rv <- as.character(rv)
+  f <- rv==""
+  if (sum(f) > 0L)
+    rv[f] <- NA
+  rv
+}
