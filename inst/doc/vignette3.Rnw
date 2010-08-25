@@ -177,7 +177,8 @@ tracks <- list(feat.track(correct, "actual binding sites"),
 
 plot.track(tracks)
 
-
+#clean up
+unlink("NRSF", recursive=TRUE)
 
 @ 
 

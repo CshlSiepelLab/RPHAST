@@ -295,11 +295,11 @@ from.pointer.msa <- function(src) {
 as.pointer.msa <- function(src) {
   if (!is.null(src$externalPtr)) return(src)
   msa(seqs=src$seq,
-          names=src$names,
-          alphabet=src$alphabet,
-          is.ordered=src$is.ordered,
-          offset=src$offset,
-          pointer.only=TRUE)
+      names=src$names,
+      alphabet=src$alphabet,
+      is.ordered=src$is.ordered,
+      offset=src$offset,
+      pointer.only=TRUE)
 }
 
 
