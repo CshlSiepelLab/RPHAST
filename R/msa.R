@@ -464,7 +464,7 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 
 ##' Reads an MSA from a file.
 ##' @title Reading an MSA Object
-##' @param filename
+##' @param filename The name of the input file containing an alignment.
 ##' @param format input file format: one of "FASTA", "MAF", "SS", "PHYLIP",
 ##' "MPM", must be correctly specified.
 ##' @param alphabet the alphabet of non-missing-data chraracters in the
