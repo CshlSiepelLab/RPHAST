@@ -179,3 +179,24 @@ coverage.feat(feat1, feat2, or=TRUE)
 coverage.feat(feat1, feat2, get.feats=TRUE, or=TRUE)
 coverage.feat(feat1, feat2, or=TRUE)
 
+
+#' tagval
+require("rphast")
+tags <- c("tag1 \"val1a\"; tag2 \"val 2a\" \"val2a.1\" 123; tag3 \"val3a\"",
+          "tag1 \"val1b\"; tag2 \"val 2b\"; tag4 \"val4b\"",
+          "tag3 \"val3a\" 1; tag4 2;")
+tagval(tags, "tag1")
+tagval(tags, "tag2")
+tagval(tags, "tag3")
+tagval(tags, "tag4")
+tagval(tags, "notag")
+
+#' tagval.feat
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+featFile <- "sol1.gp"
+unzip(exampleArchive, featFile)
+f <- read.feat(featFile)
+geneName <- tagval.feat(f, "transcript_id")
+geneName[1:10]
+length(unique(geneName)) # number of unique genes
+unlink(featFile)

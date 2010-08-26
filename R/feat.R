@@ -888,32 +888,52 @@ unique.feat <- function(x, incomparables=FALSE, ...) {
 }
 
 
-##' Extract value from tag-value formatted attributes
-##' @param x An object of type \code{feat}
-##' @param tag The attribute "tag" to be extracted.  This assumes
-##' that the features object attribute field is in tag-value format, ie:
-##' 'gene_id "geneName"; transcript_id "transcript"',
-##' then tag "transcript_id" will return "transcript".
-##' @return A list of values from the attribute field for that tag; NA
-##' if the tag is not found.  If multiple values for each tag, the result
-##' will be a list with an element for each feature, each element will
-##' be a list of length possibly greater than 1, or NA if that tag was not
-##' found for that feature.  If there is one or less element per feature,
-##' the return value will be a simple character vector of length nrow.feat(x)
-##' (with possible NAs where no results are found).
+##' Extract value from tag-value formatted attribute in features object
+##' @param x A features object of type \code{feat}.  The attribute field
+##' should be in tag-value format (as described in the GFF standard; ie,
+##' "tag1 val1a val1b; tag2 val2 ; ...",
+##' where vals are in quotes if they are strings. 
+##' @param tag The tag whose values are to be extracted.
+##' @return If there is at most one relevant value for each feature,
+##' a character vector of the same length as x will be returned, containing
+##' the value for each feature, or NA where the tag does not exist for that
+##' feature.  If some elements have multiple values, then the return value
+##' will be a list with the same length as x, each element being a character
+##' vector containing the values for the corresponding element of x (or
+##' NA for no value).
 ##' @export
 tagval.feat <- function(x, tag) {
   check.arg(tag, "tag", "character", null.OK=FALSE)
   if (is.null(x$externalPtr)) {
-    if (is.null(x$attribute)) return(rep(NA, nrow(x)))
+    if (is.null(x$attribute)) return (rep(NA, nrow(x)))
     x <- as.pointer.feat(x)
   }
   rv <- rphast.simplify.list(.Call("rph_gff_one_attribute", x$externalPtr, tag))
   maxlen <- max(sapply(rv, length))
-  if (maxlen == 1L)
-    rv <- as.character(rv)
-  f <- rv==""
+  if (maxlen == 1L) rv <- as.character(rv)
+    f <- rv==""
   if (sum(f) > 0L)
     rv[f] <- NA
   rv
+}
+
+
+##' Extract value from tag-value formatted attributes
+##' @param x A vector of character strings in tag-val format (as
+##' described in the GFF standard; ie, "tag1 val1a val1b; tag2 val2 ; ...",
+##' where vals are in quotes if they are strings. 
+##' @param tag The tag whose values are to be extracted.
+##' @return If there is at most one value per tag for each element of x,
+##' a character vector of the same length as x will be returned, containing
+##' the value for each element, or NA if the tag does not exist for that
+##' element.  If some elements have multiple values, then the return value
+##' will be a list with the same length as x, each element being a character
+##' vector containing the values for the corresponding element of x (or
+##' NA for no value).
+##' @export
+tagval <- function(x, tag) {
+  check.arg(x, "x", "character", null.OK=FALSE, min.length=1L, max.length=NULL)
+  tagval.feat(x=feat(start=rep(1, length(x)),
+                end=rep(2, length(x)), attribute=x),
+              tag=tag)
 }
