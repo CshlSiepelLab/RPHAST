@@ -148,7 +148,7 @@ nrsf.hmm <- hmm(trans.mat, eq.freq, begin.freq=eq.freq)
 
 # now lets try simulating based on the hmm
 simLength <- 100000
-simData <- simulate.msa(mods, simLength, nrsf.hmm, get.features=TRUE)
+simData <- simulate.msa(mods, simLength, hmm=nrsf.hmm, get.features=TRUE)
 hmmScores <- score.hmm(msa=simData$msa, mod=mods, hmm=nrsf.hmm, viterbi=TRUE,
                        states=sprintf("site.%i", 1:motifLen))
 predicted <- hmmScores$in.states

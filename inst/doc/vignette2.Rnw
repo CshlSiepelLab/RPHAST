@@ -99,13 +99,12 @@ informativeElements <- coverage.feat(elements, hasMouseRat, hasAtLeastFour,
 We also want to regularize the lengths of the conserved elements,
 so that we do not have to worry that the significance of the tests
 are confounded by length.  So we split the filtered conserved elements
-into fragments of size 50, and remove remaining fragments that
-are too small:
+into fragments of size 50, removing fragments that are not exactly length 50:
 
 <<rarAnalysis2,fig=FALSE>>=
 splitLength <- 50
-splitElements <- split.feat(informativeElements, max.length=splitLength)
-splitElements <- splitElements[splitElements$end - splitElements$start + 1 == splitLength,]
+splitElements <- split.feat(informativeElements, f=splitLength, 
+                            drop=TRUE)
 
 @ 
 
@@ -275,7 +274,7 @@ superTreeScale <- branchlen.tree(superTreeMod$tree)/branchlen.tree(prunedMod$tre
 superTreeScale
 
 scaledNeutralModel <- neutralMod
-scaledNeutralModel$tree <- scale.tree(neutralMod$tree, scale=superTreeScale)
+scaledNeutralModel$tree <- rescale.tree(neutralMod$tree, scale=superTreeScale)
 
 # also remove species from model which are not in alignment
 scaledNeutralModel$tree <- prune.tree(scaledNeutralModel$tree, 

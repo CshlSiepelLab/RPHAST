@@ -153,7 +153,7 @@ subtree <- function(tree, node, super.tree=FALSE) {
 
 
 
-##' Scale a tree
+##' Rescale a tree
 ##' @title Scale a Tree or Subtree
 ##' @param tree A vector of character strings, each containing a newick tree
 ##' @param scale A vector of scale factors for each tree (will be recycled
@@ -162,7 +162,7 @@ subtree <- function(tree, node, super.tree=FALSE) {
 ##' named node.  Subtrees will be recycled as necessary if shorter than trees.
 ##' @return A vector of trees whose branches have been scaled
 ##' @export
-scale.tree <- function(tree, scale, subtree=NULL) {
+rescale.tree <- function(tree, scale, subtree=NULL) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
             min.length=1, max.length=NULL)
   check.arg(scale, "scale", "numeric", null.OK=FALSE,

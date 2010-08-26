@@ -151,16 +151,12 @@ ncol.msa <- function(x, refseq=NULL) {
 
 ##' Returns the dimensions of an msa object as (# of species, # of columns)
 ##' @param x An object of type \code{msa}
-##' @param refseq A character vector giving name of reference sequence.  If
-##' not \code{NULL}, the number of columns is given as the number of non-gap
-##' characters in this sequence.  Otherwise it gives the total number of
-##' columns in the alignment.
 ##' @return An integer vector of length two giving number of species and
 ##' number of columns in the alignment
 ##' @S3method dim msa
 ##' @export
-dim.msa <- function(x, refseq=NULL) {
-  c(nrow.msa(x), ncol.msa(x, refseq))
+dim.msa <- function(x) {
+  c(nrow.msa(x), ncol.msa(x, NULL))
 }
 
 
@@ -826,8 +822,14 @@ likelihood.msa <- function(x, tm, by.column=FALSE) {
 ##' simply simulates a sequence from this model.  If an HMM is provided,
 ##' then the mod parameter should be a list of tree models with the same
 ##' length as the number of states in the HMM.
-##' @param mod A tree model or a list of tree models from which to simulate.
-##' @param nsites The number of columns in the simulated alignment.
+##' @param object An object of type \code{tm} (or a list of these objects)
+##' describing the phylogenetic model from which to simulate.  If it
+##' is a list of tree models then an HMM should be provided to describe
+##' transition rates between models.
+##' @param nsim The number of columns in the simulated alignment.
+##' @param seed A random number seed.  Either \code{NULL} (the default;
+##' do not re-seed random  number generator), or an integer to be sent to
+##' set.seed.
 ##' @param hmm an object of type HMM describing transitions between the
 ##' tree models across the columns of the alignment.
 ##' @param get.features (For use with hmm).  If \code{TRUE}, return object will
@@ -837,12 +839,16 @@ likelihood.msa <- function(x, tm, by.column=FALSE) {
 ##' @param pointer.only (Advanced use only). If TRUE, return only a pointer
 ##' to the simulated alignment.  Possibly useful for very (very) large
 ##' alignments.  Cannot be used if \code{get.features==TRUE}.
+##' @param ... Currently not used (for S3 compatibility)
 ##' @return An object of type MSA containing the simulated alignment.
 ##' @export
-simulate.msa <- function(mod, nsites, hmm=NULL, get.features=FALSE,
-                         pointer.only=FALSE) {
+simulate.msa <- function(object, nsim, seed=NULL, hmm=NULL, get.features=FALSE,
+                         pointer.only=FALSE, ...) {
+  nsites <- nsim
+  mod <- object
   check.arg(get.features, "get.features", "logical", null.OK=FALSE, min.length=1L,
             max.length=1L)
+  if (!is.null(seed)) set.seed(seed)
   if (get.features && (!is.null(hmm)) && pointer.only) 
     warning("pointer.only cannot be TRUE with get.features==TRUE; using pointer.only=FALSE")
 

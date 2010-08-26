@@ -375,10 +375,10 @@ tm2$backgd <- rep(0.25, 4)
 tm3 <- tm
 tm3$backgd <- c(0.6, 0.1, 0.2, 0.1)
 m <- simulate.msa(tm, 20)
-m <- simulate.msa(list(tm, tm2, tm3), 20, h)
+m <- simulate.msa(list(tm, tm2, tm3), 20, hmm=h)
 m <- matrix(1, nrow=9, ncol=9)
 h <- hmm(m)
-m <- simulate.msa(list(tm, tm, tm, tm, tm, tm, tm, tm, tm), 20, h)
+m <- simulate.msa(list(tm, tm, tm, tm, tm, tm, tm, tm, tm), 20, hmm=h)
 unlink(filename)
 
 #' get4d.msa

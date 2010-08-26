@@ -735,25 +735,31 @@ rbind.feat <- function(...) {
 
 ##' Split features by length
 ##' @param x An object of type \code{feat}
-##' @param max.length the maximum length of features in new object.  Can
-##' be a vector giving a different length for each row, or a single numeric
+##' @param f The maximum length of features in new object.  Can be a
+##' vector giving a different length for each row, or a single numeric
 ##' value.  Values will be recycled to the same length
 ##' as \code{nrow.feat(x)}.
+##' @param drop A logical value saying whether to drop "left-over" elements
+##' which do not have the appropriate length.
 ##' @param start.from A character string, current valid values are "left"
 ##' (start split at smallest coordinate for each feature), or "right"
 ##' (start splitting at the last coordinate and work down).  Values will
 ##' be recycled to the length of \code{nrow.feat(x)}
 ##' @param pointer.only If \code{TRUE}, return an object which is a pointer
 ##' to a features object stored in C (advanced use only).
+##' @param ... Currently not used (for S3 compatibility).
 ##' @return An object of type \code{feat} with the same features as x but
 ##' with all features of length > max.length broken into segments
 ##' (starting from the first position in feature).  The last piece
 ##' of each split segment may be smaller than max.length
 ##' @export
-split.feat <- function(x, max.length, start.from="left", pointer.only=FALSE) {
+split.feat <- function(x, f, drop=FALSE, start.from="left",
+                       pointer.only=FALSE, ...) {
   featSize <- nrow.feat(x)
-  check.arg(max.length, "max.length", "integer", null.OK=FALSE,
-            min.length = 1, max.length = NULL)
+  check.arg(f, "f", "integer", null.OK=FALSE,
+            min.length=1, max.length=NULL)
+  max.length <- f
+  check.arg(drop, "drop", "logical", null.OK=FALSE)
   check.arg(start.from, "start.from", "character", null.OK=FALSE,
             min.length=1L, max.length=nrow.feat(x))
   if (sum(start.from!="left" & start.from!="right") > 0L)
@@ -762,7 +768,7 @@ split.feat <- function(x, max.length, start.from="left", pointer.only=FALSE) {
     x <- as.pointer.feat(x)
   splitFeat <- .makeObj.feat()
   splitFeat$externalPtr <- .Call("rph_gff_split", x$externalPtr,
-                                max.length,
+                                max.length, drop, 
                                  ifelse(start.from=="left", 0, 1))
   if (!pointer.only)
     splitFeat <- as.data.frame.feat(splitFeat)
