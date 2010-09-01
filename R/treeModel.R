@@ -18,7 +18,7 @@ is.tm <- function(x) {
 
 # this needs a special function to avoid having to make a matrix object
 # in R from within C.  The C code returns a vector which is coerced
-# into a matrix here.  Watch out for row/column order!
+# into a matrix here.
 ##' @nord
 ##' @export
 .rateMatrix.from.pointer.tm <- function(x) {
@@ -204,18 +204,18 @@ subst.mods <- function() {
 ##' to "ACGT"
 ##' @param nratecats The number of rate categories in the model.  Defaults
 ##' to 1.
-##' @param alpha  If nratecats > 0, weight for each category is given
-##' by a gamma distribution with shape parameter alpha
+##' @param alpha  If nratecats > 1, weight for each category is computed using
+##' a gamma distribution with shape parameter alpha.
 ##' @param rate.consts The rate for each rate category.  NULL if only
-##' one category
+##' one category.
 ##' @param rate.weights Vector of numeric of length nratecats, determining
 ##' the weight of each rate category.  Must sum to 1 (will be normalized
 ##' otherwise).  May be defined implicitly by alpha.
 ##' @param root.leaf Usually NULL, but if set to the name of a leaf
 ##' node in the tree, the tree will be re-rooted at this leaf node.
 ##' @param likelihood an optional value giving the log likelihood of this
-##' model for some alignment
-##' @return An object of class tm
+##' model for some alignment.
+##' @return An object of class \code{tm} representing a phylogenetic model.
 ##' @export
 tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
                    alphabet="ACGT", nratecats=1, 

@@ -77,8 +77,8 @@ is.msa <- function(msa) {
 ##' reference sequence from the beginning of the chromosome.  The reference
 ##' sequence is assumed to be the first sequence.  Not used
 ##' if is.ordered==FALSE.
-##' @param pointer.only a boolean indicating whether MSA should be stored by
-##' reference (see Details)
+##' @param pointer.only a boolean indicating whether returned alignment object
+##' should be stored by reference (see Details)
 ##' @useDynLib rphast
 ##' @export msa
 msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
@@ -127,7 +127,8 @@ msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
 ##' @title MSA Sequence Length.
 ##' @param x an MSA object
 ##' @param refseq character vector giving name(s) of sequence whose
-##' length to return.
+##' length to return.  The default \code{NULL} implies the frame of
+##' reference of the entire alignment.
 ##' @return an integer vector containing the length of the named sequences.
 ##' If refseq is NULL, returns the number of columns in the alignment.
 ##' @keywords msa
@@ -799,20 +800,38 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' @param x An object of class \code{msa} representing the multiple alignment
 ##' @param tm An object of class \code{tm} representing the tree and model of
 ##' substitution
+##' @param features A features object.  If non-null, compute likelihoods
+##' for each feature rather than the whole alignment.
 ##' @param by.column Logical indicating whether to get likelihoods for
-##' each alignment column.  If FALSE, returns total likelihood
-##' @return Either the likelihood of the entire alignment (if by.column is
-##' \code{FALSE}, or a numeric vecotr giving the likelihood of each
-##' column in the alignment
+##' each alignment column.  If FALSE, returns total likelihood.  Ignored
+##' if features is not NULL.
+##' @return Either the likelihood of the entire alignment (if
+##' \code{by.column==FALSE && is.null(features)},
+##' or a numeric vector giving the likelihood of each feature
+##' (if \code{!is.null(features)}), or a numeric vector giving the likelihood
+##' of each column (if \code{by.column==TRUE}).
 ##' @export
-likelihood.msa <- function(x, tm, by.column=FALSE) {
-  check.arg(by.column, "by.column", "logical", null.OK=FALSE)
+likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
+  if (is.null(features))
+    check.arg(by.column, "by.column", "logical", null.OK=FALSE)
+  else {
+    if (is.null(features$externalPtr))
+      features <- as.pointer.feat(features)
+    else features <- copy.feat(features)  # if we don't make a copy features gets
+                                          # destroyed by re-mapping coordinates to msa
+    if (by.column) {
+      warning("by.column ignored when features is NULL")
+      by.column <- FALSE
+    }
+  }
   if (is.null(x$externalPtr)) 
     x <- as.pointer.msa(x)
   tm <- as.pointer.tm(tm)
   if (by.column && !is.ordered.msa(x))
     warning("by.column may not be a sensible option for unordered MSA")
-  .Call("rph_msa_likelihood", x$externalPtr, tm$externalPtr, by.column)
+  .Call("rph_msa_likelihood", x$externalPtr, tm$externalPtr,
+        features$externalPtr,
+        by.column)
 }
 
 ##' Simulate a MSA given a tree model and HMM.

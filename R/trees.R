@@ -107,7 +107,7 @@ prune.tree <- function(tree, seqs, all.but=FALSE) {
 ##' @title Name Ancestral Nodes
 ##' @param tree A vector of character strings, each containing a newick tree
 ##' @return A vector of character strings containing newick trees with all
-##' ancestors named
+##' ancestors named.
 ##' @export
 name.ancestors <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE,

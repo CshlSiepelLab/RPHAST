@@ -152,22 +152,20 @@ nonpara.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
 
 We can make a Q-Q plot to compare the likelihood ratios between
 real and simulated data:
-<<<rarAnalyis9>>=
+<<<rarAnalyis9,width=6,height=8>>=
 
-# THIS PLOT NEEDS SOME WORK!  HOW TO OVERLAY TWO PLOTS WITHOUT IT BEING REALLY CONFUSING?  
-# OR SHOULD WE JUST DO THEM SIDE-BY-SIDE?
-qqplot(obs.phyloP$lnlratio, nonpara.phyloP$lnlratio)
-abline(0,1, lty=2)
-lines(density(obs.phyloP$lnlratio), lty=1)
-legend(x="bottomright", inset=0.1, 
-       c("Q-Q plot with simulated likelihood ratios", 
-         "density of observed likelihood ratios",
-         "x=y"), pch=c(1, NA, NA), lty=c(NA, 1, 2))
-h <- hist(obs.phyloP$lnlratio, breaks=100, plot=FALSE)
-# rescale histogram to display relative frequencies on same plot
-h$density <- h$density/max(h$density)*max(nonpara.phyloP$lnlratio)
-plot(h, freq=FALSE, add=TRUE)
-#axis(4)
+layout(matrix(c(1,2), nrow=2), heights=c(0.7, 0.3))
+par(mar=c(4.5, 4, 4, 2), mgp=c(2.5,1,0), cex.axis=1.5, cex.lab=1.5)
+qqplot(nonpara.phyloP$lnlratio,obs.phyloP$lnlratio,
+xlim=c(0,15),ylim=c(0,15), xlab="Simulated likelihood ratio",
+      ylab="Observed likelihood ratio")
+abline(0, 1, lty=2)
+par(mar=c(4,4,1,2))
+plot(density(obs.phyloP$lnlratio,adjust=3), lty=1,xlim=c(0,15),
+    xlab="Likelihood Ratio",
+    ylab="Density",main="", col="red")
+lines(density(nonpara.phyloP$lnlratio,adjust=3), lty=1,
+col="black",xlim=c(0,15))
 
 @ 
 
@@ -192,7 +190,8 @@ nrow(nonpara.sigFeats)
 nonpara.sigFeats$feature <- "RAR"  # for rodent-accelerated region
 coverage.feat(nonpara.sigFeats)
 # can print out a features file that can be displayed on browser
-
+nonpara.sigFeats$score <- obs.phyloP$lnlratio[nonpara.fdr < 0.05]
+nonpara.sigFeats$seqname <- "hg18.chr22"
 write.feat("RAR.gff", nonpara.sigFeats)
 
 @ 

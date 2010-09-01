@@ -7,6 +7,25 @@
 }
 
 
+##' ##' Creates a copy of a features object
+##'
+##' If x is stored in R (as it is by default), then this is no different
+##' than x2 <- x.  But if it is stored as a pointer to a structure in C,
+##' then this is the only way to make an explicity copy of the features.
+##' @title Features copy
+##' @param x an object of type \code{feat}
+##' @return a features object which can be modified independently from the
+##' original object
+##' @export
+copy.feat <- function(x) {
+  if (is.null(x$externalPtr)) return(x)
+  result <- .makeObj.feat()
+  result$externalPtr <- .Call("rph_gff_copy", x$externalPtr)
+  result
+}
+
+
+
 ##' Read a features object from a file
 ##'
 ##' The function will guess the format of the input file automatically.

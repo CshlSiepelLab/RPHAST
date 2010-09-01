@@ -338,22 +338,27 @@ unlink(files) # clean up
 ################################################
 
 #' msa.likelhood
-files <- c("rev.mod", "ENr334.maf", "ENr334.fa")
+require("rphast")
+files <- c("rev.mod", "ENr334.maf", "ENr334.fa", "small.gff")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 unzip(exampleArchive, files)
 msa <- read.msa("ENr334.fa")
 tm <- read.tm("rev.mod")
-l <- likelihood.msa(msa, tm)
 likelihood.msa(msa, tm)
 like1 <- likelihood.msa(msa, tm, by.column=TRUE)
-like2 <- likelihood.msa(msa, tm, by.column=TRUE)
+length(like1)==ncol.msa(msa)
+sum(like1)
 msa <- read.msa("ENr334.maf")
 likelihood.msa(msa, tm)
-likelihood.msa(msa, tm)
-like3 <- likelihood.msa(msa, tm, by.column=TRUE)
-like4 <- likelihood.msa(msa, tm, by.column=TRUE)
+like2 <- likelihood.msa(msa, tm, by.column=TRUE)
+sum(like2)
 tm$subst.mod <- "JC69"
 likelihood.msa(msa, tm)
+#'
+# can also get likelihood by feature
+features <- read.feat("small.gff")
+features$seqname <- names(msa)[1]
+likelihood.msa(msa, tm, features=features)
 unlink(files)
 
 

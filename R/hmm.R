@@ -101,3 +101,86 @@ from.pointer.hmm <- function(x) {
     hmm$end.freq <- temp
   hmm
 }
+
+
+##' Produce likelihood of an alignment given a phylo-HMM, posterior
+##' probabilities of phylo-HMM states across an alignment,
+##' and predict states using Viterbi algorithm
+##' @title Score an alignment using a general phylo-HMM
+##' @param msa An object of type \code{msa}
+##' @param mod A list of tree model objects, corresponding to each state in the phylo-HMM
+##' @param hmm An object of type \code{hmm} describing transitions between states,
+##' equilbrium frequencies, initial frequencies, and optionally end frequencies
+##' @param states A vector of characters naming
+##' the states of interest in the phylo-HMM, or a vector of integers
+##' corresponding to states in the transition matrix.  The post.probs will give
+##' the probability of any of these states, and the viterbi regions reflect
+##' regions where the state is predicted to be any of these states.
+##' @param viterbi A logical value indicating whether to predict a path through the phylo-HMM
+##' using the Viterbi algorithm.
+##' @param ref.idx An integer value.  Use the coordinate frame of the given sequence.
+##' Default is 1, indicating the first sequence in the alignment.
+##' A value of 0 indicates the coordinate frame of the entire alignment.
+##' @param reflect.strand Given an hmm describing
+##' the forward strand, create a larger HMM that allows for features
+##' on both strands by "reflecting" the original HMM about the specified
+##' states.  States can be described as a vector of integers or characters
+##' in the same manner as states argument (above).  The new hmm will be
+##' used for prediction on both strands.
+##' @param features If non-NULL, compute the likelihood of each feature
+##' under the phylo-HMM.
+##' @param quiet If \code{TRUE}, suppress printing of progress information.
+##' @return If \code{features} is not NULL, returns a numeric vector
+##' with one value per feature, giving the likelihood of the feature under
+##' the phylo-HMM.
+##'
+##' Otherwise, returns a list with some or all of
+##' the following arguments (depending on options):
+##' \item{in.states}{An object of type \code{feat} which describes regions which
+##' fall within the interesting states specified in the states parameter,
+##' as determined by the Viterbi algorithm.}
+##' \item{post.prob.wig}{A data frame giving a coordinate and posterior
+##' probibility that each site falls within an interesting state.}
+##' \item{likelihood}{The likelihood of the data under the estimated model.}
+##' @export
+score.hmm <- function(msa, mod, hmm, states, viterbi=TRUE, ref.idx=1,
+                      reflect.strand=NULL, features=NULL,
+                      quiet=(!is.null(features))) {
+  if (!is.null(features)) {
+    if (!is.data.frame(features)) {
+      features <- as.data.frame.feat(features)
+      if (!is.data.frame(features)) stop("invalid features")
+    }
+    rv <- numeric(nrow(features))
+    if (!is.null(msa$externalPtr)) 
+      msa <- as.pointer.msa(msa)
+    for (i in 1:nrow(features)) {
+      m <- extract.feature.msa(copy.msa(msa), features[i,], pointer.only=TRUE)
+      pcResult <- phastCons.call(msa=m, mod,
+                                 rho=NULL, target.coverage=NULL, expected.length=NULL, transitions=NULL,
+                                 estimate.rho=FALSE, estimate.expected.length=FALSE,
+                                 estimate.transitions=FALSE,
+                                 estimate.trees=FALSE, viterbi=FALSE, score.viterbi=FALSE,
+                                 gc=NULL, nrates=NULL, compute.lnl=TRUE, suppress.probs=FALSE,
+                                 ref.idx=ref.idx, hmm=hmm, states=states,
+                                 reflect.strand=reflect.strand, quiet=quiet)
+      rv[i] <- pcResult$likelihood
+    }
+  } else {
+    rv <- phastCons.call(msa, mod,
+                         rho=NULL, target.coverage=NULL, expected.length=NULL, transitions=NULL,
+                         estimate.rho=FALSE, estimate.expected.length=FALSE, estimate.transitions=FALSE,
+                         estimate.trees=FALSE,
+                         viterbi=viterbi, score.viterbi=viterbi,
+                         gc=NULL, nrates=NULL, compute.lnl=TRUE, suppress.probs=FALSE,
+                         ref.idx=ref.idx,
+                         hmm=hmm,
+                         states=states,
+                         reflect.strand=reflect.strand, quiet=quiet)
+    if (!is.null(rv$most.conserved)) {
+      w <- which(names(rv) == "most.conserved")
+      names(rv)[w] <- "in.states"
+    }
+  }
+  rv
+}

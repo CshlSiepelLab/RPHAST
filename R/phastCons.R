@@ -19,7 +19,8 @@ phastCons.call <- function(msa,
                            ref.idx,
                            hmm,
                            states,
-                           reflect.strand) {
+                           reflect.strand,
+                           quiet) {
   # check parameters
   check.arg(rho, "rho", "numeric", null.OK=TRUE )
   if (!is.null(rho) && (rho < 0 || rho > 1)) stop("rho should be in range [0,1]")
@@ -139,7 +140,8 @@ phastCons.call <- function(msa,
                   ref.idx,
                   if (is.null(hmm)) NULL else hmm$externalPtr,
                   states,
-                  reflect.strand)
+                  reflect.strand,
+                  quiet)
   rphast.simplify.list(result)
 }
 
@@ -218,6 +220,7 @@ phastCons.call <- function(msa,
 ##' @param ref.idx An integer value.  Use the coordinate frame of the given sequence.
 ##' Default is 1, indicating the first sequence in the alignment.
 ##' A value of 0 indicates the coordinate frame of the entire alignment.
+##' @param quiet If \code{TRUE}, suppress printing of progress information.
 ##' @return A list containing parameter estimates.  The list may have any of the
 ##' following elements, depending on the arguments:
 ##' \item{transition.rates}{A numeric vector of length two giving the rates from the
@@ -249,7 +252,8 @@ phastCons <- function(msa,
                       viterbi=TRUE,
                       gc=NULL,
                       nrates=NULL,
-                      ref.idx=1) {
+                      ref.idx=1,
+                      quiet=FALSE) {
   score.viterbi <- viterbi
   compute.lnl <- TRUE
   suppress.probs <- FALSE
@@ -278,56 +282,7 @@ phastCons <- function(msa,
                  ref.idx=ref.idx,
                  hmm=NULL,
                  states=NULL,
-                 reflect.strand=NULL)
+                 reflect.strand=NULL, quiet=quiet)
 }
 
 
-##' Produce posterior probabilities of phylo-HMM states across an alignment,
-##' and predict states using Viterbi algorithm
-##' @title Score an alignment using a general phylo-HMM
-##' @param msa An object of type \code{msa}
-##' @param mod A list of tree model objects, corresponding to each state in the phylo-HMM
-##' @param hmm An object of type \code{hmm} describing transitions between states,
-##' equilbrium frequencies, initial frequencies, and optionally end frequencies
-##' @param states A vector of characters naming
-##' the states of interest in the phylo-HMM, or a vector of integers
-##' corresponding to states in the transition matrix.  The post.probs will give
-##' the probability of any of these states, and the viterbi regions reflect
-##' regions where the state is predicted to be any of these states.
-##' @param viterbi A logical value indicating whether to predict a path through the phylo-HMM
-##' using the Viterbi algorithm.
-##' @param ref.idx An integer value.  Use the coordinate frame of the given sequence.
-##' Default is 1, indicating the first sequence in the alignment.
-##' A value of 0 indicates the coordinate frame of the entire alignment.
-##' @param reflect.strand Given an hmm describing
-##' the forward strand, create a larger HMM that allows for features
-##' on both strands by "reflecting" the original HMM about the specified
-##' states.  States can be described as a vector of integers or characters
-##' in the same manner as states argument (above).  The new hmm will be
-##' used for prediction on both strands.
-##' @return A list with some or all of the
-##' following elements, depending on the arguments:
-##' \item{in.states}{An object of type \code{feat} which describes regions which
-##' fall within the interesting states specified in the states parameter,
-##' as determined by the Viterbi algorithm.}
-##' \item{post.prob.wig}{A data frame giving a coordinate and posterior probibility
-##' that each site falls within an interesting state.}
-##' \item{likelihood}{The likelihood of the data under the estimated model.}
-##' @export
-score.hmm <- function(msa, mod, hmm, states, viterbi=TRUE, ref.idx=1, reflect.strand=NULL) {
-  rv <- phastCons.call(msa, mod,
-                       rho=NULL, target.coverage=NULL, expected.length=NULL, transitions=NULL,
-                       estimate.rho=FALSE, estimate.expected.length=FALSE, estimate.transitions=FALSE,
-                       estimate.trees=FALSE,
-                       viterbi=viterbi, score.viterbi=viterbi,
-                       gc=NULL, nrates=NULL, compute.lnl=TRUE, suppress.probs=FALSE,
-                       ref.idx=ref.idx,
-                       hmm=hmm,
-                       states=states,
-                       reflect.strand=reflect.strand)
-  if (!is.null(rv$most.conserved)) {
-    w <- which(names(rv) == "most.conserved")
-    names(rv)[w] <- "in.states"
-  }
-  rv
-}
