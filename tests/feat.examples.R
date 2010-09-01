@@ -200,3 +200,81 @@ geneName <- tagval.feat(f, "transcript_id")
 geneName[1:10]
 length(unique(geneName)) # number of unique genes
 unlink(featFile)
+
+
+#' addUTRs
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+featFile <- "gencode.ENr334.gp"
+unzip(exampleArchive, featFile)
+f <- read.feat(featFile)
+table(f$feature)
+coverage.feat(f[f$feature=="CDS",])
+coverage.feat(f[f$feature=="exon",])
+f <- addUTRs.feat(f)
+table(f$feature)
+coverage.feat(f[f$feature=="3'UTR",])
+coverage.feat(f[f$feature=="5'UTR",])
+
+#' addIntrons
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+featFile <- "gencode.ENr334.gp"
+unzip(exampleArchive, featFile)
+f <- read.feat(featFile)
+table(f$feature)
+coverage.feat(f[f$feature=="CDS",])
+coverage.feat(f[f$feature=="exon",])
+f <- addIntrons.feat(f)
+table(f$feature)
+coverage.feat(f[f$feature=="intron",])
+
+
+#' addSignals
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+featFile <- "gencode.ENr334.gp"
+unzip(exampleArchive, featFile)
+f <- read.feat(featFile)
+table(f$feature)
+coverage.feat(f[f$feature=="CDS",])
+coverage.feat(f[f$feature=="exon",])
+f <- addSignals.feat(f)
+table(f$feature)
+coverage.feat(f[f$feature=="3'splice",])
+coverage.feat(f[f$feature=="5'splice",])
+coverage.feat(f[f$feature=="start_codon",])
+coverage.feat(f[f$feature=="stop_codon",])
+
+
+#' fixStartStop
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+featFile <- "gencode.ENr334.gp"
+unzip(exampleArchive, featFile)
+f <- read.feat(featFile)
+f <- addSignals.feat(f)
+# let's just look at one gene
+geneNames <- tagval.feat(f, "transcript_id")
+f <- f[geneNames==geneNames[1],]
+#'
+# This features file already is correct, so let's mess it up to see
+# how fixStartStop can fix it:
+#'
+#modify first CDS to not include start
+startCodon <- f[f$feature=="start_codon",]
+firstCds <- which(f$feature=="CDS" & f$start==startCodon$start)
+f[firstCds,]$start <- startCodon$end+1
+#modify last CDS to include stop
+stopCodon <- f[f$feature=="stop_codon",]
+lastCds <- which(f$feature=="CDS" & f$end+1==stopCodon$start)
+f[lastCds,]$end <- stopCodon$end
+# now call fixStartStop to fix
+f.fixed <- fixStartStop.feat(f)
+#'
+# first CDS has been fixed to include start codon
+f[firstCds,]
+f.fixed[firstCds,]
+# last CDS has been fixed to not include stop codon
+f[lastCds,]
+f.fixed[lastCds,]

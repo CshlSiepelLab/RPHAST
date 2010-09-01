@@ -705,11 +705,14 @@ coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
 ##' to x.
 ##' @export
 addUTRs.feat <- function(x) {
-  if (is.null(x$externalPtr))
+  if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
+    getDataFrame <- TRUE
+  } else getDataFrame <- FALSE
   rv <- .makeObj.feat()
   rv$externalPtr <- .Call("rph_gff_add_UTRs", x$externalPtr)
-  as.data.frame.feat(rv)
+  if (getDataFrame) return(as.data.frame.feat(rv))
+  rv
 }
 
 ##' Add introns to features
@@ -721,11 +724,58 @@ addUTRs.feat <- function(x) {
 ##' added to x.
 ##' @export
 addIntrons.feat <- function(x) {
-  if (is.null(x$externalPtr))
+  if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
+    getDataFrame <- TRUE
+  } else getDataFrame <- FALSE
   rv <- .makeObj.feat()
   rv$externalPtr <- .Call("rph_gff_add_introns", x$externalPtr)
-  as.data.frame.feat(rv)
+  if (getDataFrame) return(as.data.frame.feat(rv))
+  rv
+}
+
+##' Add start/stop codon, 3'/5' splice signals to features
+##' @param x An object of type \code{feat}.  CDS regions must be present with type "CDS", and
+##' the transcript_id must be indicated in the attribute field.
+##' @return An object of type \code{feat}, with all the entries of the original object, but
+##' also with stop codons, start, codons, 3' splice, and 5' splice sites annotated.
+##' @note If x is stored as a pointer to an object stored in C, signals will be
+##' added to x.
+##' @note Does not correctly handle case of splice site in middle of start
+##' or stop codon.
+##' @export
+addSignals.feat <- function(x) {
+  if (is.null(x$externalPtr)) {
+    x <- as.pointer.feat(x)
+    getDataFrame <- TRUE
+  } else getDataFrame <- FALSE
+  rv <- .makeObj.feat()
+  rv$externalPtr <- .Call("rph_gff_add_signals", x$externalPtr)
+  if (getDataFrame) return(as.data.frame.feat(rv))
+  rv
+}
+
+
+##' Fix start and stop signals
+##' @param x An object of type \code{feat}.  CDS regions must be present with type
+##' "CDS", and the transcript_id must be indicated in the attribute field.
+##' Start and stop codons should have feature type "start_codon" and "stop_codon"
+##' (as produced by addSignals.feat).
+##' @return An object of type \code{feat}, in which CDS regions are ensured to
+##' include start codons and exclude stop codons, as required by the GTF2 standard.
+##' @note If x is stored as a pointer to an object stored in C, signals will be
+##' added to x.
+##' @note Assumes at most one start_codon and at most one stop_codon per transcript.
+##' @export
+fixStartStop.feat <- function(x) {
+  if (is.null(x$externalPtr)) {
+    x <- as.pointer.feat(x)
+    getDataFrame <- TRUE
+  } else getDataFrame <- FALSE
+  rv <- .makeObj.feat()
+  rv$externalPtr <- .Call("rph_gff_fix_start_stop", x$externalPtr)
+  if (getDataFrame) return(as.data.frame.feat(rv))
+  rv
 }
 
 
