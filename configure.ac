@@ -39,41 +39,6 @@ AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit bzero floor gethostname gettimeofday memset pow re_comp regcomp rint sqrt strcasecmp strdup strstr strtol])
 
 
-# use -pthread if available otherwise -lpthread
-AC_MSG_CHECKING(for pthread)
-PTHREAD_FLAG=-DPHAST_PTHREAD
-OLD_LIBS=${LIBS}
-LIBS=""
-# first check if we need -pthread at all
-AC_LINK_IFELSE([
-#include <pthread.h>
-int main() {
-  pthread_t x;
-  pthread_join(x, NULL);
-  return 0;
-}
-], AC_MSG_RESULT(yes), 
-
-# now see if we can use -pthread, which is preferred over -lpthread?
-[ LIBS=-pthread; AC_LINK_IFELSE([
-#include <pthread.h>
-int main() {
-  pthread_t x;
-  pthread_join(x, NULL);
-  return 0;
-}
-], AC_MSG_RESULT(${LIBS}), [ LIBS=-lpthread; AC_LINK_IFELSE([
-#include <pthread.h>
-int main() {
-  pthread_t x;
-  pthread_join(x, NULL);
-  return 0;
-]}, AC_MSG_RESULT(${LIBS}), [AC_MSG_RESULT(no)
-                             PTHREAD_FLAG=""])])])
-
-PTHREAD_LIBS=${LIBS}
-LIBS=${OLD_LIBS}
-
 # use vecLib if available
 AC_MSG_CHECKING(for vecLib)
 OLD_CFLAGS=${CFLAGS}
@@ -116,8 +81,6 @@ AC_C_INLINE
 
 AC_SUBST(PHAST_VERSION)
 AC_SUBST(INLINE_FLAG)
-AC_SUBST(PTHREAD_LIBS)
-AC_SUBST(PTHREAD_FLAG)
 AC_SUBST(LAPACK_FLAG)
 AC_SUBST(LAPACK_LIBS)
 
