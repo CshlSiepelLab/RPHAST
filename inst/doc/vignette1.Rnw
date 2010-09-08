@@ -6,7 +6,7 @@
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage{Sweave}
 \usepackage{url}
 \usepackage{amsmath,epsfig,fullpage}
@@ -45,10 +45,10 @@ feats <- read.feat("sol1.gp")
 tomatoTree <- "((((tomato, potato), eggplant), pepper), petunia);"
 @ 
 Next, we have to address some naming issues.  The alignment makes use of
-Genome Browser-style names (e.g., ``sol1''), but it will be more convenient
-to use common names here.  The sequence names in the alignment must match
-those in the tree.  In addition, the sequence name used for the gene
-annotations must match the name of the corresponding sequence in the
+Genome Browser-style sequence names (e.g., ``sol1''), but it will be more
+convenient for us to use common names.  The sequence names in the alignment
+must match those in the tree.  In addition, the sequence name used for the
+gene annotations must match the name of the corresponding sequence in the
 alignment file (now ``tomato'').
 <<browser2,fig=FALSE>>=
 names(align)
@@ -172,8 +172,9 @@ legend(c("All", "Coding", "Noncoding"), x="topright", inset=0.05,
        lty=1, col=c("black", "red", "blue"))
 @ 
 
-From this plot we see that the coding elements are clearly longer, on
-average---as would be expected.   
+From this plot we see that the coding elements are clearly longer on
+average, as expected.   The coding elements appear to dominate the length
+distribution for all elements.
 
 Now let us examine the relationship between conserved elements and
 annotations of different types.  First, we
