@@ -77,7 +77,8 @@ table(feats$feature)
 # which no alignments are available by setting the "start" of the feature 
 # equal to the beginning of the aligned region 
 wholeChrom <- feat(seq="tomato", src=".", feature="all",
-                  start=align$offset, end=122080)
+                   start=align$offset, 
+                   end=align$offset+ncol.msa(align, "tomato"))
 
 # annotate intergenic regions
 intergenic.feats <- inverse.feat(feats, region.bounds=wholeChrom)
@@ -85,7 +86,7 @@ intergenic.feats$feature <- "intergenic"
 feats <- rbind.feat(feats, intergenic.feats)
 @ 
 Next we will estimate a neutral model from fourfold degenerate (4D) sites
-in coding regions, using phyloFit with the prefefined tree topology and the
+in coding regions, using phyloFit with the predefined tree topology and the
 general reversible (REV) substitution model.
 <<browser4,fig=FALSE>>=
 align4d <- get4d.msa(align, feats)

@@ -14,7 +14,7 @@
 
 \begin{document}
 \title{Detection of Accelerated Regions}
-\author{M. J. Hubisz K. S. Pollard, and A. Siepel}
+\author{M. J. Hubisz, K. S. Pollard, and A. Siepel}
 \SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R}
 \maketitle
 
@@ -104,8 +104,11 @@ hasMouseRat <- informative.regions.msa(align, 2, c("mm9", "rn4"))
 hasAtLeastFour <- informative.regions.msa(align, 4)
 informativeElements <- coverage.feat(elements, hasMouseRat, 
                                      hasAtLeastFour, get.feats=TRUE)
+coverage.feat(informativeElements)/coverage.feat(elements)
 
 @ 
+
+So 79\% of the conserved elements have passed our informative elements filter.
 
 We will also regularize the lengths of the conserved elements, to
 simplify our likelihood ratio tests.  (Otherwise, we will have to consider
@@ -160,7 +163,8 @@ simMsa <- sample.msa(elementAlign, nrep*splitLength, replace=TRUE)
 # concatenation of shorter alignments
 startIdx <- seq(from=1, by=splitLength, length.out=nrep)
 features <- feat(seqname=names.msa(simMsa)[1], src="sim", feat=".",
-                 start=startIdx, end=startIdx+splitLength-1)
+                 start=startIdx, 
+                 end=startIdx+splitLength-1)
 
 nonpara.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
                          features=features, subtree="mm9-rn4")
@@ -188,7 +192,7 @@ col="black",xlim=c(0,15))
 
 Notice that the two distributions appear fairly similar in the density
 plots, except that a slightly heavier right tail is evident for the
-observed elements (in black).  This excess of high likelihood ratios for the
+observed elements (in red).  This excess of high likelihood ratios for the
 observed elements shows up clearly in the Q-Q plot.
 
 Let us now calculate empirical p-values for the real data, and  
