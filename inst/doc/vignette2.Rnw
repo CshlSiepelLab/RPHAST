@@ -25,9 +25,9 @@ chromosome 22.
 
 The ideal way to perform this analysis would be to first identify conserved
 elements using the same procedure as in example 1, but in a subset of the
-alignment which excludes mouse and rat.  Then we could examine the full
+alignment which excludes mouse and rat.  Then one could examine the full
 alignments for signs of acceleration in mouse-rat in the identified
-elements.  However, to keep the example simple we will simply make use of
+elements.  However, to keep the example simple we will make use of
 precomputed conserved elements from the UCSC genome browser.
 
 The multiple alignments and conserved elements for this example can be
