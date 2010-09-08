@@ -26,41 +26,56 @@ Cornell's UCSC genome browser mirror (\url{http://genome-mirror.bscb.cornell.edu
 The necessary files are also included in the rphast package's
 example data set.
 
-<<browser,width=8,height=8>>=
+We begin by initializing RPHAST, loading the necessary data files, and
+defining the tree topology for the species of interest.
+<<browser1,fig=FALSE>>=
 require("rphast")
 
-# extract the  alignment and annotation from the RPHAST package
+# extract alignment and annotation files from RPHAST package
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 unzip(exampleArchive, c("sol1.maf", "sol1.gp"))
 
+# read alignment 
+align <- read.msa("sol1.maf")
+
+# read gene annotations from a UCSC "genepred" file
+feats <- read.feat("sol1.gp")
+
 # define tree using Newick string
 tomatoTree <- "((((tomato, potato), eggplant), pepper), petunia);"
-
-# read the alignment and switch to common names
-align <- read.msa("sol1.maf")
+@ 
+Next, we have to address some naming issues.  The alignment makes use of
+Genome Browser-style names (e.g., ``sol1''), but it will be more convenient
+to use common names here.  The sequence names in the alignment must match
+those in the tree.  In addition, the sequence name used for the gene
+annotations must match the name of the corresponding sequence in the
+alignment file (now ``tomato'').
+<<browser2,fig=FALSE>>=
 names(align)
 align$names <- c("tomato", "potato", "pepper", "petunia", "eggplant")
 names(align)
 
-# load the features
-feats <- read.feat("sol1.gp")
 unique(feats$seqname)
-
-# they are all on chr2 so rename to "tomato" to cross-reference with alignment
 feats$seqname <- "tomato"
-
-# annotate UTRs and introns
+@ 
+Now let us augment the gene annotations.  When reading a genepred file,
+RPHAST will create exon and CDS features only (with exons including both
+UTRs and coding regions, following the convention of GFF files).  We
+would like to add features for introns.  These particular gene annotations
+actually do not contain UTRs (they are derived from computational gene
+predictions, not mRNA/EST data), so the CDS and exon features are
+identical, and we can simply remove the exon features.  Finally, we will add
+features explicitly defining intergenic regions.
+<<browser3,fig=FALSE>>=
 feats <- addIntrons.feat(feats)
-# in these features, UTRs are not annotated, so CDS is the same as exon.  So
-# remove the exon features
 feats <- feats[feats$feature != "exon",]
 
 table(feats$feature)
 
-# Now want to annotate non-coding regions.  First need to define
-# chromosome boundaries
-
-# make a feature that represents the entire chromosome
+# make a feature that represents the entire chromosome.  We will ignore 
+# several thousand bases at the beginning of the reference genome for 
+# which no alignments are available by setting the "start" of the feature 
+# equal to the beginning of the aligned region 
 wholeChrom <- feat(seq="tomato", src=".", feature="all",
                   start=align$offset, end=122080)
 
@@ -68,25 +83,29 @@ wholeChrom <- feat(seq="tomato", src=".", feature="all",
 intergenic.feats <- inverse.feat(feats, region.bounds=wholeChrom)
 intergenic.feats$feature <- "intergenic"
 feats <- rbind.feat(feats, intergenic.feats)
-
-# now extract 4d sites from alignment using annotations
+@ 
+Next we will estimate a neutral model from fourfold degenerate (4D) sites
+in coding regions, using phyloFit with the prefefined tree topology and the
+general reversible (REV) substitution model.
+<<browser4,fig=FALSE>>=
 align4d <- get4d.msa(align, feats)
-
-# estimate neutral model from 4d sites
 neutralMod <- phyloFit(align4d, tree=tomatoTree, subst.mod="REV")
-
-# now run phastCons to score/predict conserved elements
+@ 
+PhastCons can now be used to predict conserved elements, based on the
+estimated neutral model.  For now, we will use the same values for the
+``expected.length'' and ``target.coverage'' parameters that were used in the
+original analysis of these alignments (Wang et al., Genetics 180:391-408,
+2008).  Below we will consider an alterative way of setting these parameters.
+<<browser5,fig=FALSE>>=
 pc <- phastCons(align, neutralMod, expected.length=6, 
                 target.coverage=0.125, viterbi=TRUE)
-
 names(pc)
 
-# the conserved elements are in a features object stored here:
 cons.elements <- pc$most.conserved
 # this shows how many bases are predicted to be conserved
 coverage.feat(cons.elements)
 
-# we get about 5% coverage of conserved elements
+# this shows the fraction of bases covered by conserved elements
 coverage.feat(cons.elements)/coverage.feat(wholeChrom)
 
 # the posterior probabilities for every base are here:
@@ -95,16 +114,22 @@ dim(pc$post.prob.wig)
 
 # and the overall likelihood is here:
 pc$likelihood
-
-
-# now run phyloP to get base-by-base scores
+@ 
+For comparison, we will produce an alternative set of conservation scores
+using phyloP.
+<<browser6,fig=FALSE>>=
 pp <- phyloP(neutralMod, align, method="LRT", mode="CONACC")
 
-# examine these results- it is a data frame giving
-# statistics for every base in the alignment
+# the returned object is a data frame giving statistics for every base 
+# in the alignment
 names(pp)
 dim(pp)
-
+@ 
+Let us now plot the gene annotations, conserved elements, and
+conservation scores for a genomic segment of interest.  We will make use of
+functions in RPHAST that allow "tracks" to be defined and then plotted in a
+browser-like display.
+<<browser7,width=8,height=8>>=
 geneTrack <- gene.track(feats, "genes")
 consElTrack <- feat.track(cons.elements, "phastCons most conserved", col="red")
 phastConsScoreTrack <- wig.track(coord=pc$post.prob.wig$coord,
@@ -118,30 +143,45 @@ plot.track(list(geneTrack, consElTrack, phastConsScoreTrack, phyloPTrack),
 
 @
 
-<<hist>>=
+Observe that the conserved elements appear to track the coding exons
+reasonably well, but they also contain some noncoding regions.  The
+(smoothed) phyloP scores are reasonably consistent with the phastCons
+scores, but show some differences.  Interestingly, the phyloP scores dip
+below zero just upstream of the gene of interest, indicating a region of
+accelerated evolution.
 
-# now examine conserved elements
+Now let us examine the predicted conserved elements in more detail.  We
+will start by plotting their length distributions.  We will plot
+distributions for all
+elements, and for the subsets of elements that primarily fall in coding or
+noncoding regions.
+<<hist>>=
 ce <- pc$most.conserved
 plot(density.feat(ce), ylim=c(0, 0.018), 
      main="Element Length by Type", xlab="Length")
 
-# break conserved elements into coding/noncoding:
 coding.feats <- feats[feats$feature=="CDS",]
-# the following returns all conserved elements that overlap with
-# coding.feats by at least 50 percent
+# obtain elements that overlap coding.feats by at least 50 percent
 ce.coding <- overlap.feat(ce, coding.feats, min.percent=0.5)
-# and this gets the ones which overlap by less than 50 percent:
+# obtain elements that overlap by less than 50 percent
 ce.noncoding <- overlap.feat(ce, coding.feats, min.percent=0.5, 
                             overlapping=FALSE)
 lines(density.feat(ce.coding), col="red")
 lines(density.feat(ce.noncoding), col="blue")
 legend(c("All", "Coding", "Noncoding"), x="topright", inset=0.05, 
        lty=1, col=c("black", "red", "blue"))
-
 @ 
-<<coverage-composition,width=8,height=8>>=
-# so coding elements tend to be longer
 
+From this plot we see that the coding elements are clearly longer, on
+average---as would be expected.   
+
+Now let us examine the relationship between conserved elements and
+annotations of different types.  First, we
+will plot the fold-enrichment of annotation types within conserved
+elements, as compared with the genomic segment as a whole.  Second, we will
+plot the composition of conserved elements by annotation type, and compare
+it with the ``background'' composition for the entire region.
+<<coverage-composition,width=8,height=8>>=
 par(mfrow=c(2, 2), cex.main=2.0, cex.lab=2.0, cex.axis=2.0, mar=c(5,5,4,2))
 
 # look at fold-enrichment of each annotation type by conserved element
@@ -156,33 +196,40 @@ legend(x="center", legend=enrich$type, fill=col, cex=2.5)
 comp <- composition.feat(ce, feats)
 pie(comp$composition, col=rainbow(nrow(comp)), radius=1.0,
     main="Composition of\nConserved Elements", labels=NA)
-#    clockwise=TRUE)
 # compare with background composition
 comp <- composition.feat(wholeChrom, feats)
 pie(comp$composition, col=rainbow(nrow(comp)), radius=1.0,
     main="Background\nComposition", labels=NA)
-#    clockwise=TRUE, init.angle=160)
-
 @ 
 
-<<width=8,height=4>>=
+Here we see that coding regions are enriched more than fourfold in
+conserved elements, but introns are slightly depleted and intergenic
+regions are quite strongly depleted.  The pie charts show clearly that CDSs
+are strongly overrepresented in conserved elements relative to background.
 
-# Run phastCons again, this time try to estimate the transition rates
-# between conserved and non-conserved
+Next, we will run phastCons again, but this time instead of fixing the the
+transition probabilities between the conserved and nonconserved states by
+specifying the ``expected.length'' and ``target.coverage'' parameters, we
+we will allow it to estimate these probabilities by maximum likelihood.  It
+does this using an expectation maximization (EM) algorithm.
+<<em,fig=FALSE>>=
 pcEM <- phastCons(align, neutralMod, viterbi=TRUE, estimate.transitions=TRUE) 
 names(pcEM)
-# note this has the same elements as pc, plus an estimate for rho
 pcEM$transition.rates
-
-# and the likelihood is higher since we estimate the rates by
-# maximum likelihood
 pcEM$likelihood
+@ 
+Note that the results now includes a ``transition.rates'' field, in
+addition to the ones that were present in the first run.  Note also that
+the likelihood is somewhat higher that it was above, as it should be
+because the rates were estimated by maximum 
+likelhood.  
 
-# now coverage is a bit higher, at 23%
-# (note rho only defines a prior expectation for coverage)
-coverage.feat(pcEM$most.conserved)/coverage.feat(wholeChrom)
-
-# compare the results with and without --estimate-rho
+Let us now compare the coverage with and without estimation of the
+transition probabilities.  We can use the ``coverage.feat'' function to
+examine the intersection properties of the two sets of elements.  
+We can also plot them along the genomic region for visual comparison.
+<<em2,width=8,height=4>>=
+coverage.feat(pcEM$most.conserved)
 coverage.feat(pcEM$most.conserved, pc$most.conserved)
 coverage.feat(pcEM$most.conserved, pc$most.conserved, or=TRUE)
 coverage.feat(pcEM$most.conserved, pc$most.conserved, 
@@ -192,8 +239,15 @@ coverage.feat(pcEM$most.conserved, pc$most.conserved,
           
 plot.track(list(feat.track(pc$most.conserved, name="No estimation"),
                 feat.track(pcEM$most.conserved, name="With estimation")))
-
 @ 
+
+Observe that the coverage of the new elements is considerably higher.  Most
+bases covered by the original elements are also covered by the new ones,
+but the reverse is not true---the new elements are largely a superset of
+the old ones.
+
+By comparing the length distributions, we can see that the new elements
+tend to be considerably longer, on average.
 <<kdensity>>=
 plot(density.feat(pc$most.conserved),
      main="Distribution of Element Lengths", xlab="Length", xlim=c(0, 1000))
@@ -201,5 +255,17 @@ lines(density.feat(pcEM$most.conserved), col="red")
 legend(x="topright", inset=0.05, c("without estimation", "with estimation"), 
        lty=1, col=c("black", "red"))
 @ 
+
+What has happened here?  It turns out that maximum likelihood estimation
+tends to produce small transition probabilities in the HMM, which leads to
+long conserved elements, containing many nonconserved as well as conserved
+bases.  While this approach leads to higher likelihoods, it is generally
+not as useful biologically.  In general, we recommend using the
+``expected.length'' and ``target.coverage'' parameters instead, and tuning
+them in an appropriate way.  For more discussion of this issue, see the
+phastCons ``HOWTO''
+(http://compgen.bscb.cornell.edu/phast/phastCons-HOWTO.html) and the
+Supplementary Material of the phastCons paper (Siepel et al., Genome
+Res. 15:1034-1050, 2005).
 
 \end{document}
