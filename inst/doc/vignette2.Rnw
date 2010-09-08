@@ -9,6 +9,7 @@
 
 \documentclass[10pt]{article}
 \usepackage{Sweave}
+\usepackage{amsmath,epsfig,fullpage}
 
 
 \begin{document}
@@ -66,11 +67,11 @@ using a pointer) in R.  It can be much more efficient than passing the
 entire object between R and C on every function call.  However, some care
 must be taken when working with pointer objects in RPHAST, because, unlike
 ordinary R objects, their values may be changed as a result of a function
-call.  Some RPHAST functions do indeed change the value of arguments that
-are passed as pointers, but this behavior is always documented in the help
+call.  When RPHAST functions change the value of arguments that
+are passed as pointers, this behavior is always documented in the help
 files.
 
-<<rarAnalysis4,fig=FALSE>>=
+<<rarAnalysis2,fig=FALSE>>=
 seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "mm9", "rn4", 
               "canFam2", "loxAfr2")
 if (!file.exists("chr22.maf")) {
@@ -97,7 +98,7 @@ use the coverage.feat function to take the intersection of these two sets
 of features and the conserved elements.  This produces a set of
 ``informative elements'' that pass the missing data filters.
 
-<<fig=FALSE>>=
+<<rarAnalysis3,fig=FALSE>>=
 
 hasMouseRat <- informative.regions.msa(align, 2, c("mm9", "rn4"))
 hasAtLeastFour <- informative.regions.msa(align, 4)
@@ -112,7 +113,7 @@ the length dependency of the likelihood ratios when evaluating significance.)
 We will simply split the filtered conserved elements
 into fragments of size 50, and discard the leftover fragments:
 
-<<rarAnalysis2,fig=FALSE>>=
+<<rarAnalysis4,fig=FALSE>>=
 splitLength <- 50
 splitElements <- split.feat(informativeElements, f=splitLength, 
                             drop=TRUE)
@@ -123,7 +124,7 @@ Now we will run phyloP on these split elements.  PhyloP will calculate a
 likelihood ratio for every feature, along with parameter estimates and
 approximate p-values (based on an assumed chi-square null distribution):
 
-<<rarAnalyis8,fig=FALSE>>=
+<<rarAnalyis5,fig=FALSE>>=
 obs.phyloP <- phyloP(neutralMod, msa=align, mode="ACC", 
                      features=splitElements, subtree="mm9-rn4")
 
@@ -168,7 +169,7 @@ nonpara.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
 Let us compare the distributions likelihood ratios for the real and simulated (null) data
 sets using a Q-Q plot.  We will also create density plots for both
 distributions, on the same scale.
-<<<rarAnalyis9,width=6,height=8>>=
+<<<rarAnalyis7,width=6,height=8>>=
 
 layout(matrix(c(1,2), nrow=2), heights=c(0.7, 0.3))
 par(mar=c(4.5, 4, 4, 2), mgp=c(2.5,1,0), cex.axis=1.5, cex.lab=1.5)
@@ -184,6 +185,7 @@ lines(density(nonpara.phyloP$lnlratio,adjust=3), lty=1,
 col="black",xlim=c(0,15))
 
 @ 
+
 Notice that the two distributions appear fairly similar in the density
 plots, except that a slightly heavier right tail is evident for the
 observed elements (in black).  This excess of high likelihood ratios for the
@@ -193,7 +195,7 @@ Let us now calculate empirical p-values for the real data, and
 adjust them for multiple comparisons using p.adjust.  We will use the
 Benjamini-Hochberg method to compute approximate false discovery rates
 (FDRs) for each element.  
-<<<rarAnalysis10>>=
+<<<rarAnalysis8,fig=FALSE>>=
 
 empirical.pval <- function(x, dist) {
   sum(x <= dist)/length(dist)
@@ -201,18 +203,16 @@ empirical.pval <- function(x, dist) {
 
 nonpara.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, 
                        nonpara.phyloP$lnlratio)
-hist(nonpara.pval, breaks=100)
-
 nonpara.fdr <- p.adjust(nonpara.pval, method="BH")
-sum(nonpara.fdr < 0.05)
 @ 
+
 We will extract those elements having FDR $<$ 0.05 and treat them as
-candidate ``RAR''s (Rodent Accelerated Regions).  We will write them to a
-file, which could be used, say, to display them as a custom track in the
-UCSC Genome Browser, or to perform an analysis using Galaxy.  Notice that
-we have to change the sequence names to allow them to be recognized by the
-UCSC Genome Browser.
-<<rarAnalysis11>>=
+candidate ``RAR''s (Rodent Accelerated Regions).  We will write these
+elements to a file, which could be used, say, to display them as a custom
+track in the UCSC Genome Browser, or to perform an analysis using Galaxy.
+Notice that we have to change the sequence names to allow them to be
+recognized by the UCSC Genome Browser.
+<<rarAnalysis9,fig=FALSE>>=
 nonpara.sigFeats <- splitElements[nonpara.fdr < 0.05,]
 nrow(nonpara.sigFeats)
 nonpara.sigFeats$feature <- "RAR" 
@@ -226,8 +226,7 @@ them with estimates for the larger set of conserved elements. We will use
 the ``ape'' package to plot the estimated trees side-by-side.   We can see
 that the RARs do show a pronounced evolutionary speedup in the rodents.
 
-<<>>=
-
+<<rarAnalysis10,width=6,height=8>>=
 consEleModel <- phyloFit(elementAlign, init.mod=neutralMod, no.freqs=TRUE, no.rates=TRUE)
 rarAlign <- extract.feature.msa(copy.msa(align), nonpara.sigFeats)
 rarModel <- phyloFit(rarAlign, init.mod=neutralMod, no.freqs=TRUE, no.rates=TRUE)
@@ -245,13 +244,13 @@ plot.phylo(read.tree(text=rarModel$tree), x.lim=c(0, 0.5),
 We made use of phyloP in this example because it happens to be optimized
 for tests of 
 clade-specific acceleration or conservation.  However, we might want to perform a similar likelihood ratio
-test based on other models available in PHAST, but not supported by
-off-the-shelf functions for likelihood ratio tests.  Below we show how the
+test based on other models available in PHAST, but not already supported by
+predefined functions for likelihood ratio tests.  Below we show how the
 same test could be implemented by making two calls to phyloFit,
 corresponding to the null and alternative models.  The R function below could
 be used in place of the call to phyloP.
 
-<<eval=FALSE,fig=FALSE>>=
+<<rarAnalysis11,eval=FALSE,fig=FALSE>>=
 
 accTest <- function(msa, mod, subtreeNode) {
   null.mod <- phyloFit(msa, init.mod=mod, scale.only=TRUE, 
@@ -280,7 +279,7 @@ of the neutral model, with a scale factor estimated from the conserved
 elements.  In estimating this scale factor, we exclude the rodents, because
 these are the species we wish to test for acceleration.
 
-<<<rarAnalysis5>>=
+<<<rarAnalysis12,fig=FALSE>>=
 seqs <- names(align)
 keepSeqs <- seqs[seqs != "mm9" & seqs != "rn4"]
 prunedMod <- neutralMod
@@ -303,7 +302,7 @@ scaledNeutralModel$tree <- prune.tree(scaledNeutralModel$tree,
 Based on this model, we can now generate synthetic alignments using the
 simulate.msa function.  We can then run phyloP on these alignments in the
 same way we did for the alignments simulated by the nonparametric approach.
-<<rarAnalysis12>>=
+<<rarAnalysis13,fig=FALSE>>=
 # now we can do parametric simulations using our scaled
 # nuetral model.  Again we will just simulate one big
 # alignment, and split it up later, for efficiency.
@@ -314,7 +313,7 @@ para.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
 @ 
 Let us see how different the RARs look, if we compute p-values based on
 this null distribution instead.
-<<rarAnalysis13>>=
+<<rarAnalysis14,fig=FALSE>>=
 para.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, 
                     para.phyloP$lnlratio)
 para.fdr <- p.adjust(para.pval, method="BH")
@@ -322,7 +321,8 @@ para.sigIdx <- which(para.fdr < 0.05)
 length(para.sigIdx)
 @ 
 We can see that this method appears to be somewhat less conservative---it
-identifies nearly five times as many elements.  This may indicate that the
+identifies roughly four times as many elements (the exact number will
+depend on random sampling).  This may indicate that the
 parametric model is too simple, for example, by failing to allow for rate
 variation among sites, indels, or missing data.  
 
