@@ -810,6 +810,7 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' or a numeric vector giving the likelihood of each feature
 ##' (if \code{!is.null(features)}), or a numeric vector giving the likelihood
 ##' of each column (if \code{by.column==TRUE}).
+##' @seealso \code{phyloFit}, \code{tm}
 ##' @export
 likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
   if (is.null(features))
@@ -974,6 +975,7 @@ get4d.msa <- function(x, features) {
 ##' @note If x was loaded with \code{pointer.only==TRUE}, then x
 ##' will be modified to the return value of the function.
 ##' Use \code{extract.feature.msa(copy.msa(x),...)} if you don't want this behavior!
+##' @seealso \code{sub.msa}, \code{[.msa}
 ##' @export
 extract.feature.msa <- function(x, features, do4d=FALSE, pointer.only=FALSE) {
   if (!is.ordered.msa(x))
@@ -1158,3 +1160,4 @@ informative.regions.msa <- function(x, min.numspec, spec=NULL, refseq=1,
                              gaps.inf)
   as.data.frame.feat(feats)
 }
+

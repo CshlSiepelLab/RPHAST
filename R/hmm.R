@@ -53,6 +53,34 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
   hmm
 }
 
+##' Read an HMM object from a file
+##'
+##' This function uses phast's internal hmm format, which is quite
+##' simple.  See \code{write.hmm} or file used in example below for
+##' exaples of hmm format.
+##' @param filename The file to read
+##' @return An hmm object
+##' @export
+read.hmm <- function(filename) {
+  h <- .makeObj.hmm()
+  h$externalPtr <- .Call("rph_hmm_new_from_file", filename)
+  from.pointer.hmm(h)
+}
+
+
+##' Write an HMM object to a file
+##' @param x An object of type \code{hmm}
+##' @param filename The name of the file to write to (if NULL, write
+##' to terminal)
+##' @param append If \code{TRUE}, append hmm to existing file, otherwise
+##' overwrite.
+##' @export
+write.hmm <- function(x, filename, append=FALSE) {
+  h <- as.pointer.hmm(x)
+  invisible(.Call("rph_hmm_print", h$externalPtr, filename, append))
+}
+
+
 ##' @export
 stopIfNotValidHmm <- function(hmm){
   if (is.null(hmm$trans.mat) ||
@@ -79,7 +107,7 @@ nstate.hmm <- function(hmm) {
 
 ##' @export
 as.pointer.hmm <- function(hmm) {
-  obj <- list()
+  obj <- .makeObj.hmm()
   obj$externalPtr <- .Call("rph_hmm_new", hmm$trans.mat, hmm$eq.freq,
                            hmm$begin.freq, hmm$end.freq)
   obj
@@ -92,14 +120,14 @@ from.pointer.hmm <- function(x) {
     stopIfNotValidHmm()
     return(x)
   }
-  hmm <- .makeObj.tm()
+  hmm <- .makeObj.hmm()
   hmm$trans.mat = .Call("rph_hmm_transMat", x$externalPtr)
   hmm$eq.freq = .Call("rph_hmm_eqFreq", x$externalPtr)
   hmm$begin.freq = .Call("rph_hmm_beginFreq", x$externalPtr)
   temp <- .Call("rph_hmm_endFreq", x$externalPtr)
   if (!is.null(temp))
     hmm$end.freq <- temp
-  hmm
+  rphast.simplify.list(hmm)
 }
 
 

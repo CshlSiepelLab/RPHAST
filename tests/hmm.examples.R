@@ -6,7 +6,6 @@ h
 
 
 #' score.hmm
-library(rphast)
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 files <- c("ENr334.maf", "rev.mod", "gencode.ENr334.gff")
 unzip(exampleArchive, files)
@@ -35,3 +34,22 @@ plot.track(list(feat.track(scores$in.states, name="hmmScores"),
            xlim=c(41650000, 41680000))
 unlink(files)
 
+#' read.hmm
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+file <- "coding.hmm"
+unzip(exampleArchive, file)
+# this is a 5-state hmm with states representing
+# intergenic, intron, first, second, and third codon positions.
+h <- read.hmm(file)
+h
+unlink(file)
+
+
+#' write.hmm
+state.names <- c("neutral", "conserved")
+h <- hmm(matrix(c(0.99, 0.01, 0.01, 0.99), nrow=2,
+                dimnames=list(state.names, state.names)),
+                eq.freq=c(neutral=0.9, conserved=0.1))
+filename <- tempfile()
+write.hmm(h, filename)
+unlink(filename)
