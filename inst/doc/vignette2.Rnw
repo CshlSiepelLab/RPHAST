@@ -7,7 +7,7 @@
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage{Sweave}
 
 
@@ -17,51 +17,58 @@
 \SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R}
 \maketitle
 
-This example will go through the basic steps of detecting
-accelerated evolution in a subtree.  In this case we will look
-for accelerated regions in the mouse-rat subtree, and we will focus
-on alignments from human chromosome 22.  The ideal way to go about this
-would be to first identify conserved elements using the same procedure
-as in example 1, but in a subset of the alignment which excludes the 
-species of interest.  Then we can look in the full alignment at these
-elements for signs of acceleration in mouse-rat.
+This example will go through the basic steps of detecting accelerated
+evolution in a subtree.  In this case, we will look for accelerated regions
+in the mouse-rat subtree, focusing on alignments from human
+chromosome 22.  
 
-Instead we will just use the conserved elements from the UCSC genome
-browser.  They can be downloaded through the table browser for
-the hg18 assembly, as well as the multiple alignment.
+The ideal way to perform this analysis would be to first identify conserved
+elements using the same procedure as in example 1, but in a subset of the
+alignment which excludes mouse and rat.  Then we could examine the full
+alignments for signs of acceleration in mouse-rat in the identified
+elements.  However, to keep the example simple we will simply make use of
+precomputed conserved elements from the UCSC genome browser.
 
+The multiple alignments and conserved elements for this example can be
+obtained using the UCSC Table Browser for the hg18 assembly.  We also make
+use of a neutral phylogenetic model from UCSC.  For convenience, we have
+included the conserved elements and neutral model with the RPHAST package.
+We have also provided a direct link to the alignment file (see below).
 
+We begin by initializing RPHAST and loading the neutral model and conserved
+elements.  We have to change the feature names for the conserved elements
+to ensure that they match the name of the reference genome in the alignment
+(``hg18''). 
 <<rarAnalysis1,fig=FALSE>>=
 require("rphast")
 
-exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+exampleArchive <- system.file("extdata", "examples.zip", 
+                              package="rphast")
 unzip(exampleArchive, c("placentalMammals.mod", "chr22-elements.bed"))
 
-# read the neutral model.  This file is also available
-# through the UCSC genome browser
-neutralMod <- read.tm("placentalMammals.mod") #read the neutral model
+neutralMod <- read.tm("placentalMammals.mod")
 
 elements <- read.feat("chr22-elements.bed")
 unique(elements$seqname)
-elements$seqname <- "hg18" # need seqname in features to match seqname in
-                           # alignment
-
+elements$seqname <- "hg18" 
 @ 
 
-Now, read the alignment.  The MAF file can be downloaded through the table browser
-on the UCSC genome browser (under the hg18 assembly, Comparative Genomics Group, 
-Conservation track, multiz44way table).  We have posted a version of this alignment
-containing a subset of the 44 species on a server for the purposes of this example.
+Next, let's download the posted version of the alignment, which contains a
+subset of the full 44 species (to minimize download and compute time).  
+The full MAF file can be downloaded through the UCSC Table Browser (under
+the hg18 assembly, Comparative Genomics Group,  
+Conservation track, multiz44way table).  
 
-Since it is a large alignment we will use the pointer.only=TRUE option to read.msa.  This
-option keeps the alignment object stored in C's memory, and only a pointer to object
-is returned to R.  It can be much more efficient than passing the entire object between
-R's memory and C's memory at every function call.  Objects stored as a pointer
-can be used in much the same way as a normal R object, however, when they are sent to
-a function, they are sent ``by reference''.  This means that, unlike ordinary R objects,
-their value may be changed as a result of the function call.  Some RPHAST functions will
-change the value of arguments which are sent as a pointer, but this behavior is always
-documented in the help files.
+Since this is still quite a large alignment, we will use the
+pointer.only=TRUE option to read.msa.  This option causes the alignment
+object to be stored on the C side, and handled only ``by reference'' (i.e.,
+using a pointer) in R.  It can be much more efficient than passing the
+entire object between R and C on every function call.  However, some care
+must be taken when working with pointer objects in RPHAST, because, unlike
+ordinary R objects, their values may be changed as a result of a function
+call.  Some RPHAST functions do indeed change the value of arguments that
+are passed as pointers, but this behavior is always documented in the help
+files.
 
 <<rarAnalysis4,fig=FALSE>>=
 seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "mm9", "rn4", 
@@ -74,32 +81,36 @@ if (!file.exists("chr22.maf")) {
 }
 align <- strip.gaps.msa(read.msa("chr22.maf", seqnames=seqnames, pointer.only=TRUE))
 unlink("chr22.maf")
-
 @ 
 
-In this type of analysis it is usually necessary to apply some filters to the data
-to control the rate of false positives.  In a real analysis we would suggest synteny
-filters, as well as filters to remove regions with repeats or too much missing data.  
-For this example we will implement a missing data filter.
+In this type of analysis, it is usually necessary to apply a strict set of
+filters to the alignments to avoid false positive ``accelerated regions''
+that result from misalignments and other data quality problems.  Typically,
+we would use synteny, duplication, and repeat filters, as well as filters
+to remove regions with too much missing data.  Here we will 
+implement a missing data filter.
 
-The following code computes a set of features containing all positions with 
-non-missing data at mouse and rat. Then it creates another set of features giving 
-positions with data at a minimum of four species.  We use the coverage.feat function
-to take the union of these features and the conserved elements to get ``informativeElements''.
+The following code defines a set of features containing all positions that
+do not have missing data in mouse or rat. It then creates another set of
+features containing positions with data in a minimum of four species.  We
+use the coverage.feat function to take the intersection of these two sets
+of features and the conserved elements.  This produces a set of
+``informative elements'' that pass the missing data filters.
 
 <<fig=FALSE>>=
 
 hasMouseRat <- informative.regions.msa(align, 2, c("mm9", "rn4"))
 hasAtLeastFour <- informative.regions.msa(align, 4)
-informativeElements <- coverage.feat(elements, hasMouseRat, hasAtLeastFour, 
-                                     get.feats=TRUE)
+informativeElements <- coverage.feat(elements, hasMouseRat, 
+                                     hasAtLeastFour, get.feats=TRUE)
 
 @ 
 
-We also want to regularize the lengths of the conserved elements,
-so that we do not have to worry that the significance of the tests
-are confounded by length.  So we split the filtered conserved elements
-into fragments of size 50, removing fragments that are not exactly length 50:
+We will also regularize the lengths of the conserved elements, to
+simplify our likelihood ratio tests.  (Otherwise, we will have to consider
+the length dependency of the likelihood ratios when evaluating significance.)
+We will simply split the filtered conserved elements
+into fragments of size 50, and discard the leftover fragments:
 
 <<rarAnalysis2,fig=FALSE>>=
 splitLength <- 50
@@ -108,50 +119,55 @@ splitElements <- split.feat(informativeElements, f=splitLength,
 
 @ 
 
-Now we want to run phyloP on these split elements.  This calculates a likelihood
-ratio for every feature (along with parameter estimates and p-values based on asymptotics):
+Now we will run phyloP on these split elements.  PhyloP will calculate a
+likelihood ratio for every feature, along with parameter estimates and
+approximate p-values (based on an assumed chi-square null distribution):
 
-<<<rarAnalyiss8,fig=FALSE>>=
-obs.phyloP <- phyloP(neutralMod, msa=align, mode="ACC", features=splitElements,
-                     subtree="mm9-rn4")
+<<rarAnalyis8,fig=FALSE>>=
+obs.phyloP <- phyloP(neutralMod, msa=align, mode="ACC", 
+                     features=splitElements, subtree="mm9-rn4")
 
 @ 
 
-For these short elements with a fairly small species set, we do not
-want to rely on asymptotics to calculate p-values.  Instead we will use 
-non-parametric simulations to calculate p-values.  At the end of the vignette
-we will also show a parametric alternative.
+For these short elements with a fairly small species set, we would like to
+compute empirical p-values, instead of relying on the assumption of a
+chi-square null distribution (which holds only asymptotically).  We will
+use non-parametric simulations to calculate these empirical p-values.  At
+the end of the vignette we will also show an alternative, parametric method
+for computing empirical p-values.
 
+We begin by extracting the sites from the original alignment that
+correspond to the identified elements, using the ``extract.feature.msa''
+function.  Because this function will change a pointer object (as
+documented in the help file), we work with a copy of it.  We then generate
+5000 synthetic alignments by sampling (with replacement) from this set of
+sites.  For reasons of efficiency, we accomplish this by generating one long
+alignment, and interpreting it as a concatenation of shorter alignments.
+We then run phyloP on this alignment to obtain our null distribution of log
+likelihood ratios.  We take care to apply phyloP in exactly the same way as
+for the real data.
 <<rarAnalysis6,fig=FALSE>>=
 
-# first we get the set of sites to sample from: extract the informativeElements
-# from the original alignment.  Note that extract.feature.msa will change 
-# the alignment object if a pointer is passed in (as documented in the
-# the help file), which is why we use the copy.msa function
 elementAlign <- extract.feature.msa(copy.msa(align), informativeElements, 
                                     pointer.only=TRUE)
 
-# we could simulate an MSA separately for each simulation, but it
-# is more efficient to simulate one long MSA and then split it up later.
 nrep <- 5000
 simMsa <- sample.msa(elementAlign, nrep*splitLength, replace=TRUE)
 
 
-# now we create a feature object which splits the simulated alignment into
-# 5000 pieces of length 100
+# produce features allowing long alignment to be interpreted as 
+# concatenation of shorter alignments
 startIdx <- seq(from=1, by=splitLength, length.out=nrep)
 features <- feat(seqname=names.msa(simMsa)[1], src="sim", feat=".",
                  start=startIdx, end=startIdx+splitLength-1)
 
-# now run phyloP on this artifical alignment/features in the same way it
-# was run on the real data
 nonpara.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
                          features=features, subtree="mm9-rn4")
-
 @
 
-We can make a Q-Q plot to compare the likelihood ratios between
-real and simulated data:
+Let us compare the distributions likelihood ratios for the real and simulated (null) data
+sets using a Q-Q plot.  We will also create density plots for both
+distributions, on the same scale.
 <<<rarAnalyis9,width=6,height=8>>=
 
 layout(matrix(c(1,2), nrow=2), heights=c(0.7, 0.3))
@@ -168,37 +184,47 @@ lines(density(nonpara.phyloP$lnlratio,adjust=3), lty=1,
 col="black",xlim=c(0,15))
 
 @ 
+Notice that the two distributions appear fairly similar in the density
+plots, except that a slightly heavier right tail is evident for the
+observed elements (in black).  This excess of high likelihood ratios for the
+observed elements shows up clearly in the Q-Q plot.
 
-Calculate p-values for the observed for each simulation set, and 
-adjust the p-values for multiple testing using p.adjust.  Then
-we can get a set of candidate ``RAR''s (Rodent Accelerated Regions):
+Let us now calculate empirical p-values for the real data, and  
+adjust them for multiple comparisons using p.adjust.  We will use the
+Benjamini-Hochberg method to compute approximate false discovery rates
+(FDRs) for each element.  
 <<<rarAnalysis10>>=
 
 empirical.pval <- function(x, dist) {
   sum(x <= dist)/length(dist)
 }
 
-nonpara.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, nonpara.phyloP$lnlratio)
+nonpara.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, 
+                       nonpara.phyloP$lnlratio)
 hist(nonpara.pval, breaks=100)
 
 nonpara.fdr <- p.adjust(nonpara.pval, method="BH")
 sum(nonpara.fdr < 0.05)
-
-# this gets the indices of elements with adjusted p-values < 0.05
+@ 
+We will extract those elements having FDR $<$ 0.05 and treat them as
+candidate ``RAR''s (Rodent Accelerated Regions).  We will write them to a
+file, which could be used, say, to display them as a custom track in the
+UCSC Genome Browser, or to perform an analysis using Galaxy.  Notice that
+we have to change the sequence names to allow them to be recognized by the
+UCSC Genome Browser.
+<<rarAnalysis11>>=
 nonpara.sigFeats <- splitElements[nonpara.fdr < 0.05,]
 nrow(nonpara.sigFeats)
-nonpara.sigFeats$feature <- "RAR"  # for rodent-accelerated region
-coverage.feat(nonpara.sigFeats)
-# can print out a features file that can be displayed on browser
+nonpara.sigFeats$feature <- "RAR" 
 nonpara.sigFeats$score <- obs.phyloP$lnlratio[nonpara.fdr < 0.05]
 nonpara.sigFeats$seqname <- "hg18.chr22"
 write.feat("RAR.gff", nonpara.sigFeats)
 
 @ 
-
-Below we use phyloFit to estimate trees for the conserved elements and the RARs. Then
-we use the ``ape'' package to plot the trees side-by-side, and we can see that there
-does seem to be acceleration in the rodent lineage of the RARs.
+As a sanity check, let us estimate branch lengths for the RARs and compare
+them with estimates for the larger set of conserved elements. We will use
+the ``ape'' package to plot the estimated trees side-by-side.   We can see
+that the RARs do show a pronounced evolutionary speedup in the rodents.
 
 <<>>=
 
@@ -216,10 +242,14 @@ plot.phylo(read.tree(text=rarModel$tree), x.lim=c(0, 0.5),
 
 @ 
 
-In this example, phyloP was the most efficient function for calculating the likelihood, 
-but phyloFit can be used to construct more general likelihood
-ratio tests.  Here is how the test above could have been constructed
-using phyloFit:
+We made use of phyloP in this example because it happens to be optimized
+for tests of 
+clade-specific acceleration or conservation.  However, we might want to perform a similar likelihood ratio
+test based on other models available in PHAST, but not supported by
+off-the-shelf functions for likelihood ratio tests.  Below we show how the
+same test could be implemented by making two calls to phyloFit,
+corresponding to the null and alternative models.  The R function below could
+be used in place of the call to phyloP.
 
 <<eval=FALSE,fig=FALSE>>=
 
@@ -236,72 +266,64 @@ accTest <- function(msa, mod, subtreeNode) {
   alt.mod$likelihood - null.mod$likelihood
 }
 
-# this method is slower; let's just look at the first 50 elements as an example
-sampleSize <- 50
-obs.lr <- numeric(sampleSize)
-for (i in 1:sampleSize) {
-  obs.phyloP[i] <- accTest(sub.msa(align, start.col=splitElements[i,"start"],
-                                      end.col=splitElements[i,"end"],
+# example function call
+llr <- accTest(sub.msa(align, start.col=splitElements[1,"start"],
+                                      end.col=splitElements[1,"end"],
                                       refseq="hg18"),
                               neutralMod, "mm9-rn4")
-}
-
-nrep <- 100
-sim.lr <- numeric(nrep)
-for (i in 1:nrep) {
-  simMsa <- sample.msa(elementAlign, splitLength, replace=TRUE)
-  sim.lr[i] <- accTest(simMsa, neutralMod, "mm9-rn4")
-}
-
 @ 
 
-We can also do a parametric test.  First we have to create a scaled 
-neutral model, which represents a model for a conserved element without
-any acceleration in rodents.  So we estimate a scale factor using 
-the conserved elements, after removing the rodent branches.
+An alternative approach for characterizing the null distribution of log
+likelihood ratios would be to generate data from a parametric model.  Below
+we demonstrate this approach.  For our null model, we use a scaled version 
+of the neutral model, with a scale factor estimated from the conserved
+elements.  In estimating this scale factor, we exclude the rodents, because
+these are the species we wish to test for acceleration.
 
 <<<rarAnalysis5>>=
-
 seqs <- names(align)
 keepSeqs <- seqs[seqs != "mm9" & seqs != "rn4"]
 prunedMod <- neutralMod
 prunedMod$tree <- prune.tree(neutralMod$tree, keepSeqs, all.but=TRUE)
 subAlign <- sub.msa(elementAlign, seqs=keepSeqs)
-superTreeMod <- phyloFit(subAlign, init.mod=neutralMod, scale.only=TRUE,
-                         no.freqs=TRUE, no.rates=TRUE)
-superTreeScale <- branchlen.tree(superTreeMod$tree)/branchlen.tree(prunedMod$tree)
+superTreeMod <- phyloFit(subAlign, init.mod=neutralMod, 
+                         scale.only=TRUE, no.freqs=TRUE, no.rates=TRUE)
+superTreeScale <- branchlen.tree(superTreeMod$tree) /
+  branchlen.tree(prunedMod$tree)
 superTreeScale
 
 scaledNeutralModel <- neutralMod
-scaledNeutralModel$tree <- rescale.tree(neutralMod$tree, scale=superTreeScale)
+scaledNeutralModel$tree <- rescale.tree(neutralMod$tree, 
+                                        scale=superTreeScale)
 
 # also remove species from model which are not in alignment
 scaledNeutralModel$tree <- prune.tree(scaledNeutralModel$tree, 
                                       seqs=seqs, all.but=TRUE)
-
+@ 
+Based on this model, we can now generate synthetic alignments using the
+simulate.msa function.  We can then run phyloP on these alignments in the
+same way we did for the alignments simulated by the nonparametric approach.
+<<rarAnalysis12>>=
 # now we can do parametric simulations using our scaled
 # nuetral model.  Again we will just simulate one big
 # alignment, and split it up later, for efficiency.
 simMsa <- simulate.msa(scaledNeutralModel, nrep*splitLength)
 
-# now run phyloP on parametric simulation
 para.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
                       features=features, subtree="mm9-rn4")
-
-para.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, para.phyloP$lnlratio)
+@ 
+Let us see how different the RARs look, if we compute p-values based on
+this null distribution instead.
+<<rarAnalysis13>>=
+para.pval <- sapply(obs.phyloP$lnlratio, empirical.pval, 
+                    para.phyloP$lnlratio)
 para.fdr <- p.adjust(para.pval, method="BH")
-sum(para.fdr < 0.05)
-
-# this gets the indices of elements with adjusted p-values < 0.05
 para.sigIdx <- which(para.fdr < 0.05)
 length(para.sigIdx)
-para.sigFeats <- splitElements[para.sigIdx,]
-para.sigFeats$feature <- "RAR"  # for rodent-accelerated region
-coverage.feat(para.sigFeats)
-plot.track(list(feat.track(para.sigFeats, "parametric RARs"),
-                feat.track(nonpara.sigFeats, "non-parametric RAR"),
-                feat.track(elements, "Conserved elements")), xlim=c(3e+07, 3.5e+07))
-
 @ 
+We can see that this method appears to be somewhat less conservative---it
+identifies nearly five times as many elements.  This may indicate that the
+parametric model is too simple, for example, by failing to allow for rate
+variation among sites, indels, or missing data.  
 
 \end{document}
