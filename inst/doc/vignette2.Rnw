@@ -190,10 +190,9 @@ col="black",xlim=c(0,15))
 
 @ 
 
-Notice that the two distributions appear fairly similar in the density
-plots, except that a slightly heavier right tail is evident for the
-observed elements (in red).  This excess of high likelihood ratios for the
-observed elements shows up clearly in the Q-Q plot.
+Notice that the two distributions appear to be quite similar from the density
+plots.  However, an excess of high likelihood ratios for the
+observed elements is clearly evident in the Q-Q plot.
 
 Let us now calculate empirical p-values for the real data, and  
 adjust them for multiple comparisons using p.adjust.  We will use the
@@ -324,10 +323,14 @@ para.fdr <- p.adjust(para.pval, method="BH")
 para.sigIdx <- which(para.fdr < 0.05)
 length(para.sigIdx)
 @ 
-We can see that this method appears to be somewhat less conservative---it
-identifies roughly four times as many elements (the exact number will
-depend on random sampling).  This may indicate that the
-parametric model is too simple, for example, by failing to allow for rate
-variation among sites, indels, or missing data.  
+The results of this comparison will be somewhat different each time the
+code is executed, because the empirical p-values depend on random sampling, but
+when we ran it we found that the nonparametric method identified more
+elements.  In general, this method may be somewhat less conservative,
+perhaps because the
+parametric model is overly simple, by failing to allow for rate
+variation among sites, indels, missing data, and other features of the real
+alignments.  But the number of samples here is quite small (only 5000), so
+stochastic effects may cause one run to be quite different from another.
 
 \end{document}
