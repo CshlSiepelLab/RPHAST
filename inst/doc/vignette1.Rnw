@@ -128,7 +128,7 @@ dim(pp)
 @ 
 Let us now plot the gene annotations, conserved elements, and
 conservation scores for a genomic segment of interest.  We will make use of
-functions in RPHAST that allow "tracks" to be defined and then plotted in a
+functions in RPHAST that allow ``tracks'' to be defined and then plotted in a
 browser-like display.
 <<browser7,width=8,height=8>>=
 geneTrack <- gene.track(feats, "genes")
@@ -144,9 +144,9 @@ plot.track(list(geneTrack, consElTrack, phastConsScoreTrack, phyloPTrack),
 
 @
 
-Observe that the conserved elements appear to track the coding exons
+Observe that the conserved elements appear to follow the coding exons
 reasonably well, but they also contain some noncoding regions.  The
-(smoothed) phyloP scores are reasonably consistent with the phastCons
+(smoothed) phyloP scores are fairly consistent with the phastCons
 scores, but show some differences.  Interestingly, the phyloP scores dip
 below zero just upstream of the gene of interest, indicating a region of
 accelerated evolution.
