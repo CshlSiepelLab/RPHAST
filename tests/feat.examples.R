@@ -151,7 +151,6 @@ dim.feat(f2)
 ###############################################
 
 #' overlap.feat
-require("rphast")
 feat1 <- feat(seqname=c(rep("chr1", 3), rep("chr2", 2)),
               start=c(1, 5, 100, 10, 20),
               end=c(7, 10, 105, 15, 30))
@@ -178,7 +177,7 @@ coverage.feat(feat1, feat2, or=FALSE)
 coverage.feat(feat1, feat2, or=TRUE)
 coverage.feat(feat1, feat2, get.feats=TRUE, or=TRUE)
 coverage.feat(feat1, feat2, or=TRUE)
-
+rm(feat1, feat2)
 
 #' tagval
 require("rphast")
@@ -190,6 +189,7 @@ tagval(tags, "tag2")
 tagval(tags, "tag3")
 tagval(tags, "tag4")
 tagval(tags, "notag")
+rm(tags)
 
 #' tagval.feat
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
@@ -200,6 +200,7 @@ geneName <- tagval.feat(f, "transcript_id")
 geneName[1:10]
 length(unique(geneName)) # number of unique genes
 unlink(featFile)
+rm(f, geneName)
 
 
 #' addUTRs

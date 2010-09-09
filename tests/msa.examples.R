@@ -343,22 +343,22 @@ files <- c("rev.mod", "ENr334.maf", "ENr334.fa", "small.gff")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 unzip(exampleArchive, files)
 msa <- read.msa("ENr334.fa")
-tm <- read.tm("rev.mod")
-likelihood.msa(msa, tm)
-like1 <- likelihood.msa(msa, tm, by.column=TRUE)
+mod <- read.tm("rev.mod")
+likelihood.msa(msa, mod)
+like1 <- likelihood.msa(msa, mod, by.column=TRUE)
 length(like1)==ncol.msa(msa)
 sum(like1)
 msa <- read.msa("ENr334.maf")
-likelihood.msa(msa, tm)
-like2 <- likelihood.msa(msa, tm, by.column=TRUE)
+likelihood.msa(msa, mod)
+like2 <- likelihood.msa(msa, mod, by.column=TRUE)
 sum(like2)
-tm$subst.mod <- "JC69"
-likelihood.msa(msa, tm)
+mod$subst.mod <- "JC69"
+likelihood.msa(msa, mod)
 #'
 # can also get likelihood by feature
 features <- read.feat("small.gff")
 features$seqname <- names(msa)[1]
-likelihood.msa(msa, tm, features=features)
+likelihood.msa(msa, mod, features=features)
 unlink(files)
 
 
@@ -374,16 +374,17 @@ m[2,] <- c(1,5,10)
 m[3,] <- c(10,4,2)
 eq.freq <- c(1,2,3)
 h <- hmm(m, eq.freq)
-tm <- read.tm(filename)
-tm2 <- tm
-tm2$backgd <- rep(0.25, 4)
-tm3 <- tm
-tm3$backgd <- c(0.6, 0.1, 0.2, 0.1)
-m <- simulate.msa(tm, 20)
-m <- simulate.msa(list(tm, tm2, tm3), 20, hmm=h)
+mod <- read.tm(filename)
+mod2 <- mod
+mod2$backgd <- rep(0.25, 4)
+mod3 <- mod
+mod3$backgd <- c(0.6, 0.1, 0.2, 0.1)
+m <- simulate.msa(mod, 20)
+m <- simulate.msa(list(mod, mod2, mod3), 20, hmm=h)
 m <- matrix(1, nrow=9, ncol=9)
 h <- hmm(m)
-m <- simulate.msa(list(tm, tm, tm, tm, tm, tm, tm, tm, tm), 20, hmm=h)
+m <- simulate.msa(list(mod, mod2, mod3, mod, mod2, mod3, mod, mod2, mod3),
+                  20, hmm=h)
 unlink(filename)
 
 #' get4d.msa

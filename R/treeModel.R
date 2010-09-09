@@ -52,7 +52,7 @@ from.pointer.tm <- function(x) {
   tm$rate.matrix <- .rateMatrix.from.pointer.tm(x)
   tm$subst.mod <- .Call("rph_tm_substMod", x$externalPtr)
   tm$likelihood <- .Call("rph_tm_likelihood", x$externalPtr)
-  tm$alpha <- .Call("rph_tm_alpha", x$externalPtr)
+  tm["alpha"]<- .Call("rph_tm_alpha", x$externalPtr)
   tm$nratecats <- .Call("rph_tm_nratecats", x$externalPtr)
   tm$rate.consts <- .Call("rph_tm_rK", x$externalPtr)
   tm$rate.weights <- .Call("rph_tm_freqK", x$externalPtr)
@@ -73,7 +73,7 @@ as.pointer.tm <- function(tm) {
                          tm$rate.matrix,
                          tm$subst.mod,
                          tm$likelihood,
-                         tm$alpha,
+                         tm["alpha"],
                          tm$nratecats,
                          tm$rate.consts,
                          tm$rate.weights,
@@ -275,7 +275,7 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
   tm$backgd <- backgd
   tm$rate.matrix <- rate.matrix
   tm$subst.mod <- subst.mod
-  tm$alpha <- alpha
+  tm["alpha"] <- alpha
   tm$likelihood <- likelihood
   tm$nratecats <- nratecats
   tm$rate.consts <- rate.consts
