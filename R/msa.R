@@ -735,11 +735,9 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' is stored in R, it may be more efficient return an object in R, in which
 ##' case this argument will be ignored.
 ##' @seealso \code{\link{sub.msa}} which can subset columns based on genomic
-##' coordinates.
-##' @seealso \code{\link{extract.feature.msa}} which can subset based on
-##' genomic coordinates denoted in a features object.
+##' coordinates, and \code{\link{extract.feature.msa}} which can subset based
+##' on genomic coordinates denoted in a features object.
 ##' @usage \method{[}{msa}(x, rows, cols, pointer.only)
-## @usage \method{[}{msa}(x, rows, cols, pointer.only)
 ##' @S3method "[" msa
 ##' @note This function will not alter the value of x even if it is stored as
 ##' a pointer to a C structure.

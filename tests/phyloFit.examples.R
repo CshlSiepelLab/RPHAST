@@ -14,8 +14,8 @@ print(mod$likelihood, digits=10)
 f <- read.feat("gencode.ENr334.gff")
 mod <- phyloFit(m, tree="((hg18, (mm9, rn4)), canFam2)",
                 features=f, quiet=TRUE)
-names(t)
-t$other
-t[["5'flank"]]
+names(mod)
+mod$other
+mod[["5'flank"]]
 phyloFit(m, init.mod=mod$AR, nrates=3, alpha=4.0)
 phyloFit(m, init.mod=mod$AR, rate.constants=c(10, 5, 1))
