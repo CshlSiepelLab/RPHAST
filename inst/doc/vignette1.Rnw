@@ -6,7 +6,7 @@
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
-\documentclass[10pt]{article}
+\documentclass[10pt,nogin]{article}
 \usepackage{Sweave}
 \usepackage{url}
 \usepackage{amsmath,epsfig,fullpage}
@@ -15,7 +15,7 @@
 
 \title{Conservation Analysis}
 \author{M. J. Hubisz, K. S. Pollard, and A. Siepel}
-\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R,keep.source=TRUE}
+\SweaveOpts{echo=TRUE,fig=FALSE,eval=TRUE,include=FALSE,engine=R,keep.source=TRUE}
 \maketitle
 
 
@@ -28,7 +28,7 @@ example data set.
 
 We begin by initializing RPHAST, loading the necessary data files, and
 defining the tree topology for the species of interest.
-<<browser1,fig=FALSE>>=
+<<browser1>>=
 require("rphast")
 
 # extract alignment and annotation files from RPHAST package
@@ -50,7 +50,7 @@ convenient for us to use common names.  The sequence names in the alignment
 must match those in the tree.  In addition, the sequence name used for the
 gene annotations must match the name of the corresponding sequence in the
 alignment file (now ``tomato'').
-<<browser2,fig=FALSE>>=
+<<browser2>>=
 names(align)
 align$names <- c("tomato", "potato", "pepper", "petunia", "eggplant")
 names(align)
@@ -66,7 +66,7 @@ actually do not contain UTRs (they are derived from computational gene
 predictions, not mRNA/EST data), so the CDS and exon features are
 identical, and we can simply remove the exon features.  Finally, we will add
 features explicitly defining intergenic regions.
-<<browser3,fig=FALSE>>=
+<<browser3>>=
 feats <- addIntrons.feat(feats)
 feats <- feats[feats$feature != "exon",]
 
@@ -88,7 +88,7 @@ feats <- rbind.feat(feats, intergenic.feats)
 Next we will estimate a neutral model from fourfold degenerate (4D) sites
 in coding regions, using phyloFit with the predefined tree topology and the
 general reversible (REV) substitution model.
-<<browser4,fig=FALSE>>=
+<<browser4>>=
 align4d <- get4d.msa(align, feats)
 neutralMod <- phyloFit(align4d, tree=tomatoTree, subst.mod="REV")
 @ 
@@ -97,7 +97,7 @@ estimated neutral model.  For now, we will use the same values for the
 ``expected.length'' and ``target.coverage'' parameters that were used in the
 original analysis of these alignments (Wang et al., Genetics 180:391-408,
 2008).  Below we will consider an alterative way of setting these parameters.
-<<browser5,fig=FALSE>>=
+<<browser5>>=
 pc <- phastCons(align, neutralMod, expected.length=6, 
                 target.coverage=0.125, viterbi=TRUE)
 names(pc)
@@ -118,7 +118,7 @@ pc$likelihood
 @ 
 For comparison, we will produce an alternative set of conservation scores
 using phyloP.
-<<browser6,fig=FALSE>>=
+<<browser6>>=
 pp <- phyloP(neutralMod, align, method="LRT", mode="CONACC")
 
 # the returned object is a data frame giving statistics for every base 
@@ -130,7 +130,7 @@ Let us now plot the gene annotations, conserved elements, and
 conservation scores for a genomic segment of interest.  We will make use of
 functions in RPHAST that allow ``tracks'' to be defined and then plotted in a
 browser-like display.
-<<browser7,width=8,height=8>>=
+<<browserFigure,fig=TRUE,prefix=FALSE,width=6,height=4.5>>=
 geneTrack <- gene.track(feats, "genes")
 consElTrack <- feat.track(cons.elements, "phastCons most conserved", col="red")
 phastConsScoreTrack <- wig.track(coord=pc$post.prob.wig$coord,
@@ -140,9 +140,11 @@ phyloPTrack <- wig.track(coord=pp$coord, score=pp$score, name="phyloP score",
                          col="blue", smooth=TRUE, horiz.line=0)
 
 plot.track(list(geneTrack, consElTrack, phastConsScoreTrack, phyloPTrack),
-           xlim=c(60000, 68000), cex.labels=1.5, cex.axis=1.5, cex.lab=2.0)
+           xlim=c(60000, 68000), cex.labels=1.25, cex.axis=1.25, cex.lab=1.5)
 
 @
+
+The plot produced by the code above can be seen in Figure \ref{fig:browser}.
 
 Observe that the conserved elements appear to follow the coding exons
 reasonably well, but they also contain some noncoding regions.  The
@@ -156,10 +158,11 @@ will start by plotting their length distributions.  We will plot
 distributions for all
 elements, and for the subsets of elements that primarily fall in coding or
 noncoding regions.
-<<hist>>=
+<<label=elementLengthByType,fig=TRUE,prefix=FALSE,width=4,height=4>>=
 ce <- pc$most.conserved
 plot(density.feat(ce), ylim=c(0, 0.018), 
-     main="Element Length by Type", xlab="Length")
+     main="Element Length by Type", xlab="Length", 
+     mgp=c(1.5,0.5,0),mar=c(2,2,2,2))
 
 coding.feats <- feats[feats$feature=="CDS",]
 # obtain elements that overlap coding.feats by at least 50 percent
@@ -173,7 +176,9 @@ legend(c("All", "Coding", "Noncoding"), x="topright", inset=0.05,
        lty=1, col=c("black", "red", "blue"))
 @ 
 
-From this plot we see that the coding elements are clearly longer on
+
+The above code produces the plot shown in Figure \ref{fig:elementLength}. 
+We see that the coding elements are clearly longer on
 average, as expected.   The coding elements appear to dominate the length
 distribution for all elements.
 
@@ -183,8 +188,8 @@ will plot the fold-enrichment of annotation types within conserved
 elements, as compared with the genomic segment as a whole.  Second, we will
 plot the composition of conserved elements by annotation type, and compare
 it with the ``background'' composition for the entire region.
-<<coverage-composition,width=8,height=8>>=
-par(mfrow=c(2, 2), cex.main=2.0, cex.lab=2.0, cex.axis=2.0, mar=c(5,5,4,2))
+<<label=coverage-composition,fig=TRUE,prefix=FALSE>>=
+par(mfrow=c(2, 2), cex.main=1.5, cex.lab=1.5, cex.axis=1.5, mar=c(5,5,4,2))
 
 # look at fold-enrichment of each annotation type by conserved element
 enrich <- enrichment.feat(ce, feats, wholeChrom)
@@ -193,7 +198,7 @@ barplot(enrich$enrichment, col=col,
         main="Enrichment of\nConserved Elements",
         ylab="Fold Enrichment")
 plot.new()
-legend(x="center", legend=enrich$type, fill=col, cex=2.5)
+legend(x="center", legend=enrich$type, fill=col, cex=1.5)
 # look at the composition of the conserved elements
 comp <- composition.feat(ce, feats)
 pie(comp$composition, col=rainbow(nrow(comp)), radius=1.0,
@@ -204,7 +209,8 @@ pie(comp$composition, col=rainbow(nrow(comp)), radius=1.0,
     main="Background\nComposition", labels=NA)
 @ 
 
-Here we see that coding regions are enriched more than fourfold in
+The plots are shown in Figure \ref{fig:compositionCoverage}.  
+We see that coding regions are enriched more than fourfold in
 conserved elements, but introns are slightly depleted and intergenic
 regions are quite strongly depleted.  The pie charts show clearly that CDSs
 are strongly overrepresented in conserved elements relative to background.
@@ -214,7 +220,7 @@ transition probabilities between the conserved and nonconserved states by
 specifying the ``expected.length'' and ``target.coverage'' parameters, we
 we will allow it to estimate these probabilities by maximum likelihood.  It
 does this using an expectation maximization (EM) algorithm.
-<<em,fig=FALSE>>=
+<<em>>=
 pcEM <- phastCons(align, neutralMod, viterbi=TRUE, estimate.transitions=TRUE) 
 names(pcEM)
 pcEM$transition.rates
@@ -230,7 +236,7 @@ Let us now compare the coverage with and without estimation of the
 transition probabilities.  We can use the ``coverage.feat'' function to
 examine the intersection properties of the two sets of elements.  
 We can also plot them along the genomic region for visual comparison.
-<<em2,width=8,height=4>>=
+<<emPlot,fig=TRUE,prefix=FALSE,width=5,height=3.5,prefix=FALSE>>=
 coverage.feat(pcEM$most.conserved)
 coverage.feat(pcEM$most.conserved, pc$most.conserved)
 coverage.feat(pcEM$most.conserved, pc$most.conserved, or=TRUE)
@@ -246,11 +252,12 @@ plot.track(list(feat.track(pc$most.conserved, name="No estimation"),
 Observe that the coverage of the new elements is considerably higher.  Most
 bases covered by the original elements are also covered by the new ones,
 but the reverse is not true---the new elements are largely a superset of
-the old ones.
+the old ones.  The browser plot of both sets of elements can be seen in Figure 
+\ref{fig:emCompare}.
 
 By comparing the length distributions, we can see that the new elements
 tend to be considerably longer, on average.
-<<kdensity>>=
+<<kdensity,fig=TRUE,prefix=FALSE,width=4,height=4>>=
 plot(density.feat(pc$most.conserved),
      main="Distribution of Element Lengths", xlab="Length", xlim=c(0, 1000))
 lines(density.feat(pcEM$most.conserved), col="red")
@@ -258,6 +265,7 @@ legend(x="topright", inset=0.05, c("without estimation", "with estimation"),
        lty=1, col=c("black", "red"))
 @ 
 
+The length distributions appear in Figure \ref{fig:kdensity}.
 What has happened here?  It turns out that maximum likelihood estimation
 tends to produce small transition probabilities in the HMM, which leads to
 long conserved elements, containing many nonconserved as well as conserved
@@ -269,5 +277,51 @@ phastCons ``HOWTO''
 (http://compgen.bscb.cornell.edu/phast/phastCons-HOWTO.html) and the
 Supplementary Material of the phastCons paper (Siepel et al., Genome
 Res. 15:1034-1050, 2005).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% figures
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=6in,height=4.5in,angle=0]{browserFigure}
+  \end{center}
+  \caption{Browser-like display created by the plot.track function.}
+  \label{fig:browser}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=4in,height=4in,angle=0]{elementLengthByType}
+  \end{center}
+  \caption{Distribution of the length of conserved elements.}
+  \label{fig:elementLength}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=4in,height=4in,angle=0]{coverage-composition}
+  \end{center}
+  \caption{Composition of conserved elements.}
+\label{fig:compositionCoverage}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=5in,height=3.5in,angle=0]{emPlot}
+  \end{center}
+  \caption{Comparison of conserved elements with and without estimation of transition
+    probabilities.}
+\label{fig:emCompare}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=4in,height=4in,angle=0]{kdensity}
+  \end{center}
+  \caption{Distribution of element lengths with and without estimation of transition 
+    probabilities.}
+  \label{fig:kdensity}
+\end{figure}
+
 
 \end{document}

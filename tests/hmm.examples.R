@@ -53,3 +53,5 @@ h <- hmm(matrix(c(0.99, 0.01, 0.01, 0.99), nrow=2,
 filename <- tempfile()
 write.hmm(h, filename)
 unlink(filename)
+
+gc()
