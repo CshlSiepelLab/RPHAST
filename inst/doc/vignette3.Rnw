@@ -6,8 +6,9 @@
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage{Sweave}
+\usepackage{amsmath,epsfig,fullpage}
 
 \begin{document}
 \title{Phylo-HMMs}
@@ -15,71 +16,86 @@
 \SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R}
 \maketitle
 
+In this example we will use RPHAST to create a custom phylo-HMM for use 
+in detecting transcription factor binding sites. 
+We will again use the multiple alignments available on UCSC, as well 
+as the neutral model from the second example.  In addition, we will make
+use of a set of putative binding sites for the neuron-restrictive
+silencer factor (NRSF) in training the phylo-HMM.  We have included a
+set of multiple alignments and a corresponding GFF for these NRSF binding
+sites in the RPHAST package.  This example is meant to demonstrate how
+RPHAST can be useful as a prototyping environment for new models.
 
-In this example we are going to create a custom phylo-HMM and try to use
-it to detect transcription factor binding sites. 
-
-We will once again use the multiple alignments available on UCSC, as well 
-as the neutral model from the second example.  The rphast package comes
-with a set of multiple alignments for identified NRSF binding sites,
-as well as a GFF describing their genomic positions.  We will use these
-to build the phylo-HMM.
+We begin by initializing RPHAST and loading
+the neutral model obtained from UCSC.  For simplicity and speed, we will
+consider only 
+a subset of the species in the model.
 <<phyloHmm1,fig=FALSE>>=
 require("rphast")
-# lets use a subset of the full species
 seqnames <- c("hg18", "panTro2", "ponAbe2", "rheMac2", "equCab2", 
-              "canFam2", "dasNov2", "mm9", "rn4", "galGal3", "xenTro2")
+              "canFam2", "dasNov2", "mm9", "rn4", "galGal3", "xenTro2") 
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 unzip(exampleArchive, "placentalMammals.mod")
 neutralMod <- read.tm("placentalMammals.mod")
 neutralMod$tree <- prune.tree(neutralMod$tree, seqs=seqnames, all.but=TRUE)
-
-# get the NRSF maf files from rphast
+@ 
+Now we will unpack the NRSF alignments and 
+concatenate them into one large
+alignment for convenient use in estimating parameters for the phylo-HMM.  
+The individual alignment files represent only the genomic segments
+corresponding to putative binding sites, as defined in the accompanying GFF
+file.  Columns in these alignments that contain gaps in the reference genome
+will be discarded, and alignments that correspond to binding sites on the
+negative strand will be reverse complemented.  After processing, each
+alignment will consist of 21 columns, corresponding to the 21 bp motif.
+<<phyloHmm2,fig=FALSE>>=
 unzip(system.file("extdata", "NRSF.zip", package="rphast"))
 mafFiles <- list.files("NRSF", pattern="*.maf", full.names=TRUE)
 nrsfNames <- basename(mafFiles)
-nrsfNames <- substr(nrsfNames, 1, nchar(nrsfNames)-4) #remove .maf from end of names
+nrsfNames <- substr(nrsfNames, 1, nchar(nrsfNames)-4) # remove .maf suffix
 nrsfSites <- read.feat("NRSF/NRSF.gff")
-motifLen <- 21   # this is the length of the NRSF binding site
+motifLen <- 21   
 msaList <- list()
 for (i in 1:length(mafFiles)) {
-  smallMsa <- read.msa(mafFiles[i])
-  
-  # remove gaps from hg18 so that alignments have exactly 21 columns
+  smallMsa <- read.msa(mafFiles[i])  
   smallMsa <- strip.gaps.msa(smallMsa)
-  
-  # remove offset so that columns are numbered 1..21 instead of using genomic coords
   smallMsa$offset <- 0 
-  
-  # get the feature corresponding to this alignment
   feat <- nrsfSites[which(nrsfSites$feature == nrsfNames[i]),]
-  
-  # reverse the alignment if the binding site is on the minus strand
   if (feat$strand == "-") 
     smallMsa <- reverse.complement(smallMsa)
   if (ncol.msa(smallMsa) != motifLen)
     cat("wrong number of columns in ", nrsfNames[i], "\n")
   msaList[[nrsfNames[i]]] <- smallMsa
 }
-# now concatenate all alignments
 aggMsa <- concat.msa(msaList)
 @ 
 
-Now we we have a concatenated alignment of 52 different 21-bp binding sites.  We want
-to create a feature set so that each position of the alignment has its own feature.  
-Then we can estimate models for each position using phyloFit.  Since we do not have
+Now we will
+create a feature set that labels each column in the catenated alignment
+with the corresponding motif position (1--21).
+We can then easily estimate a models for each motif position using
+phyloFit.  Since we do not have 
 very much data, we will only estimate a scale factor for each position.
 
-<<phyloHmm2>>=
+<<phyloHmm3,fig=FALSE>>=
 feats <- feat(seqname="hg18", src=as.character(sapply(nrsfNames, rep, motifLen)),
               feature=rep(sprintf("site.%i", 1:motifLen), length(mafFiles)),
               start=1:(motifLen*length(mafFiles)),
               end=2:(motifLen*length(mafFiles)+1))
 mods <- phyloFit(aggMsa, init.mod=neutralMod, no.rates=TRUE, features=feats,
                  scale.only=TRUE, ninf.sites=10)
-# the warning about skipping category 0 just means that there are no sites
-# which don't belong to any category so it won't return a model for that
+@ 
+Do not worry about the warning generated by the call to phyloFit.  This warning
+occurs because 
+there are no sites in category ``0'' which is included by default to
+represent the absence of any label (it is the ``background'' category).
 
+Let us now summarize the estimated models in two ways.  First, we will
+compute the (log) likelihood ratio comparing the fit of the estimated
+phylogenetic model for each position to the fit of the neutral model.  This
+will give us a sense for how much phylogenetic information we have per
+motif position.
+<<phyloHmm4,width=6,height=4>>=
 nullLike <- numeric()
 lr  <- numeric()
 
@@ -87,66 +103,75 @@ for (i in 1:21) {
   nullLike[i] <- likelihood.msa(aggMsa[,(0:(length(mafFiles)-1))*21+i], neutralMod)
   lr[i] <- mods[[i]]$likelihood - nullLike[i]
 }
+barplot(lr, names.arg=1:21, ylab="likelihood ratio")
+@ 
 
-length(mods)
-
-# plot motif
+Let us compare these position-specific likelihood ratios with 
+the known NRSF motif.  We will use the ``seqLogo'' package to create a
+``logo'' plot of the motif.  A motif model derived from TRANSFAC is
+included in a file in the RPHAST package called ``NRSF.mtf.'' 
+<<phyloHmm5,width=6,height=4>>=
 require("seqLogo")
 m <- read.table("NRSF/NRSF.mtf")
 pwm <- makePWM(t(m))
 seqLogo(pwm)
 @ 
-<<>>=
+
+We can alternatively describe the estimated motif by creating a sequence
+logo based 
+on the equilibrium frequencies for the estimated phylogenetic models
+(called ``background'' frequencies in PHAST).
+<<phyloHmm6,width=6,height=4>>=
 m <- matrix(0, nrow=21, ncol=4)
 for (i in 1:21)
   m[i,] <- mods[[i]]$backgd
 pwm <- makePWM(t(m))
 seqLogo(pwm)
 @ 
-<<>>=
-barplot(lr, names.arg=1:21, ylab="likelihood ratio")
-@ 
 
-Now we are going to make a 22-state phylo-HMM.  The 22 states are the 21
-states for each position in the motif, plus a neutral state.
-We can then use the phylo-HMM to find possible binding sites.
-We will use some parameters from the phastCons track on UCSC to define the 
-phylo-HMM.
+Observe that the estimated motif model agrees fairly well with the
+motif from TRANSFAC, despite a relatively small number of motif instances.
+In addition, there is a reasonable concordance between the
+position-specific log
+odds scores and the information content of the motif.  
 
-<<phyloHmm3>>=
+Now we will construct a 22-state phylo-HMM for binding site prediction.
+The 22 states include 21 states for the position in the motif, plus a
+``background'' state.  We will use a simple parameterization for the
+state-transition matrix, with a probability $\lambda$ of entering a binding
+site from the background state, a probability of $1-\lambda$ of remaining
+in the background state, a probability 1 of entering each motif position
+from the previous position, and a probability 1 of returning to the
+background state from the last motif position.  Here we will simply set
+$\lambda$ to a small value.  Similarly, we will set the equilibrium
+frequency for the background state to a large value and the equilibrium
+frequencies for the motif states to small values.  In real applications, we
+might wish to estimate these frequencies from training data.
+
+<<phyloHmm7,fig=FALSE>>=
 mods[["neutral"]] <- neutralMod
 
-# define the transition matrix between states
-# lambda is the rate of transition to the motif 
 get.trans.mat <- function(lambda, state.names, motifLen) {
   trans.mat <- matrix(0, nrow=length(state.names), ncol=length(state.names),
                       dimnames=list(state.names, state.names))
   trans.mat["neutral", "site.1"] <- lambda
   lastSite <- sprintf("site.%i", motifLen)
-  trans.mat[lastSite, "neutral"] <- 1.0
   trans.mat["neutral", "neutral"] <- 1 - lambda
   for (i in 1:(motifLen-1)) 
     trans.mat[sprintf("site.%i", i), sprintf("site.%i", i+1)] <- 1
+  trans.mat[lastSite, "neutral"] <- 1.0
   trans.mat
 }
 
-# would like to show a plot but haven't found a good package yet
-# have tried Rgraphviz, but it requires some external software (GraphViz) 
-# which makes it problematic for the vignette.
-# Also looked at dagR but I don't think it can make the kind of plot we want,
-# and is also quite complicated - would take a half dozen commands at least
-
-# this is the rate of transition to motif states
 lambda <- 0.0001
 trans.mat <- get.trans.mat(lambda, names(mods), motifLen)
-# need equilibrium frequencies for the HMM
 eq.freq <- ifelse(names(mods) == "neutral", 0.999, (1-0.999)/motifLen)
-sum(eq.freq)  #make sure sums to 1
 
-# now create the HMM
 nrsf.hmm <- hmm(trans.mat, eq.freq, begin.freq=eq.freq)
-
-# now lets try simulating based on the hmm
+@ 
+Let us now try generating some simulated data from the HMM, and then making
+a set of predictions using the same model.
+<<phyloHmm8,fig=FALSE>>=
 simLength <- 100000
 simData <- simulate.msa(mods, simLength, hmm=nrsf.hmm, get.features=TRUE)
 hmmScores <- score.hmm(msa=simData$msa, mod=mods, hmm=nrsf.hmm, viterbi=TRUE,
@@ -158,8 +183,12 @@ numSitePredicted <- coverage.feat(predicted)
 numSiteCorrect <- coverage.feat(correct)
 numSiteOverlap <- coverage.feat(predicted, correct)
 cat(numSitePredicted, numSiteCorrect, numSiteOverlap, "\n")
-
-
+@ 
+We can now measure the sensitivity and specificity of the predictions
+and plot them alongsite the ``true'' binding sites in a track.  We will
+also display the position-by-position posterior probabilities along the
+genomic segment.
+<<phyloHmm9,width=6,height=6>>=
 wholeRegion <- feat("hg18", src=".", feature="all",start=1, end=simLength)
 specificity <- coverage.feat(correct, predicted, not=c(TRUE, TRUE), 
                             region.bounds=wholeRegion)/
@@ -167,19 +196,26 @@ specificity <- coverage.feat(correct, predicted, not=c(TRUE, TRUE),
 sensitivity <- coverage.feat(correct, predicted)/coverage.feat(correct)
 cat(specificity, sensitivity, "\n")
 
-
 tracks <- list(feat.track(correct, "actual binding sites"),
                feat.track(predicted, "predicted binding sites", col="red"),
                wig.track(hmmScores$post.prob.wig$coord,
                          hmmScores$post.prob.wig$post.prob,
                          "hmm Posterior probilities",
                          smooth=FALSE, col="red", ylim=c(0,1)))
-
 plot.track(tracks)
+@ 
 
-#clean up
+We see that the performance is excellent.  In this case, 
+the models used to simulate the data and perform inference match exactly,
+so it is unsurprising that the method performs well.  In a real
+application, we may need a more complex model, for example, allowing for
+both conserved and nonconserved background states.  Nevertheless, this
+example should provide a general idea for how a phylo-HMM can be created
+and applied using RPHAST.
+
+Finally, we should be sure to clean up the ``NRSF'' directory.
+<<phyloHmm10,fig=FALSE>>=
 unlink("NRSF", recursive=TRUE)
-
 @ 
 
 \end{document}
