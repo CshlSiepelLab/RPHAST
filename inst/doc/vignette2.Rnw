@@ -15,7 +15,7 @@
 \begin{document}
 \title{Detection of Accelerated Regions}
 \author{M. J. Hubisz, K. S. Pollard, and A. Siepel}
-\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R}
+\SweaveOpts{echo=TRUE,fig=FALSE,eval=TRUE,include=FALSE,engine=R,keep.source=TRUE}
 \maketitle
 
 This example will go through the basic steps of detecting accelerated
@@ -173,7 +173,7 @@ nonpara.phyloP <- phyloP(neutralMod, msa=simMsa, mode="ACC",
 Let us compare the distributions likelihood ratios for the real and simulated (null) data
 sets using a Q-Q plot.  We will also create density plots for both
 distributions, on the same scale.
-<<<rarAnalyis7,width=6,height=8>>=
+<<qqPlotAndDensity,fig=TRUE,prefix=FALSE,width=6,height=8>>=
 
 layout(matrix(c(1,2), nrow=2), heights=c(0.7, 0.3))
 par(mar=c(4.5, 4, 4, 2), mgp=c(2.5,1,0), cex.axis=1.5, cex.lab=1.5)
@@ -190,6 +190,7 @@ col="black",xlim=c(0,15))
 
 @ 
 
+The plots can be seen in Figure \ref{fig:qqplot}.  
 Notice that the two distributions appear to be quite similar from the density
 plots.  However, an excess of high likelihood ratios for the
 observed elements is clearly evident in the Q-Q plot.
@@ -198,7 +199,7 @@ Let us now calculate empirical p-values for the real data, and
 adjust them for multiple comparisons using p.adjust.  We will use the
 Benjamini-Hochberg method to compute approximate false discovery rates
 (FDRs) for each element.  
-<<<rarAnalysis8,fig=FALSE>>=
+<<rarAnalysis8,fig=FALSE>>=
 
 empirical.pval <- function(x, dist) {
   sum(x <= dist)/length(dist)
@@ -226,10 +227,11 @@ write.feat("RAR.gff", nonpara.sigFeats)
 @ 
 As a sanity check, let us estimate branch lengths for the RARs and compare
 them with estimates for the larger set of conserved elements. We will use
-the ``ape'' package to plot the estimated trees side-by-side.   We can see
+the ``ape'' package to plot the estimated trees side-by-side (Figure 
+\ref{fig:ape-plot}).   We can see
 that the RARs do show a pronounced evolutionary speedup in the rodents.
 
-<<rarAnalysis10,width=6,height=8>>=
+<<apePlot,fig=TRUE,prefix=FALSE>>=
 consEleModel <- phyloFit(elementAlign, init.mod=neutralMod, no.freqs=TRUE, no.rates=TRUE)
 rarAlign <- extract.feature.msa(copy.msa(align), nonpara.sigFeats)
 rarModel <- phyloFit(rarAlign, init.mod=neutralMod, no.freqs=TRUE, no.rates=TRUE)
@@ -238,9 +240,9 @@ require("ape")
 par(mfrow=c(1,2), mar=c(5,2,4,2))
 maxX <- depth.tree(rarModel$tree, "mm9")
 plot.phylo(read.tree(text=consEleModel$tree), x.lim=c(0, 0.5), 
-           xaxt="s", main="Conserved Elements")
+           main="Conserved Elements")
 plot.phylo(read.tree(text=rarModel$tree), x.lim=c(0, 0.5), 
-           xaxt="s", main="RAR")
+           main="RAR")
 
 @ 
 
@@ -282,7 +284,7 @@ of the neutral model, with a scale factor estimated from the conserved
 elements.  In estimating this scale factor, we exclude the rodents, because
 these are the species we wish to test for acceleration.
 
-<<<rarAnalysis12,fig=FALSE>>=
+<<rarAnalysis12,fig=FALSE>>=
 seqs <- names(align)
 keepSeqs <- seqs[seqs != "mm9" & seqs != "rn4"]
 prunedMod <- neutralMod
@@ -333,4 +335,22 @@ variation among sites, indels, missing data, and other features of the real
 alignments.  But the number of samples here is quite small (only 5000), so
 stochastic effects may cause one run to be quite different from another.
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% figures
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=6in,height=8in,angle=0]{qqPlotAndDensity}
+  \end{center}
+  \caption{On top, Q-Q plot for observed and simulated likelihood ratios.  On bottom, distributions of observed (red) and simulated (black) values.}
+  \label{fig:qqplot}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=6in,height=4.5in,angle=0]{apePlot}
+  \end{center}
+  \caption{Trees estimated from conserved elements (left) and predicted rodent accelerated regions (right), plotted by the ape package.}
+  \label{fig:ape-plot}
+\end{figure}
 \end{document}

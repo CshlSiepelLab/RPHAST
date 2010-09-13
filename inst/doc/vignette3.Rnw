@@ -6,15 +6,21 @@
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
-\documentclass[10pt]{article}
+\documentclass[a4paper]{article}
+%\documentclass[10pt]{article}
 \usepackage{Sweave}
-\usepackage{amsmath,epsfig,fullpage}
+\usepackage{amsmath,fullpage}
 
 \begin{document}
 \title{Phylo-HMMs}
 \author{M. J. Hubisz, K. S. Pollard, and A. Siepel}
-\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=TRUE,engine=R}
+\SweaveOpts{echo=TRUE,fig=FALSE,eval=TRUE,include=FALSE,engine=R,keep.source=TRUE}
 \maketitle
+
+<<echo=FALSE>>=
+options(SweaveHooks=list(fig=function()
+          par(mar=c(3.1,2.1,4.1,2.1))))
+@ 
 
 In this example we will use RPHAST to create a custom phylo-HMM for use in
 detecting transcription factor binding sites.  As in the second example, we
@@ -105,7 +111,7 @@ compute a (log) likelihood ratio comparing the fit of the estimated
 phylogenetic model to the fit of the neutral model at each position in the
 motif.  This will give us a sense for how much phylogenetic information we
 have per motif position.
-<<phyloHmm4,width=6,height=4>>=
+<<lrByMotifPosition,width=6,height=3,fig=TRUE,prefix=FALSE>>=
 nullLike <- numeric()
 lr  <- numeric()
 
@@ -116,15 +122,18 @@ for (i in 1:21) {
 barplot(lr, names.arg=1:21, ylab="likelihood ratio")
 @ 
 
-Let us compare these position-specific likelihood ratios with 
+The position-specific likelihood ratios can be seen in Figure 
+\ref{fig:lr-by-motif-position}.
+Let us compare these likelihood ratios with 
 the known NRSF motif.  We will use the ``seqLogo'' package to create a
 ``logo'' plot of the motif based on a motif model from TRANSFAC (included
-in the ``examples.zip'' package). 
-<<phyloHmm5,width=6,height=4>>=
+in the ``examples.zip'' package).  The plot is shown in Figure 
+\ref{fig:seqLogo-plot}. 
+<<seqLogoPlot,width=6,height=3,fig=TRUE,prefix=FALSE>>=
 require("seqLogo")
 m <- read.table("NRSF/NRSF.mtf")
 pwm <- makePWM(t(m))
-seqLogo(pwm)
+seqLogo(pwm, xfontsize=10)
 @ 
 
 Notice the general agreement between the log odds scores and the
@@ -132,16 +141,16 @@ information content across the positions of the motif.  This suggests that
 sites with strong base preferences also tend to be conserved across
 mammalian species.
 
-Second, let us describe the estimated motif based on 
+Second, let us describe the estimated motif based on
 on the equilibrium frequencies in the estimated phylogenetic models
 (called ``background'' frequencies in PHAST).  We can also plot these using
-``seqLogo.'' 
-<<phyloHmm6,width=6,height=4>>=
+``seqLogo'' (Figure \ref{fig:seqLogo-plot-backgd}):
+<<seqLogoPlotBackgd,width=6,height=3,fig=TRUE,prefix=FALSE>>=
 m <- matrix(0, nrow=21, ncol=4)
 for (i in 1:21)
   m[i,] <- mods[[i]]$backgd
 pwm <- makePWM(t(m))
-seqLogo(pwm)
+seqLogo(pwm, xfontsize=10)
 @ 
 
 Again, we see a reasonable agreement between the estimates from these
@@ -224,8 +233,9 @@ specificity, and positive predictive value of the predictions.  We
 can also plot the predictions alongside the ``true'' binding sites in a
 track.  We will 
 plot the position-by-position posterior probabilities together with the
-true and predicted binding sites.
-<<phyloHmm11,width=6,height=6>>=
+true and predicted binding sites (Figure \ref{fig:vignette3-browser-view}).
+<<vignette3BrowserView,fig=TRUE,prefix=FALSE,width=6,height=4>>=
+
 wholeRegion <- feat("hg18", src=".", feature="all",start=1, end=simLength)
 sensitivity <- coverage.feat(correct, predicted)/coverage.feat(correct)
 specificity <- coverage.feat(correct, predicted, not=c(TRUE, TRUE), 
@@ -258,4 +268,37 @@ Finally, we should be sure to clean up the ``NRSF'' directory.
 unlink("NRSF", recursive=TRUE)
 @ 
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% figures
+\begin{figure}[ht]
+  \begin{minipage}[b]{\linewidth}
+    \centering
+    \includegraphics[scale=0.75]{lrByMotifPosition}
+    \caption{Likelihood ratio for conservation for alignment columns in a given motif position.}
+    \label{fig:lr-by-motif-position}
+  \end{minipage}
+  \hspace{4cm}
+  \begin{minipage}[b]{\linewidth}
+    \centering
+    \includegraphics[scale=0.75]{seqLogoPlot}
+    \caption{NRSF motif from TRANSFAC, plotted by the seqLogo package.}
+    \label{fig:seqLogo-plot}
+  \end{minipage}
+  \hspace{4cm}
+  \begin{minipage}[b]{\linewidth}
+    \centering
+    \includegraphics[scale=0.75]{seqLogoPlotBackgd}
+    \caption{NRSF motif determined using background frequencies estimated by phyloFit, and plotted by the seqLogo package.}
+    \label{fig:seqLogo-plot-backgd}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=6in,height=4in,angle=0]{vignette3BrowserView}
+  \end{center}
+  \caption{Browser-like plot showing locations of simulated binding sites, predicted binding sites, and posterior probabilities computed by the score.hmm function.}
+  \label{fig:vignette3-browser-view}
+\end{figure}
 \end{document}

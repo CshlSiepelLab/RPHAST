@@ -38,7 +38,6 @@ AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit bzero floor gethostname gettimeofday memset pow re_comp regcomp rint sqrt strcasecmp strdup strstr strtol])
 
-
 # use vecLib if available
 AC_MSG_CHECKING(for vecLib)
 OLD_CFLAGS=${CFLAGS}
@@ -74,6 +73,12 @@ if test -z "$LAPACK_FLAG"; then
 fi
 
 LIBS="${OLD_LIBS}"
+
+OLD_CFLAGS=${CFLAGS}
+CFLAGS="${CFLAGS} -fno-strict-aliasing"
+AC_MSG_CHECKING(for -fno-strict-aliasing)
+AC_COMPILE_IFELSE(AC_LANG_PROGRAM(), AC_MSG_RESULT(yes), [AC_MSG_RESULT(no)
+		                           CFLAGS=${OLD_CFLAGS}])
 
 PHAST_VERSION="\"`cat src/version`\""
 
