@@ -8,7 +8,7 @@ Maintainer: Melissa Hubisz <mjhubisz@cornell.edu>
 Description: R interface to PHAST
 License: GPL (>= 2)
 URL: http://compgen.bscb.cornell.edu/phast
-Suggests: ape
+Suggests: ape, seqLogo
 Collate: 'checkArgs.R' 'feat.R' 'hmm.R' 'listOfLists.R' 'msa.R'
     'phastCons.R' 'phyloFit.R' 'phyloP.R' 'plot.R' 'treeModel.R'
     'trees.R'

@@ -9,7 +9,7 @@
 \documentclass[10pt,nogin]{article}
 \usepackage{Sweave}
 \usepackage{url}
-\usepackage{amsmath,epsfig,fullpage}
+\usepackage{amsmath,epsfig,fullpage,hyperref}
 
 \begin{document}
 

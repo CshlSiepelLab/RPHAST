@@ -3,6 +3,7 @@
 % likely to be overwritten.
 %
 % \VignetteIndexEntry{rphast}
+% \VignetteDepends{seqLogo}
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
