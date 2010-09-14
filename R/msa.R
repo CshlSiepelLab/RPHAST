@@ -30,6 +30,7 @@ copy.msa <- function(msa) {
 ##' @param msa An object to tests
 ##' @return A logical indicating whether object is of type \code{msa}
 ##' @export
+##' @keywords msa
 is.msa <- function(msa) {
   attr(msa, "class")=="msa"
 }
@@ -80,6 +81,7 @@ is.msa <- function(msa) {
 ##' @param pointer.only a boolean indicating whether returned alignment object
 ##' should be stored by reference (see Details)
 ##' @useDynLib rphast
+##' @keywords msa
 ##' @export msa
 msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
                 offset=NULL, pointer.only=FALSE) {
@@ -156,6 +158,7 @@ ncol.msa <- function(x, refseq=NULL) {
 ##' number of columns in the alignment
 ##' @S3method dim msa
 ##' @export
+##' @keywords msa
 dim.msa <- function(x) {
   c(nrow.msa(x), ncol.msa(x, NULL))
 }
@@ -166,6 +169,7 @@ dim.msa <- function(x) {
 ##' @return The number of "informative" columns in the msa.  An informative
 ##' column has at least two non-missing and non-gap characters.
 ##' @export
+##' @keywords msa
 ninf.msa <- function(msa) {
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
@@ -198,7 +202,6 @@ nrow.msa <- function(msa) {
 ##' @return a logical vector indicating whether each element of the
 ##' input parameter is a valid format string.
 ##' @keywords msa
-##' @keywords format
 ##' @export
 validFormatStr.msa <- function(format) {
   if (is.null(format)) return(NULL)
@@ -215,6 +218,7 @@ validFormatStr.msa <- function(format) {
 ##' @param msa an MSA object
 ##' @return The difference between the first position in an alignment
 ##' from the beginning of a chromosome.
+##' @keywords msa
 ##' @export
 offset.msa <- function(msa) {
   if (!is.null(msa$externalPtr))
@@ -227,6 +231,7 @@ offset.msa <- function(msa) {
 ##' @title MSA Alphabet
 ##' @param msa an MSA object
 ##' @return the valid non-missing-data characters for an MSA object.
+##' @keywords msa
 ##' @export
 alphabet.msa <- function(msa) {
   if (!is.null(msa$externalPtr))
@@ -238,6 +243,7 @@ alphabet.msa <- function(msa) {
 ##' @title MSA is Ordered?
 ##' @param msa an MSA object
 ##' @return a boolean indicating whether the columns are in order
+##' @keywords msa
 ##' @export
 is.ordered.msa <- function(msa) {
   if (!is.null(msa$externalPtr))
@@ -253,6 +259,7 @@ is.ordered.msa <- function(msa) {
 ##' @param x an MSA object
 ##' @return a character vector giving the names of the sequences, or
 ##' NULL if they are not defined
+##' @keywords msa
 ##' @export
 ##' @S3method names msa
 names.msa <- function(x) {
@@ -268,6 +275,7 @@ names.msa <- function(x) {
 ##' @return an MSA object stored in R.  If src is already stored in R,
 ##' returns a copy of the object.
 ##' @seealso \code{\link{msa}} for details on MSA storage options.
+##' @keywords msa
 ##' @export
 from.pointer.msa <- function(src) {
   if (is.null(src$externalPtr)) return(src)
@@ -288,6 +296,7 @@ from.pointer.msa <- function(src) {
 ##' @return an MSA object stored by reference as a pointer to an object
 ##' created in C.
 ##' @seealso \code{\link{msa}} for details on MSA storage options.
+##' @keywords msa
 ##' @export
 as.pointer.msa <- function(src) {
   if (!is.null(src$externalPtr)) return(src)
@@ -307,6 +316,7 @@ as.pointer.msa <- function(src) {
 ##' "LAV", "SS", "MPM", "PHYLIP"), or NULL if a guess can't be made
 ##' based on the file extension.
 ##' @seealso validFormatStr.msa
+##' @keywords msa
 ##' @export
 guess.format.msa  <- function(filename) {
   if (is.null(filename)) return(NULL)
@@ -331,8 +341,7 @@ guess.format.msa  <- function(filename) {
 ##' @param pretty.print Whether to pretty-print alignment (turning
 ##' bases which match the first base in the same column to ".").
 ##' @note pretty.print does not work if format="SS".
-##' @keywords write
-##' @keywords msa
+##' @keywords msa FASTA PHYLIP MPM SS
 ##' @export
 write.msa <- function(msa, filename=NULL,
                       format=c(guess.format.msa(filename), "FASTA")[1],
@@ -369,7 +378,6 @@ write.msa <- function(msa, filename=NULL,
 ##' @param format to print sequence in if printing alignment
 ##' @param pretty.print whether to pretty.print pretty-print sequence if printing alignment
 ##' @keywords msa
-##' @keywords summary
 ##' @seealso \code{\link{print.msa}}
 ##' @export
 ##' @S3method summary msa
@@ -441,7 +449,6 @@ summary.msa <- function(object, ...,
 ##' @param format to print sequence in if printing alignment
 ##' @param pretty.print whether to pretty.print pretty-print sequence if printing alignment
 ##' @keywords msa
-##' @keywords alignment
 ##' @export
 ##' @S3method print msa
 print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TRUE, FALSE),
@@ -507,7 +514,8 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' sequence.
 ##' @note If the features argument is an object stored in C, its values will
 ##' be changed by this function!
-##' @return an MSA object.  
+##' @return an MSA object.
+##' @keywords msa FASTA MAF PHYLIP SS
 ##' @seealso \code{\link{msa}}, \code{\link{read.feat}}
 ##' @export
 read.msa <- function(filename,
@@ -585,6 +593,7 @@ read.msa <- function(filename,
 ##' @param x A character vector with DNA sequences to be complemented
 ##' @return The complement of the given sequence(s).  Characters other
 ##' than A,C,G,T,a,c,g,t are unchanged.
+##' @keywords msa
 ##' @export
 complement <- function(x) {
   chartr("ACGTacgt", "TGCAtgca", x)
@@ -598,6 +607,7 @@ complement <- function(x) {
 ##' its reverse complement.  Use reverse.complement(copy.msa(x)) to avoid this
 ##' behavior.  The return value will be a pointer if the input value was stored
 ##' as a pointer.
+##' @keywords msa
 ##' @export
 reverse.complement <- function(x) {
   if (is.null(x$externalPtr)) {
@@ -630,6 +640,7 @@ reverse.complement <- function(x) {
 ##' @S3method sub msa
 ##' @note This function will not modify x even if it is stored as a pointer.
 ##' @export
+##' @keywords msa
 sub.msa <- function(x, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
                     refseq=NULL, pointer.only=FALSE) {
   check.arg(keep, "keep", "logical", null.OK=FALSE)
@@ -675,6 +686,7 @@ sub.msa <- function(x, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
 ##' modify x.  Use strip.gaps.msa(copy.msa(x)) to avoid this behavior.  Also,
 ##' the return value will be stored as a pointer if x is stored as a pointer;
 ##' otherwise the return value will be stored in R.
+##' @keywords msa
 ##' @export
 strip.gaps.msa <- function(x, strip.mode=1) {
   names <- NULL
@@ -741,6 +753,7 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' @S3method "[" msa
 ##' @note This function will not alter the value of x even if it is stored as
 ##' a pointer to a C structure.
+##' @keywords msa
 ##' @export "[.msa"
 "[.msa" <- function(x, rows, cols, pointer.only=FALSE) {
   if (!missing(rows)) {
@@ -809,6 +822,7 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' (if \code{!is.null(features)}), or a numeric vector giving the likelihood
 ##' of each column (if \code{by.column==TRUE}).
 ##' @seealso \code{phyloFit}, \code{tm}
+##' @keywords msa tm features
 ##' @export
 likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
   if (is.null(features))
@@ -859,6 +873,7 @@ likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
 ##' alignments.  Cannot be used if \code{get.features==TRUE}.
 ##' @param ... Currently not used (for S3 compatibility)
 ##' @return An object of type MSA containing the simulated alignment.
+##' @keywords msa hmm
 ##' @export
 simulate.msa <- function(object, nsim, seed=NULL, hmm=NULL, get.features=FALSE,
                          pointer.only=FALSE, ...) {
@@ -921,6 +936,7 @@ simulate.msa <- function(object, nsim, seed=NULL, hmm=NULL, get.features=FALSE,
 ##' conjunction with "[.msa".  It will not alter the value of x even if it
 ##' is stored as a pointer.
 ##' @S3method sample msa
+##' @keywords msa
 ##' @export
 sample.msa <- function(x, size, replace=FALSE, prob=NULL, pointer.only=FALSE) {
   check.arg(size, "size", "integer", null.OK=FALSE)
@@ -974,6 +990,7 @@ get4d.msa <- function(x, features) {
 ##' will be modified to the return value of the function.
 ##' Use \code{extract.feature.msa(copy.msa(x),...)} if you don't want this behavior!
 ##' @seealso \code{sub.msa}, \code{[.msa}
+##' @keywords msa features
 ##' @export
 extract.feature.msa <- function(x, features, do4d=FALSE, pointer.only=FALSE) {
   if (!is.ordered.msa(x))
@@ -1015,6 +1032,7 @@ extract.feature.msa <- function(x, features, do4d=FALSE, pointer.only=FALSE) {
 ##' @return An object of type MSA
 ##' @note None of the msas passed to this function will be altered, even if
 ##' they are stored as pointers to objects in C.
+##' @keywords msa
 ##' @export
 concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
   # have to do a little dance to make sure this behaves OK if
@@ -1062,6 +1080,7 @@ concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
 ##' \code{split.by.feature.msa(x, copy.feat(f), ...)} to avoid this behavior!
 ##' @note x will not be altered even if it is stored as a pointer to an
 ##' object in C.
+##' @keywords msa features
 ##' @export
 split.by.feature.msa <- function(x, f, drop=FALSE, pointer.only=FALSE, ...) {
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
@@ -1114,6 +1133,7 @@ split.by.feature.msa <- function(x, f, drop=FALSE, pointer.only=FALSE, ...) {
 ##' \code{refseq==1}.
 ##' @note This function will not alter the value of x even if it is stored as
 ##' a pointer.
+##' @keywords msa
 ##' @export
 informative.regions.msa <- function(x, min.numspec, spec=NULL, refseq=1,
                                     gaps.inf=FALSE) {

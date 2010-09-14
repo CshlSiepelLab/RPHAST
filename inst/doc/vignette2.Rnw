@@ -1,5 +1,8 @@
+% \VignetteIndexEntry{rphast}
+% \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
+% \VignettePackage{rphast}
+
 \documentclass[a4paper]{article}
-%\VignetteIndexEntry{Interface '96 paper by Marron et al. (1997)} %\VignettePackage{clps}
 
 \usepackage{hyperref}
 \usepackage{natbib}

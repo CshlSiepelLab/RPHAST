@@ -24,6 +24,7 @@ fix.semicolon.tree <- function(x) {
 ##' @title Read a Newick Tree from a File
 ##' @param filename The file containing the tree.
 ##' @return a character string representing the tree in newick format
+##' @keywords trees newick
 ##' @export
 read.newick.tree <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
@@ -36,6 +37,7 @@ read.newick.tree <- function(filename) {
 ##' @title Number of Nodes in a Tree
 ##' @param tree A vector of character strings, each containing a newick tree
 ##' @return A numeric vector containing the number of nodes in each tree
+##' @keywords trees
 ##' @export
 numnodes.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
@@ -51,6 +53,7 @@ numnodes.tree <- function(tree) {
 ##' Get the total length of the edges of a tree
 ##' @param tree A vector of character strings, each containing a newick tree
 ##' @return A numeric vector containing the total branchlength of each tree
+##' @keywords trees
 ##' @export
 branchlen.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
@@ -68,6 +71,7 @@ branchlen.tree <- function(tree) {
 ##' use for each tree.  Will be recycled to the length of the first argument.
 ##' @return A numeric vector containing the distance from each given
 ##' node to the root of the corresponding tree.
+##' @keywords trees
 ##' @export
 depth.tree <- function(tree, node) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
@@ -88,6 +92,7 @@ depth.tree <- function(tree, node) {
 ##' @param all.but A logical value.  If false, prunes all the named sequences
 ##' from the tree.  If TRUE, prunes all sequences except the ones named.
 ##' @return a vector of character strings representing the pruned trees.
+##' @keywords trees
 ##' @export
 prune.tree <- function(tree, seqs, all.but=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -108,6 +113,7 @@ prune.tree <- function(tree, seqs, all.but=FALSE) {
 ##' @param tree A vector of character strings, each containing a newick tree
 ##' @return A vector of character strings containing newick trees with all
 ##' ancestors named.
+##' @keywords trees
 ##' @export
 name.ancestors <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -130,6 +136,7 @@ name.ancestors <- function(tree) {
 ##' nodes which are descendants of node, rather than keeping them.
 ##' @return A vector of trees which have been pruned, removing all nodes
 ##' which are not descendants of the given node.
+##' @keywords trees
 ##' @export
 subtree <- function(tree, node, super.tree=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -161,6 +168,7 @@ subtree <- function(tree, node, super.tree=FALSE) {
 ##' @param subtree If not NULL, scaling will be on subtree defined by the
 ##' named node.  Subtrees will be recycled as necessary if shorter than trees.
 ##' @return A vector of trees whose branches have been scaled
+##' @keywords trees
 ##' @export
 rescale.tree <- function(tree, scale, subtree=NULL) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -197,6 +205,7 @@ rescale.tree <- function(tree, scale, subtree=NULL) {
 ##' substitutions
 ##' @return A vector of character strings, in which all nodes with names
 ##' given in old.names are replaced with values from new.names
+##' @keywords trees
 ##' @export
 rename.tree <- function(tree, old.names, new.names) {
   check.arg(tree, "tree", "character", null.OK=FALSE,

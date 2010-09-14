@@ -2,6 +2,7 @@
 ##' @param x An object to test
 ##' @param ... ignored
 ##' @return A logical indicating whether x is an object of type track
+##' @keywords plot
 ##' @export
 is.track <- function(x, ...) {
   if (is.null(attr(x, "class"))) return(FALSE)
@@ -14,6 +15,7 @@ is.track <- function(x, ...) {
 ##' @param na.rm logical, indicating if \code{NA}'s should be omitted
 ##' @return a numeric vector of length two giving the minimum and maximum
 ##' coordinates in any element of the list
+##' @keywords plot
 ##' @export
 range.track <- function(..., na.rm=FALSE) {
   l <- list(...)
@@ -82,6 +84,7 @@ smooth.wig <- function(coord, score, numpoints=300) {
 ##' @param lmar The size of the left margin (in number of lines)
 ##' @param ... Other options to be passed to \code{plot}.  See \link{par}.
 ##' @seealso \code{plotPhast}, which may be easier to use but less flexible
+##' @keywords plot
 ##' @export
 plot.track <- function(x,
                        doLabels=TRUE,
@@ -211,6 +214,7 @@ plot.track <- function(x,
 ##' @param horiz.col If horiz.line is defined, use this color
 ##' @return An object of type \code{track} which can be plotted with the plot.track
 ##' function
+##' @keywords plot
 ##' @export
 wig.track <- function(coord, score, name, short.label=NULL,
                       col="black", ylim=NULL, smooth=FALSE, numpoints=250,
@@ -246,6 +250,7 @@ wig.track <- function(coord, score, name, short.label=NULL,
 ## @param show.strand If \code{NULL}, do not use strand data.  If "
 ##' @return An object of type \code{track} which can be plotted with plot.track
 ##' function
+##' @keywords plot
 ##' @export
 feat.track <- function(x, name, short.label=NULL, col="black") {
   rv <- list()
@@ -274,6 +279,7 @@ feat.track <- function(x, name, short.label=NULL, col="black") {
 ##' @return An object of type \code{track} which can be plotted with
 ##' the plot.track function
 ##' @seealso addIntrons.feat to add intron annotations to a features object.
+##' @keywords plot
 ##' @export
 gene.track <- function(x, name, short.label=NULL,
                        col="black", arrow.density=10) {

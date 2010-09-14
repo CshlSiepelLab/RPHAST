@@ -61,6 +61,7 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
 ##' @param filename The file to read
 ##' @return An hmm object
 ##' @export
+##' @keywords hmm
 read.hmm <- function(filename) {
   h <- .makeObj.hmm()
   h$externalPtr <- .Call("rph_hmm_new_from_file", filename)
@@ -75,6 +76,7 @@ read.hmm <- function(filename) {
 ##' @param append If \code{TRUE}, append hmm to existing file, otherwise
 ##' overwrite.
 ##' @export
+##' @keywords hmm
 write.hmm <- function(x, filename, append=FALSE) {
   h <- as.pointer.hmm(x)
   invisible(.Call("rph_hmm_print", h$externalPtr, filename, append))
@@ -99,6 +101,7 @@ stopIfNotValidHmm <- function(hmm){
 ##' @param hmm An object of type \code{hmm}
 ##' @return The number of states in the hidden Markov Model
 ##' @export
+##' @keywords hmm
 nstate.hmm <- function(hmm) {
   stopIfNotValidHmm(hmm)
   nrow(hmm$trans.mat)
@@ -171,6 +174,7 @@ from.pointer.hmm <- function(x) {
 ##' probibility that each site falls within an interesting state.}
 ##' \item{likelihood}{The likelihood of the data under the estimated model.}
 ##' @export
+##' @keywords hmm
 score.hmm <- function(msa, mod, hmm, states, viterbi=TRUE, ref.idx=1,
                       reflect.strand=NULL, features=NULL,
                       quiet=(!is.null(features))) {

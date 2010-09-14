@@ -145,6 +145,7 @@ phyloP.call<- function(mod,
 ##' @return A data frame containing scores and parameter estimates for
 ##' every feature (if features is given) or for every base (otherwise).  All
 ##' return objects are in 0-based coordinates.
+##' @keywords msa tm features
 ##' @export
 phyloP <- function(mod,
                    msa,

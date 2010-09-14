@@ -59,6 +59,7 @@
 ##' @note If msa or features object are passed in as pointers to C memory,
 ##' they may be altered by this function!  Use \code{copy.msa(msa)} or
 ##' \code{copy.feat(features)} to avoid this behavior!
+##' @keywords msa tm features trees
 ##' @export
 phyloFit <- function(msa,
                      tree=NULL,

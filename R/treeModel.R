@@ -10,6 +10,7 @@
 ##' @title Tree Models
 ##' @param x an object to be tested
 ##' @return TRUE if an object has class "tm", FALSE otherwise
+##' @keywords tm
 ##' @export
 is.tm <- function(x) {
   return(class(x)=="tm")
@@ -95,6 +96,7 @@ as.tm.list <- function(l) {
 ##' @title Read a Tree Model
 ##' @return An object of class "tm"
 ##' @seealso \code{\link{tm}}
+##' @keywords tm
 ##' @export
 read.tm <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
@@ -112,6 +114,7 @@ read.tm <- function(filename) {
 ##' @param append Whether to append the tree to the end of the file
 ##' (if FALSE, overwrites file).  Not used if filename is \code{NULL}
 ##' @seealso \code{\link{tm}}
+##' @keywords tm
 ##' @export
 write.tm <- function(tm, filename=NULL, append=FALSE) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
@@ -127,6 +130,7 @@ write.tm <- function(tm, filename=NULL, append=FALSE) {
 ##' @param ... Parameters to be passed to/from other functions
 ##' @seealso \code{\link{tm}}
 ##' @export
+##' @keywords tm
 ##' @S3method summary tm
 summary.tm <- function(object, ...) {
   write.tm(object, NULL)
@@ -153,6 +157,7 @@ as.list.tm <- function(x, ...) {
 ##' @param ... arguments to be passed to/from other functions
 ##' @seealso \code{\link{tm}}
 ##' @export
+##' @keywords tm
 ##' @S3method print tm
 print.tm <- function(x, aslist=FALSE, ...) {
   if (aslist) print(as.list(x), ...)
@@ -215,6 +220,7 @@ subst.mods <- function() {
 ##' node in the tree, the tree will be re-rooted at this leaf node.
 ##' @param likelihood an optional value giving the log likelihood of this
 ##' model for some alignment.
+##' @keywords tm
 ##' @return An object of class \code{tm} representing a phylogenetic model.
 ##' @export
 tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,

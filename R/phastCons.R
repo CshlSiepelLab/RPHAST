@@ -238,6 +238,7 @@ phastCons.call <- function(msa,
 ##' @note Estimating transition rates between states by maximum likelihood, or the
 ##' parameters for the phylogenetic models, does not perform very well and is discouraged.
 ##' See CITE PHASTCONS PAPER for more details.
+##' @keywords msa
 ##' @export
 phastCons <- function(msa,
                       mod,
