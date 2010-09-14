@@ -1,0 +1,13 @@
+\documentclass[a4paper]{article}
+%\VignetteIndexEntry{Interface '96 paper by Marron et al. (1997)} %\VignettePackage{clps}
+
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{pdfpages}
+
+\begin{document}
+
+\includepdf[fitpaper=true,pages=-]{vignette2-source.pdf}
+
+\end{document} 
+
