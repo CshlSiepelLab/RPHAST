@@ -1,13 +1,22 @@
 Package: rphast
-Version: 1.0
+Version: 1.1
 Date: 2009-12-14
-Title: RPHAST
-Author: Melissa Hubisz <mjhubisz@cornell.edu> and Adam Siepel
-    <acs4@cornell.edu>
+Title: RPHAST: R interface to PHAST
+Author: Melissa Hubisz, Katherine Pollard, and Adam Siepel
 Maintainer: Melissa Hubisz <mjhubisz@cornell.edu>
-Description: R interface to PHAST
+Description: RPHAST is an R interface to the PHAST pacakge
+    (Phylogenetic Analyis with Space/Time Models).  It can be used for
+    many types of analysis in comparative and evolutionary genomics,
+    such as estimating models of evolution from sequence data, scoring
+    alignments for conservation or acceleration, and predicting
+    elements based on conservation or custom phylogenetic hidden
+    markov models.  It can also perform many basic operations on multiple
+    sequence alignments and phylogenetic trees.
 License: GPL (>= 2)
-URL: http://compgen.bscb.cornell.edu/phast
+URL: http://compgen.bscb.cornell.edu/rphast
+Copyright: The code in src/pcre is Copyright (c) 1997-2010 University
+    of Cambridge.  All other code is Copyright (c) 2002-2010 University
+    of California, Cornell University.
 Suggests: ape, seqLogo
 Collate: 'checkArgs.R' 'feat.R' 'hmm.R' 'listOfLists.R' 'msa.R'
     'phastCons.R' 'phyloFit.R' 'phyloP.R' 'plot.R' 'treeModel.R'

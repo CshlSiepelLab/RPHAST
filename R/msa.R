@@ -1037,6 +1037,8 @@ extract.feature.msa <- function(x, features, do4d=FALSE, pointer.only=FALSE) {
 concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
   # have to do a little dance to make sure this behaves OK if
   # some msas are empty
+  if (!is.list(msas))
+    stop("concat.msa expects list of msa objects")
   isZero <- logical(length(msas))
   for (i in 1:length(msas)) {
     if (is.null(msas[[i]]$externalPtr)) 

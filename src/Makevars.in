@@ -1,8 +1,80 @@
-PKG_CFLAGS = -I. -Ipcre -DHAVE_CONFIG_H -DPHAST_VERSION='@PHAST_VERSION@' -DRPHAST @LAPACK_FLAG@ 
+PKG_CFLAGS = -I. -Ipcre -DHAVE_CONFIG_H -DPHAST_VERSION='@PHAST_VERSION@' -DRPHAST @LAPACK_FLAG@ @CFLAGS@
 PKG_LIBS = @LAPACK_LIBS@
-SRCS = $(wildcard *.c)
-PCRE_SRCS = $(wildcard pcre/*.c)
-OBJECTS = $(SRCS:.c=.o) $(PCRE_SRCS:.c=.o)
-
-all: $(SHLIB)
-$(SHLIB): $(OBJECTS)
+OBJECTS = \
+ fit_em.o\
+ rph_phyloP.o\
+ msa.o\
+ fit_column.o\
+ indel_mod.o\
+ motif.o\
+ rph_msa.o\
+ indel_history.o\
+ em.o\
+ gap_patterns.o\
+ trees.o\
+ sufficient_stats.o\
+ lists.o\
+ matrix.o\
+ subst_distrib.o\
+ bed.o\
+ eigen.o\
+ rph_phyloFit.o\
+ rph_util.o\
+ rph_phastCons.o\
+ rph_list_of_lists.o\
+ genepred.o\
+ phast_cons.o\
+ tree_model.o\
+ misc.o\
+ local_alignment.o\
+ prob_vector.o\
+ complex_matrix.o\
+ subst_mods.o\
+ list_of_lists.o\
+ maf.o\
+ maf_block.o\
+ rph_category_map.o\
+ complex_vector.o\
+ dgamma.o\
+ gff.o\
+ hmm.o\
+ rph_init.o\
+ category_map.o\
+ rph_hmm.o\
+ tree_likelihoods.o\
+ stringsplus.o\
+ multi_msa.o\
+ rph_tree_model.o\
+ markov_matrix.o\
+ hashtable.o\
+ phylo_p.o\
+ rph_gff.o\
+ rph_subst_mods.o\
+ rph_trees.o\
+ vector.o\
+ fit_feature.o\
+ phylo_hmm.o\
+ pcre/pcre_newline.o\
+ pcre/pcre_study.o\
+ pcre/pcre_compile.o\
+ pcre/pcre_valid_utf8.o\
+ pcre/pcre_globals.o\
+ pcre/pcre_get.o\
+ pcre/pcre_fullinfo.o\
+ pcre/pcre_tables.o\
+ pcre/pcre_chartables.o\
+ pcre/pcre_try_flipped.o\
+ pcre/pcre_exec.o\
+ pcre/pcre_xclass.o\
+ pcre/pcre_ord2utf8.o\
+ pcre/pcre_info.o\
+ pcre/pcre_config.o\
+ pcre/pcre_refcount.o\
+ pcre/pcre_version.o\
+ pcre/pcre_maketables.o\
+ pcre/pcre_ucd.o\
+ pcre/pcre_dfa_exec.o\
+ prob_matrix.o\
+ phylo_fit.o\
+ numerical_opt.o\
+ printP.o

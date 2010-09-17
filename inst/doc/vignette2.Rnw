@@ -1,4 +1,4 @@
-% \VignetteIndexEntry{rphast}
+% \VignetteIndexEntry{vignette2}
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
