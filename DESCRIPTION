@@ -1,7 +1,7 @@
 Package: rphast
 Version: 1.1
 Date: 2009-12-14
-Title: RPHAST: R interface to PHAST
+Title: R interface to PHAST package for comparative genomics
 Author: Melissa Hubisz, Katherine Pollard, and Adam Siepel
 Maintainer: Melissa Hubisz <mjhubisz@cornell.edu>
 Description: RPHAST is an R interface to the PHAST pacakge
