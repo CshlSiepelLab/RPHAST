@@ -7,7 +7,7 @@
 }
 
 
-##' ##' Creates a copy of a features object
+##' Creates a copy of a features object
 ##'
 ##' If x is stored in R (as it is by default), then this is no different
 ##' than x2 <- x.  But if it is stored as a pointer to a structure in C,
@@ -16,6 +16,7 @@
 ##' @param x an object of type \code{feat}
 ##' @return a features object which can be modified independently from the
 ##' original object
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 copy.feat <- function(x) {
   if (is.null(x$externalPtr)) return(x)
@@ -51,6 +52,7 @@ copy.feat <- function(x) {
 ##' @keywords Genepred
 ##' @keywords BED
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 read.feat <- function(filename, pointer.only=FALSE) {
   feat <- .makeObj.feat()
@@ -95,6 +97,7 @@ read.feat <- function(filename, pointer.only=FALSE) {
 ##'
 ##' \code{\link{msa}} for more details on the pointer.only option.
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 feat <- function(seqname="default", src=".", feature=".",
                  start, end, score=NULL,
@@ -159,6 +162,7 @@ feat <- function(seqname="default", src=".", feature=".",
 ##' object created in C.
 ##' @seealso \code{\link{feat}} for more details on features storage
 ##' options.
+##' @author Melissa J. Hubisz
 ##' @export
 as.pointer.feat <- function(x) {
   if (!is.null(x$externalPtr))
@@ -177,6 +181,7 @@ as.pointer.feat <- function(x) {
 ##' @keywords features
 ##' @seealso \code{\link{write.feat}}
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @S3method print feat
 print.feat <- function(x, ...) {
   cat(paste("Features object\n"))
@@ -189,6 +194,7 @@ print.feat <- function(x, ...) {
 ##' @param filename The name of the file to write to (will be overwritten)
 ##' @param x an object of type \code{feat}
 ##' @keywords features GFF
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 write.feat <- function(filename, x) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
@@ -205,6 +211,7 @@ write.feat <- function(filename, x) {
 ##' @export
 ##' @S3method nrow feat
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 nrow.feat <- function(x) {
   if (is.null(x$externalPtr))
     return(dim(x)[1])
@@ -221,6 +228,7 @@ nrow.feat <- function(x) {
 ##' @export
 ##' @S3method ncol feat
 ##' @keywords features
+##' @author Melissa J. Hubisz
 ncol.feat <- function(x) {
   if (is.null(x$externalPtr))
     return(dim(x)[2])
@@ -235,6 +243,7 @@ ncol.feat <- function(x) {
 ##' @export
 ##' @S3method summary feat
 ##' @keywords features
+##' @author Melissa J. Hubisz
 summary.feat <- function(object, ...) {
   if (is.null(object$externalPtr)) {
     as <- "stored as data frame"
@@ -260,6 +269,7 @@ summary.feat <- function(object, ...) {
 ##' direction.
 ##' @export
 ##' @S3method as.data.frame feat
+##' @author Melissa J. Hubisz and Adam Siepel
 as.data.frame.feat <- function(x, row.names=NULL, optional=FALSE, ...) {
   if (is.data.frame(x)) return(x)
   if (!is.null(x$externalPtr)) {
@@ -278,6 +288,7 @@ as.data.frame.feat <- function(x, row.names=NULL, optional=FALSE, ...) {
 ##' @export
 ##' @S3method dim feat
 ##' @keywords features
+##' @author Melissa J. Hubisz
 dim.feat <- function(x) {
   c(nrow.feat(x), ncol.feat(x))
 }
@@ -292,6 +303,7 @@ dim.feat <- function(x) {
 ##' @S3method range feat
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz
 range.feat <- function(..., na.rm=FALSE) {
   feats <- list(...)
   mins <- numeric(length(feats))
@@ -338,6 +350,7 @@ range.feat <- function(..., na.rm=FALSE) {
 ##' @param ... graphical parameters to be passed to \code{plot}.
 ##' @export
 ##' @keywords features plot
+##' @author Melissa J. Hubisz
 plot.feat <- function(x, y=0, height=1, plottype="r",
                       arrow.density=5,
                       angle=30,
@@ -474,6 +487,7 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
 ##' @param ... graphical parameters to be passed to \code{plot}.
 ##' @export
 ##' @keywords features plot
+##' @author Melissa J. Hubisz
 plot.gene <- function(x, y=0, height=1,
                       arrow.density=5,
                       angle = 30,
@@ -533,6 +547,7 @@ plot.gene <- function(x, y=0, height=1,
 ##' @return A kernel density object as defined by \code{\link{density}}
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz
 density.feat <- function(x, type="length", ...) {
   if (type == "length") {
     if (!is.null(x$externalPtr)) {
@@ -558,6 +573,7 @@ density.feat <- function(x, type="length", ...) {
 ##' @S3method hist feat
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz
 hist.feat <- function(x, type="length", ...) {
   if (type == "length") {
     if (!is.null(x$externalPtr)) {
@@ -602,6 +618,7 @@ hist.feat <- function(x, type="length", ...) {
 ##' otherwise unchanged.
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz
 overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
                          overlapping=TRUE, get.fragments=FALSE, pointer.only=FALSE) {
   check.arg(numbase, "numbase", "integer", null.OK=TRUE)
@@ -641,6 +658,7 @@ overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
 ##' be sorted by this function.  region.bounds will not be changed.
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz
 inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
   if (is.null(x$externalPtr))
     x <- as.pointer.feat(x)
@@ -680,6 +698,7 @@ inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
 ##' pointer to an object stored in C may be reordered (sorted) by this function.
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz
 coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
                           not=NULL,
                           region.bounds=NULL) {
@@ -718,6 +737,7 @@ coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
 ##' to x.
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 addUTRs.feat <- function(x) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
@@ -738,6 +758,7 @@ addUTRs.feat <- function(x) {
 ##' added to x.
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 addIntrons.feat <- function(x) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
@@ -760,6 +781,7 @@ addIntrons.feat <- function(x) {
 ##' or stop codon.
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 addSignals.feat <- function(x) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
@@ -784,6 +806,7 @@ addSignals.feat <- function(x) {
 ##' @note Assumes at most one start_codon and at most one stop_codon per transcript.
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 fixStartStop.feat <- function(x) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
@@ -802,6 +825,7 @@ fixStartStop.feat <- function(x) {
 ##' given features
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 rbind.feat <- function(...) {
   feat <- .makeObj.feat()
   featlist <- list(...)
@@ -841,6 +865,7 @@ rbind.feat <- function(...) {
 ##' of each split segment may be smaller than max.length
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz
 split.feat <- function(x, f, drop=FALSE, start.from="left",
                        pointer.only=FALSE, ...) {
   featSize <- nrow.feat(x)
@@ -876,6 +901,7 @@ split.feat <- function(x, f, drop=FALSE, start.from="left",
 ##' object in C; in this case it may sort differently depending on how
 ##' the object has been previously used.  x will be sorted if it is a pointer.
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 sort.feat <- function(x, decreasing = FALSE, ...) {
   if (is.null(x$externalPtr))
     x <- as.pointer.feat(x)
@@ -903,6 +929,7 @@ sort.feat <- function(x, decreasing = FALSE, ...) {
 ##' @note If x or annotations are passed to this function as pointers to objects
 ##' stored in C, they will be sorted after the function call.
 ##' @keywords features
+##' @author Melissa J. Hubisz
 composition.feat <- function(x, annotations) {
   if (!is.null(annotations$externalPtr))
     annotations <- as.data.frame.feat(annotations)
@@ -938,6 +965,7 @@ composition.feat <- function(x, annotations) {
 ##' @note If any of the arguments to this function are passed as pointers to
 ##' objects stored in C, they will be sorted after this function call.
 ##' @keywords features
+##' @author Melissa J. Hubisz
 enrichment.feat <- function(x, annotations, region.bounds) {
   if (!is.null(annotations$externalPtr))
     annotations <- as.data.frame.feat(annotations)
@@ -973,6 +1001,7 @@ enrichment.feat <- function(x, annotations, region.bounds) {
 ##' @S3method unique feat
 ##' @export
 ##' @keywords features
+##' @author Melissa J. Hubisz and Adam Siepel
 unique.feat <- function(x, incomparables=FALSE, ...) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
@@ -1001,6 +1030,7 @@ unique.feat <- function(x, incomparables=FALSE, ...) {
 ##' NA for no value).
 ##' @export
 ##' @keywords features GFF
+##' @author Melissa J. Hubisz
 tagval.feat <- function(x, tag) {
   check.arg(tag, "tag", "character", null.OK=FALSE)
   if (is.null(x$externalPtr)) {
@@ -1031,6 +1061,7 @@ tagval.feat <- function(x, tag) {
 ##' NA for no value).
 ##' @export
 ##' @keywords GFF
+##' @author Melissa J. Hubisz
 tagval <- function(x, tag) {
   check.arg(x, "x", "character", null.OK=FALSE, min.length=1L, max.length=NULL)
   tagval.feat(x=feat(start=rep(1, length(x)),

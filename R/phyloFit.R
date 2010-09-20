@@ -61,6 +61,7 @@
 ##' \code{copy.feat(features)} to avoid this behavior!
 ##' @keywords msa tm features trees
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 phyloFit <- function(msa,
                      tree=NULL,
                      subst.mod="REV",

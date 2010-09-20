@@ -12,6 +12,7 @@
 ##' @return TRUE if an object has class "tm", FALSE otherwise
 ##' @keywords tm
 ##' @export
+##' @author Melissa J. Hubisz
 is.tm <- function(x) {
   return(class(x)=="tm")
 }
@@ -98,6 +99,7 @@ as.tm.list <- function(l) {
 ##' @seealso \code{\link{tm}}
 ##' @keywords tm
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 read.tm <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
   x <- list()
@@ -116,6 +118,7 @@ read.tm <- function(filename) {
 ##' @seealso \code{\link{tm}}
 ##' @keywords tm
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 write.tm <- function(tm, filename=NULL, append=FALSE) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
   check.arg(append, "append", "logical", null.OK=TRUE)
@@ -132,6 +135,7 @@ write.tm <- function(tm, filename=NULL, append=FALSE) {
 ##' @export
 ##' @keywords tm
 ##' @S3method summary tm
+##' @author Melissa J. Hubisz and Adam Siepel
 summary.tm <- function(object, ...) {
   write.tm(object, NULL)
 }
@@ -144,6 +148,7 @@ summary.tm <- function(object, ...) {
 ##' @seealso \code{\link{tm}}
 ##' @export
 ##' @S3method as.list tm
+##' @author Melissa J. Hubisz and Adam Siepel
 as.list.tm <- function(x, ...) {
   class(x) <- "list"
   x
@@ -159,6 +164,7 @@ as.list.tm <- function(x, ...) {
 ##' @export
 ##' @keywords tm
 ##' @S3method print tm
+##' @author Melissa J. Hubisz and Adam Siepel
 print.tm <- function(x, aslist=FALSE, ...) {
   if (aslist) print(as.list(x), ...)
   else summary.tm(x, ...)
@@ -172,6 +178,7 @@ print.tm <- function(x, aslist=FALSE, ...) {
 ##' @return A vector of logical values indicating whether each string
 ##' represents a defined substitution model
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 isSubstMod.tm <- function(mod) {
   result <- logical(length(mod))
   for (i in 1:length(mod)) 
@@ -184,6 +191,7 @@ isSubstMod.tm <- function(mod) {
 ##' @return a character vector with the names of all valid substitution
 ##' models
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 subst.mods <- function() {
   .Call("rph_subst_mods_list_all", NULL)
 }
@@ -223,6 +231,7 @@ subst.mods <- function() {
 ##' @keywords tm
 ##' @return An object of class \code{tm} representing a phylogenetic model.
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
                    alphabet="ACGT", nratecats=1, 
                    alpha=0.0, rate.consts=NULL, rate.weights=NULL,

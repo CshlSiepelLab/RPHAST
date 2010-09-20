@@ -4,6 +4,7 @@
 ##' @return A logical indicating whether x is an object of type track
 ##' @keywords plot
 ##' @export
+##' @author Melissa J. Hubisz
 is.track <- function(x, ...) {
   if (is.null(attr(x, "class"))) return(FALSE)
   attr(x, "class") == "track"
@@ -17,6 +18,7 @@ is.track <- function(x, ...) {
 ##' coordinates in any element of the list
 ##' @keywords plot
 ##' @export
+##' @author Melissa J. Hubisz
 range.track <- function(..., na.rm=FALSE) {
   l <- list(...)
   if (length(l)==1 && !is.track(l[[1]])) 
@@ -43,6 +45,7 @@ range.track <- function(..., na.rm=FALSE) {
 ##' with smoothed values.  If \code{length(coord) <= numpoints}, it will contain the
 ##' original data
 ##' @export
+##' @author Melissa J. Hubisz
 smooth.wig <- function(coord, score, numpoints=300) {
   if (length(coord) != length(score)) stop("smooth.wig expects length(coord) == length(score)")
   if (length(coord) <= numpoints) return(data.frame(coord=coord, score=score))
@@ -86,6 +89,7 @@ smooth.wig <- function(coord, score, numpoints=300) {
 ##' @seealso \code{plotPhast}, which may be easier to use but less flexible
 ##' @keywords plot
 ##' @export
+##' @author Melissa J. Hubisz
 plot.track <- function(x,
                        doLabels=TRUE,
                        cex.axis=1.0,
@@ -216,6 +220,7 @@ plot.track <- function(x,
 ##' function
 ##' @keywords plot
 ##' @export
+##' @author Melissa J. Hubisz
 wig.track <- function(coord, score, name, short.label=NULL,
                       col="black", ylim=NULL, smooth=FALSE, numpoints=250,
                       horiz.line=NULL, horiz.lty=2, horiz.col="black") {
@@ -252,6 +257,7 @@ wig.track <- function(coord, score, name, short.label=NULL,
 ##' function
 ##' @keywords plot
 ##' @export
+##' @author Melissa J. Hubisz
 feat.track <- function(x, name, short.label=NULL, col="black") {
   rv <- list()
   attr(rv, "class") <- "track"
@@ -281,6 +287,7 @@ feat.track <- function(x, name, short.label=NULL, col="black") {
 ##' @seealso addIntrons.feat to add intron annotations to a features object.
 ##' @keywords plot
 ##' @export
+##' @author Melissa J. Hubisz
 gene.track <- function(x, name, short.label=NULL,
                        col="black", arrow.density=10) {
   rv <- list()

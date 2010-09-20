@@ -147,6 +147,7 @@ phyloP.call<- function(mod,
 ##' return objects are in 0-based coordinates.
 ##' @keywords msa tm features
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 phyloP <- function(mod,
                    msa,
                    method="LRT",
@@ -255,6 +256,7 @@ phyloP.prior <- function(mod, nsites=100, subtree=NULL, branches=NULL,
 ##' rather than whole distribution.
 ##' @return Either a list, data frame, or matrix, depending on options.
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 phyloP.sph <- function(mod,
                        msa=NULL,
                        mode="CON",

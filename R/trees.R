@@ -7,6 +7,7 @@
 ##' @return The same value, but with a semi-colon added to the end
 ##' of any strings which did not already end in semi-colons.
 ##' @export
+##' @author Melissa J. Hubisz
 fix.semicolon.tree <- function(x) {
   n <- nchar(x)
   lastCh <- substr(x, n, n)
@@ -25,6 +26,7 @@ fix.semicolon.tree <- function(x) {
 ##' @param filename The file containing the tree.
 ##' @return a character string representing the tree in newick format
 ##' @keywords trees newick
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 read.newick.tree <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
@@ -38,6 +40,7 @@ read.newick.tree <- function(filename) {
 ##' @param tree A vector of character strings, each containing a newick tree
 ##' @return A numeric vector containing the number of nodes in each tree
 ##' @keywords trees
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 numnodes.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
@@ -54,6 +57,7 @@ numnodes.tree <- function(tree) {
 ##' @param tree A vector of character strings, each containing a newick tree
 ##' @return A numeric vector containing the total branchlength of each tree
 ##' @keywords trees
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 branchlen.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
@@ -72,6 +76,7 @@ branchlen.tree <- function(tree) {
 ##' @return A numeric vector containing the distance from each given
 ##' node to the root of the corresponding tree.
 ##' @keywords trees
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 depth.tree <- function(tree, node) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
@@ -93,6 +98,7 @@ depth.tree <- function(tree, node) {
 ##' from the tree.  If TRUE, prunes all sequences except the ones named.
 ##' @return a vector of character strings representing the pruned trees.
 ##' @keywords trees
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 prune.tree <- function(tree, seqs, all.but=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -114,6 +120,7 @@ prune.tree <- function(tree, seqs, all.but=FALSE) {
 ##' @return A vector of character strings containing newick trees with all
 ##' ancestors named.
 ##' @keywords trees
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 name.ancestors <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -137,6 +144,7 @@ name.ancestors <- function(tree) {
 ##' @return A vector of trees which have been pruned, removing all nodes
 ##' which are not descendants of the given node.
 ##' @keywords trees
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 subtree <- function(tree, node, super.tree=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -169,6 +177,7 @@ subtree <- function(tree, node, super.tree=FALSE) {
 ##' named node.  Subtrees will be recycled as necessary if shorter than trees.
 ##' @return A vector of trees whose branches have been scaled
 ##' @keywords trees
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 rescale.tree <- function(tree, scale, subtree=NULL) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -206,6 +215,7 @@ rescale.tree <- function(tree, scale, subtree=NULL) {
 ##' @return A vector of character strings, in which all nodes with names
 ##' given in old.names are replaced with values from new.names
 ##' @keywords trees
+##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 rename.tree <- function(tree, old.names, new.names) {
   check.arg(tree, "tree", "character", null.OK=FALSE,

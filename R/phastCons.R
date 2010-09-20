@@ -240,6 +240,7 @@ phastCons.call <- function(msa,
 ##' See CITE PHASTCONS PAPER for more details.
 ##' @keywords msa
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 phastCons <- function(msa,
                       mod,
                       rho=0.3,

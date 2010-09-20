@@ -1,0 +1,7 @@
+2010-09-17: 1.1 released
+	* updated DESCRIPTION
+	* updates to Makevars and configure.ac to resolve error compiling 
+          on Solaris
+	* fixed bug causing segmentation fault in gff.c
+
+2010-09-15: 1.0 released

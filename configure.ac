@@ -1,5 +1,5 @@
 AC_PREREQ(2.57)
-AC_INIT([rphast], 0.0.1, [mjhubisz@cornell.edu], [], [http://compgen.bscb.cornell.edu/phast])
+AC_INIT([rphast], 1.1, [mjhubisz@cornell.edu], [], [http://compgen.bscb.cornell.edu/phast])
 #AC_CONFIG_SRCDIR([RPHAST/src/rph_init.c])
 
 : ${R_HOME=`R RHOME`}
@@ -81,31 +81,12 @@ AC_MSG_CHECKING(for -fno-strict-aliasing)
 AC_COMPILE_IFELSE(AC_LANG_PROGRAM(), AC_MSG_RESULT(yes), [AC_MSG_RESULT(no)
 		                           CFLAGS=${OLD_CFLAGS}])
 
-PHAST_VERSION="\"`cat src/version`\""
-
 AC_C_INLINE
 
-AC_SUBST(PHAST_VERSION)
-AC_SUBST(INLINE_FLAG)
-AC_SUBST(LAPACK_FLAG)
-AC_SUBST(LAPACK_LIBS)
-AC_SUBST(CFLAGS)
-
-AC_OUTPUT(src/Makevars)
-
-####################################################################
-####################################################################
-dnl BELOW IS PCRE CONFIG_H FILE, edited for RPHAST purposes
-
-dnl Process this file with autoconf to produce a configure script.
-
-dnl NOTE FOR MAINTAINERS: Do not use minor version numbers 08 or 09 because
-dnl the leading zeros may cause them to be treated as invalid octal constants
-dnl if a PCRE user writes code that uses PCRE_MINOR as a number. There is now
-dnl a check further down that throws an error if 08 or 09 are used.
-
-dnl The PCRE_PRERELEASE feature is for identifying release candidates. It might
-dnl be defined as -RC2, for example. For real releases, it should be empty.
+##################################################
+## The following comes from pcre's configure.ac ##
+## (edited for RPHAST purposes)                 ##
+##################################################
 
 m4_define(pcre_major, [8])
 m4_define(pcre_minor, [02])
@@ -117,34 +98,13 @@ m4_define(libpcre_version, [0:1:0])
 m4_define(libpcreposix_version, [0:0:0])
 m4_define(libpcrecpp_version, [0:0:0])
 
-dnl AC_PREREQ(2.57)  # do this earlier
-dnl AC_INIT(PCRE, pcre_major.pcre_minor[]pcre_prerelease, , pcre)
+AC_CONFIG_HEADERS(src/pcre/config.h)
+
 # This was added at the suggestion of libtoolize (03-Jan-10)
 AC_CONFIG_MACRO_DIR([src/pcre/m4])
-AC_CONFIG_SRCDIR([src/pcre/pcre.h.in])
-AC_CONFIG_HEADERS(src/pcre/config.h)
 
 # Check for a 64-bit integer type
 AC_TYPE_INT64_T
-
-PCRE_MAJOR="pcre_major"
-PCRE_MINOR="pcre_minor"
-PCRE_PRERELEASE="pcre_prerelease"
-PCRE_DATE="pcre_date"
-
-if test "$PCRE_MINOR" = "08" -o "$PCRE_MINOR" = "09"
-then
-  echo "***"
-  echo "*** Minor version number $PCRE_MINOR must not be used. ***"
-  echo "*** Use only 01 to 07 or 10 onwards, to avoid octal issues. ***"
-  echo "***"
-  exit 1
-fi
-
-AC_SUBST(PCRE_MAJOR)
-AC_SUBST(PCRE_MINOR)
-AC_SUBST(PCRE_PRERELEASE)
-AC_SUBST(PCRE_DATE)
 
 # Handle --enable-rebuild-chartables
 AC_ARG_ENABLE(rebuild-chartables,
@@ -163,12 +123,6 @@ AC_ARG_ENABLE(unicode-properties,
               AS_HELP_STRING([--enable-unicode-properties],
                              [enable Unicode properties support (implies --enable-utf8)]),
               , enable_unicode_properties=no)
-
-# Handle --enable-newline=NL
-dnl AC_ARG_ENABLE(newline,
-dnl               AS_HELP_STRING([--enable-newline=NL],
-dnl                              [use NL as newline (lf, cr, crlf, anycrlf, any; default=lf)]),
-dnl               , enable_newline=lf)
 
 # Separate newline options
 ac_pcre_newline=lf
@@ -331,9 +285,6 @@ PCRE uses memmove() if HAVE_MEMMOVE is set to 1; otherwise it uses bcopy() if
 HAVE_BCOPY is set to 1. If your system has neither bcopy() nor memmove(), set
 them both to 0; an emulation function will be used. */])
 
-# Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS(limits.h sys/types.h sys/stat.h dirent.h windows.h)
 
 # The files below are C++ header files.
 pcre_have_type_traits="0"
@@ -344,13 +295,11 @@ AC_SUBST(pcre_have_type_traits)
 AC_SUBST(pcre_have_bits_type_traits)
 
 # Conditional compilation
-AM_CONDITIONAL(WITH_PCRE_CPP, test "x$enable_cpp" = "xyes")
 AM_CONDITIONAL(WITH_REBUILD_CHARTABLES, test "x$enable_rebuild_chartables" = "xyes")
 
 # Checks for typedefs, structures, and compiler characteristics.
 
 AC_C_CONST
-AC_TYPE_SIZE_T
 
 # Checks for library functions.
 
@@ -624,59 +573,35 @@ if test "$enable_pcretest_libreadline" = "yes"; then
 fi
 AC_SUBST(LIBREADLINE)
 
-# Produce these files, in addition to config.h.
-AC_CONFIG_FILES(
-	src/pcre/pcre.h
-)
+AC_CONFIG_FILES(src/pcre/pcre.h)
 
-# Make the generated script files executable.
-#AC_CONFIG_COMMANDS([script-chmod], [chmod a+x pcre-config])
+AC_OUTPUT()
 
-# Make sure that pcre_chartables.c is removed in case the method for
-# creating it was changed by reconfiguration.
-#AC_CONFIG_COMMANDS([delete-old-chartables], [rm -f pcre_chartables.c])
+dnl end configure.ac
 
-AC_OUTPUT
+##################################################
+## End pcre configure.ac section                ##
+##################################################
 
-# Print out a nice little message after configure is run displaying your
-# chosen options.
+
+AC_SUBST(LAPACK_FLAG)
+AC_SUBST(LAPACK_LIBS)
+AC_SUBST(CFLAGS)
+
+AC_OUTPUT(src/Makevars)
 
 cat <<EOF
 
 $PACKAGE-$VERSION configuration summary:
 
-#    Install prefix .................. : ${prefix}
     C preprocessor .................. : ${CPP}
     C compiler ...................... : ${CC}
-    C++ preprocessor ................ : ${CXXCPP}
-    C++ compiler .................... : ${CXX}
-    Linker .......................... : ${LD}
-    C preprocessor flags ............ : ${CPPFLAGS}
     C compiler flags ................ : ${CFLAGS}
-    C++ compiler flags .............. : ${CXXFLAGS}
-    Linker flags .................... : ${LDFLAGS}
     Extra libraries ................. : ${LIBS}
+    Lapack flag ..................... : ${LAPACK_FLAG}
     Lapack libs ..................... : ${LAPACK_LIBS}
     BLAS libs ....................... : ${BLAS_LIBS}
     FLIBS ........................... : ${FLIBS}
-
-    Build C++ library ............... : ${enable_cpp}
-    Enable UTF-8 support ............ : ${enable_utf8}
-    Unicode properties .............. : ${enable_unicode_properties}
-    Newline char/sequence ........... : ${enable_newline}
-    \R matches only ANYCRLF ......... : ${enable_bsr_anycrlf}
-    EBCDIC coding ................... : ${enable_ebcdic}
-    Rebuild char tables ............. : ${enable_rebuild_chartables}
-    Use stack recursion ............. : ${enable_stack_for_recursion}
-    POSIX mem threshold ............. : ${with_posix_malloc_threshold}
-    Internal link size .............. : ${with_link_size}
-    Match limit ..................... : ${with_match_limit}
-    Match limit recursion ........... : ${with_match_limit_recursion}
-    Build shared libs ............... : ${enable_shared}
-    Build static libs ............... : ${enable_static}
-    Link pcregrep with libz ......... : ${enable_pcregrep_libz}
-    Link pcregrep with libbz2 ....... : ${enable_pcregrep_libbz2}
-    Link pcretest with libreadline .. : ${enable_pcretest_libreadline}
 
 EOF
 

@@ -33,6 +33,7 @@ fixFreq.hmm <- function(freq, name, n) {
 ##' @param end.freq A vector of length n giving the final state frequencies.
 ##' If NULL, do not condition on end frequencies.
 ##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
 hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
                 end.freq=NULL) {
   trans.mat <- as.matrix(trans.mat)
@@ -62,6 +63,7 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
 ##' @return An hmm object
 ##' @export
 ##' @keywords hmm
+##' @author Melissa J. Hubisz and Adam Siepel
 read.hmm <- function(filename) {
   h <- .makeObj.hmm()
   h$externalPtr <- .Call("rph_hmm_new_from_file", filename)
@@ -77,6 +79,7 @@ read.hmm <- function(filename) {
 ##' overwrite.
 ##' @export
 ##' @keywords hmm
+##' @author Melissa J. Hubisz and Adam Siepel
 write.hmm <- function(x, filename, append=FALSE) {
   h <- as.pointer.hmm(x)
   invisible(.Call("rph_hmm_print", h$externalPtr, filename, append))
@@ -102,6 +105,7 @@ stopIfNotValidHmm <- function(hmm){
 ##' @return The number of states in the hidden Markov Model
 ##' @export
 ##' @keywords hmm
+##' @author Melissa J. Hubisz
 nstate.hmm <- function(hmm) {
   stopIfNotValidHmm(hmm)
   nrow(hmm$trans.mat)
@@ -175,6 +179,7 @@ from.pointer.hmm <- function(x) {
 ##' \item{likelihood}{The likelihood of the data under the estimated model.}
 ##' @export
 ##' @keywords hmm
+##' @author Melissa J. Hubisz and Adam Siepel
 score.hmm <- function(msa, mod, hmm, states, viterbi=TRUE, ref.idx=1,
                       reflect.strand=NULL, features=NULL,
                       quiet=(!is.null(features))) {
