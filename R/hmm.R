@@ -87,6 +87,7 @@ write.hmm <- function(x, filename, append=FALSE) {
 
 
 ##' @export
+##' @nord
 stopIfNotValidHmm <- function(hmm){
   if (is.null(hmm$trans.mat) ||
       is.null(hmm$eq.freq) ||
@@ -113,6 +114,7 @@ nstate.hmm <- function(hmm) {
 
 
 ##' @export
+##' @nord
 as.pointer.hmm <- function(hmm) {
   obj <- .makeObj.hmm()
   obj$externalPtr <- .Call("rph_hmm_new", hmm$trans.mat, hmm$eq.freq,

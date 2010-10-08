@@ -25,7 +25,8 @@ rphast.simplify.list <- function(lol) {
       rowNames <- lol$row.names
       lol$row.names <- NULL
     } else rowNames <- NULL
-    if (isMatrix) lol <- as.matrix(as.data.frame(lol), check.names=FALSE)
+    # NOTE this is where we take the transpose of the C matrix
+    if (isMatrix) lol <- t(as.matrix(as.data.frame(lol), check.names=FALSE))
     if (isDataFrame) lol <- as.data.frame(lol, check.names=FALSE)
     if (!is.null(rowNames)) row.names(lol) <- rowNames
   } else {

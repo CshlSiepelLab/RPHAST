@@ -862,6 +862,8 @@ likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
       by.column <- FALSE
     }
   }
+  if (!is.msa(x))
+    stop("x is not an MSA object")
   if (is.null(x$externalPtr)) 
     x <- as.pointer.msa(x)
   tm <- as.pointer.tm(tm)

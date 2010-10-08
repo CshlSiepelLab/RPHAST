@@ -7,6 +7,7 @@
 # arg is NULL and null.OK==FALSE
 # length(arg) < min.length or length(arg) > max.length
 ##' @export
+##' @nord
 check.arg <- function(arg, argname="argument", class=NULL,
                      null.OK=TRUE, min.length=1L, max.length=1L) {
   if (is.null(arg)) {

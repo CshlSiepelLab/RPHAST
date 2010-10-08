@@ -1,73 +1,16 @@
 
 
-##' Fit a Phylogenetic model to an alignment
-##' @param msa An alignment object.  May be altered if passed in as a pointer to
-##' C memory (see Note).
-##' @param tree A character string containing a Newick formatted tree
-##' defining the topology.  Required if the number of species > 3, unles
-##' init.mod is specified.  The topology must be rooted, although the
-##' root is ignored if the substitution model is reversible.
-##' @param subst.mod The substitution model to use.  See
-##' \code{\link{subst.mods}}.
-##' @param init.mod An object of class \code{tm} used to initialize the model
-##' @param no.freqs (Only applies when init.mod provided). If \code{TRUE}, do
-##' not estimate equilibrium frequencies; just use the ones from init.mod.
-##' @param no.rates (Only applies when init.mod provided). If \code{TRUE},
-##' do not estimate transition rate parameters; just use the transition
-##' matrix in init.mod.
-##' @param features An object of type \code{feat}.  If given, a separate model will be
-##' estimated for each feature type.
-##' @param scale.only A logical value. If \code{TRUE}, estimate only the
-##' scale of the tree.  Branches will be held at initial values.  Useful in
-##' conjunction with init.mod.
-##' @param scale.subtree A character string giving the name of a node in
-##' a tree.  This option implies scale.only=TRUE.  If given, estimate
-##' separate scale factors for subtree beneath identified node and the rest
-##' of the tree.  The branch leading to the subtree is included in the subtree.
-##' @param nrates An integer.  The number of rate categories to use.
-##' Specifying a value greater than one causes the discrete gamma model for
-##' rate variation to be used,  unless rate constants are specified.
-##' @param alpha A numeric value > 0, for use with "nrates".  Initial value
-##' for alpha, the shape parameter of the gamma distribution.
-##' @param rate.constants A numeric vector.  Implies nrates =
-##' length(rate.constants).  Also implies EM=TRUE.  Uses a non-parametric
-##' mixture model for rates, instead of a gamma distribution.  The weight
-##' associated with each rate will be estimated.  alpha may still be used to
-##' initialize these weights.
-##' @param init.random A logical value.  If \code{TRUE}, parameters will be
-##' initialized randomly.
-##' @param init.parsimony A logical value.  If \code{TRUE}, branch lengths
-##' will be estimated based on parsimony counts for the alignments.
-##' Currently only works for models of order 0.
-##' @param clock A logical value.  If \code{TRUE}, assume a molecular clock
-##' in estimation.
-##' @param EM A logical value.  If \code{TRUE}, the model is fit using EM
-##' rather than the default BFGS quasi-Newton algorithm.  Not available
-##' for all models/options.
-##' @param precision A character vector, one of "HIGH", "MED", or "LOW",
-##' denoting the level of precision to use in estimating model parameters.
-##' Affects convergence criteria for iterative algorithms: higher precision
-##' means more iterations and longer execution time.
-##' @param ninf.sites An integer.  Require at least this many "informative"
-##' sites in order to estimate a model.  An informative site as an alignment
-##' column with at least two non-gap and non-missing-data characers.
-##' @param quiet A logical value.  If \code{TRUE}, do not report progress
-##' to screen.
-##' @return An object of class \code{tm} (tree model), or (if several models
-##' are computed, as is possible with the features or windows options), a list of
-##' objects of class \code{tm}.
-##' @note If msa or features object are passed in as pointers to C memory,
-##' they may be altered by this function!  Use \code{copy.msa(msa)} or
-##' \code{copy.feat(features)} to avoid this behavior!
-##' @keywords msa tm features trees
+#  Note: the man page for this function has become too complex for
+# roxygen to currently handle; it is created manually and copied
+# to RPHAST/man after roxygen is called.
+##' @nord
 ##' @export
-##' @author Melissa J. Hubisz and Adam Siepel
 phyloFit <- function(msa,
                      tree=NULL,
                      subst.mod="REV",
                      init.mod=NULL,
-                     no.freqs=FALSE,
-                     no.rates=FALSE,
+                     no.opt=c("backgd"),
+                     init.backgd.from.data=ifelse(is.null(init.mod),TRUE,FALSE),
                      features=NULL,
 #                     do.cats=NULL,
 #                     reverse.groups=NULL,
@@ -82,9 +25,10 @@ phyloFit <- function(msa,
                      EM=FALSE,
                      precision="HIGH",
                      ninf.sites=50,
-                     quiet=FALSE
-#                     no.opt=NULL,
-#                     init.freqs="from.data",
+                     quiet=FALSE,
+                     bound=NULL,
+                     log.file=FALSE
+#                     alt.mod=NULL  # don't use alt.mod here anymore, instead require init.mod with alt.mod defined for alt.mod
 #                     symmetric.freqs=FALSE,
 #                     report.error=FALSE,
 #                     ancestor=NULL,
@@ -104,18 +48,15 @@ phyloFit <- function(msa,
             min.length=NULL, max.length=NULL)
   if (!is.null(init.mod))
     init.mod <- as.pointer.tm(init.mod)
-  check.arg(no.freqs, "no.freqs", "logical", null.OK=FALSE)
-  check.arg(no.rates, "no.rates", "logical", null.OK=FALSE)
-  if (no.freqs && is.null(init.mod)) {
-    warning("no.freqs only applies when init.mod is specified; ignoring")
-    no.freqs <- FALSE
-  }
-  if (no.rates && is.null(init.mod)) {
-    warning("no.rates only applies when init.mod is specified; ignoring")
-    no.rates <- FALSE
-  }
+  check.arg(no.opt, "no.opt", "character", null.OK=TRUE, min.length=1L,
+            max.length=NULL)
   check.arg(init.random, "init.random", "logical", null.OK=FALSE)
   check.arg(init.parsimony, "init.parsimony", "logical", null.OK=FALSE)
+  check.arg(init.backgd.from.data, "init.backgd.from.data",
+            "logical", null.OK=FALSE,
+            min.length=1L, max.length=1L)
+  if (init.backgd.from.data == FALSE && is.null(init.mod))
+    stop("init.backgd.from.data cannot be FALSE unless init.mod is provided")
   check.arg(clock, "clock", "logical", null.OK=FALSE)
   check.arg(EM, "EM", "logical", null.OK=FALSE)
   check.arg(precision, "precision", "character", null.OK=FALSE)
@@ -124,6 +65,7 @@ phyloFit <- function(msa,
   check.arg(quiet, "quiet", "logical", null.OK=TRUE)
   # phyloFit will complain if precision is an invalid string, no need to
   # check here.
+  check.arg(bound, "bound", "character", null.OK=TRUE)
 
   if (!is.null(rate.constants)) {
     EM <- TRUE
@@ -147,9 +89,8 @@ phyloFit <- function(msa,
                               nrates,
                               alpha,
                               rate.constants,
-                              init.mod$externalPtr,
-                              no.freqs,
-                              no.rates,
+                              if (is.null(init.mod)) NULL else init.mod$externalPtr,
+                              init.backgd.from.data,
                               init.random,
                               init.parsimony,
                               clock,
@@ -157,7 +98,10 @@ phyloFit <- function(msa,
                               precision,
                               features$externalPtr,
                               ninf.sites,
-                              quiet)
+                              quiet,
+                              no.opt,
+                              bound,
+                              log.file)
 
   #need to parse result to make a list in R
   numModels <- .Call("rph_phyloFit_result_num_models", result$externalPtr)
@@ -181,6 +125,3 @@ phyloFit <- function(msa,
   }
   resultList
 }
-
-
-

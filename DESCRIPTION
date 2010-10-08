@@ -1,7 +1,7 @@
 Package: rphast
-Version: 1.2
+Version: 1.1.1
 Date: 2009-12-14
-Title: R interface to PHAST package for comparative genomics
+Title: R interface to PHAST software for comparative genomics
 Author: Melissa Hubisz, Katherine Pollard, and Adam Siepel
 Maintainer: Melissa Hubisz <mjhubisz@cornell.edu>
 Description: RPHAST is an R interface to the PHAST pacakge
@@ -12,7 +12,7 @@ Description: RPHAST is an R interface to the PHAST pacakge
     elements based on conservation or custom phylogenetic hidden Markov
     models.  It can also perform many basic operations on multiple
     sequence alignments and phylogenetic trees.
-License: GPL (>= 2)
+License: BSD
 URL: http://compgen.bscb.cornell.edu/rphast
 Copyright: The code in src/pcre is Copyright (c) 1997-2010 University
     of Cambridge.  All other code is Copyright (c) 2002-2010 University

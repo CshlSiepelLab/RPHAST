@@ -1,3 +1,16 @@
+???: 1.2 not yet released
+	* many changes to phyloFit; allow lineage-specific models, arbitrary
+	  parameter boundaries, hold specified boundaries constant.  Some
+	  of the default values are now different from command-line phyloFit.
+	* added support for alternate lineage-specific models within
+	  the tree model object
+	* to support lineage-specific models, added support for labels in
+	  phylogenetic trees which are denoted by the pound sign ie,
+	  "((human #primate, chimp #primate)#primate, mouse)"
+	* added plot.rate.matrix (and plot.tm and plot.altmodel.tm)
+	* added summary.tree function which returns a data frame with various
+	  information about each branch
+
 2010-09-17: 1.1 released
 	* updated DESCRIPTION
 	* updates to Makevars and configure.ac to resolve error compiling 
