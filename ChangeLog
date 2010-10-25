@@ -1,15 +1,38 @@
 ???: 1.2 not yet released
-	* many changes to phyloFit; allow lineage-specific models, arbitrary
-	  parameter boundaries, hold specified boundaries constant.  Some
-	  of the default values are now different from command-line phyloFit.
 	* added support for alternate lineage-specific models within
 	  the tree model object
+	* added support for codon models (HKY_CODON, REV_CODON, SSREV_CODON),
+	  also codon.clean.msa function
 	* to support lineage-specific models, added support for labels in
 	  phylogenetic trees which are denoted by the pound sign ie,
 	  "((human #primate, chimp #primate)#primate, mouse)"
+	* many changes to phyloFit; allow lineage-specific models, arbitrary
+	  parameter boundaries, hold specified boundaries constant.  Some
+	  of the default options are now different from command-line phyloFit.
 	* added plot.rate.matrix (and plot.tm and plot.altmodel.tm)
+	* added set.rate.matrix.tm and get.rate.matrix.params.tm which set 
+	  a rate matrix based on substitution model parameters, or get the 
+	  substitution model parameters describing a rate matrix, respectively.
 	* added summary.tree function which returns a data frame with various
 	  information about each branch
+	* changed several function names to increase consistency in naming 
+	  conventions:
+	    addUTRs.feat -> add.UTRs.feat
+	    addIntrons.feat -> add.introns.feat
+	    addSignals.feat -> add.signals.feat
+	    fixStartStop.feat -> fix.start.stop.feat
+	    validFormatStr.msa -> is.format.msa
+	    isSubstMod.tm -> is.subst.mod.tm
+	    branchlen.tree -> branchlength.tree
+	    wig.track -> as.track.wig
+	    feat.track -> as.track.feat
+	    gene.track -> as.track.feat(is.gene=TRUE)
+	* added pairwise.diff.msa function which returns pairwise differences
+	  per site between pairs of sequences in an alignment
+	* fixed some minor bugs in documentation (multiple notes in functions,
+	  help("[.msa") not working previously)
+	* Switched order of arguments in write.feat to (feature, file) for 
+	  consistency with all other write functions.
 
 2010-09-17: 1.1 released
 	* updated DESCRIPTION

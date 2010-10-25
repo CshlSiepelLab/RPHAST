@@ -31,8 +31,8 @@ scores <- score.hmm(align, mod=list(neutral=neutralMod,
 # try an alternate approach of comparing likelihoods of genes 
 feats <- read.feat("gencode.ENr334.gff")
 # plot in a region with some genes
-plot.track(list(feat.track(scores$in.states, name="hmmScores"),
-                feat.track(feats[feats$feature=="CDS",], name="genes")),
+plot.track(list(as.track.feat(scores$in.states, name="hmmScores"),
+                as.track.feat(feats[feats$feature=="CDS",], name="genes")),
            xlim=c(41650000, 41680000))
 unlink(files)
 

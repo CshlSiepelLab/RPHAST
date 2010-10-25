@@ -67,7 +67,7 @@ predictions, not mRNA/EST data), so the CDS and exon features are
 identical, and we can simply remove the exon features.  Finally, we will add
 features explicitly defining intergenic regions.
 <<browser3>>=
-feats <- addIntrons.feat(feats)
+feats <- add.introns.feat(feats)
 feats <- feats[feats$feature != "exon",]
 
 table(feats$feature)
@@ -81,9 +81,9 @@ wholeChrom <- feat(seq="tomato", src=".", feature="all",
                    end=align$offset+ncol.msa(align, "tomato"))
 
 # annotate intergenic regions
-intergenic.feats <- inverse.feat(feats, region.bounds=wholeChrom)
-intergenic.feats$feature <- "intergenic"
-feats <- rbind.feat(feats, intergenic.feats)
+intergenicFeats <- inverse.feat(feats, region.bounds=wholeChrom)
+intergenicFeats$feature <- "intergenic"
+feats <- rbind.feat(feats, intergenicFeats)
 @ 
 Next we will estimate a neutral model from fourfold degenerate (4D) sites
 in coding regions, using phyloFit with the predefined tree topology and the
@@ -102,12 +102,12 @@ pc <- phastCons(align, neutralMod, expected.length=6,
                 target.coverage=0.125, viterbi=TRUE)
 names(pc)
 
-cons.elements <- pc$most.conserved
+consElements <- pc$most.conserved
 # this shows how many bases are predicted to be conserved
-coverage.feat(cons.elements)
+coverage.feat(consElements)
 
 # this shows the fraction of bases covered by conserved elements
-coverage.feat(cons.elements)/coverage.feat(wholeChrom)
+coverage.feat(consElements)/coverage.feat(wholeChrom)
 
 # the posterior probabilities for every base are here:
 names(pc$post.prob.wig)
@@ -131,13 +131,13 @@ conservation scores for a genomic segment of interest.  We will make use of
 functions in RPHAST that allow ``tracks'' to be defined and then plotted in a
 browser-like display.
 <<browserFigure,fig=TRUE,prefix=FALSE,width=6,height=4.5>>=
-geneTrack <- gene.track(feats, "genes")
-consElTrack <- feat.track(cons.elements, "phastCons most conserved", col="red")
-phastConsScoreTrack <- wig.track(coord=pc$post.prob.wig$coord,
-                                 score=pc$post.prob.wig$post.prob,
-                                 name="phastCons post prob", col="red", ylim=c(0, 1))
-phyloPTrack <- wig.track(coord=pp$coord, score=pp$score, name="phyloP score", 
-                         col="blue", smooth=TRUE, horiz.line=0)
+codingFeats <- feats[feats$feature=="CDS",]
+geneTrack <- as.track.feat(codingFeats, "genes", is.gene=TRUE)
+consElTrack <- as.track.feat(consElements, "phastCons most conserved", col="red")
+phastConsScoreTrack <- as.track.wig(wig=pc$post.prob.wig,
+                                    name="phastCons post prob", col="red", ylim=c(0, 1))
+phyloPTrack <- as.track.wig(coord=pp$coord, score=pp$score, name="phyloP score", 
+                            col="blue", smooth=TRUE, horiz.line=0)
 
 plot.track(list(geneTrack, consElTrack, phastConsScoreTrack, phyloPTrack),
            xlim=c(60000, 68000), cex.labels=1.25, cex.axis=1.25, cex.lab=1.5)
@@ -164,14 +164,13 @@ plot(density.feat(ce), ylim=c(0, 0.018),
      main="Element Length by Type", xlab="Length", 
      mgp=c(1.5,0.5,0),mar=c(2,2,2,2))
 
-coding.feats <- feats[feats$feature=="CDS",]
-# obtain elements that overlap coding.feats by at least 50 percent
-ce.coding <- overlap.feat(ce, coding.feats, min.percent=0.5)
+# obtain elements that overlap codingFeats by at least 50 percent
+codingConsEle <- overlap.feat(ce, codingFeats, min.percent=0.5)
 # obtain elements that overlap by less than 50 percent
-ce.noncoding <- overlap.feat(ce, coding.feats, min.percent=0.5, 
+noncodingConsEle <- overlap.feat(ce, codingFeats, min.percent=0.5, 
                             overlapping=FALSE)
-lines(density.feat(ce.coding), col="red")
-lines(density.feat(ce.noncoding), col="blue")
+lines(density.feat(codingConsEle), col="red")
+lines(density.feat(noncodingConsEle), col="blue")
 legend(c("All", "Coding", "Noncoding"), x="topright", inset=0.05, 
        lty=1, col=c("black", "red", "blue"))
 @ 
@@ -245,8 +244,8 @@ coverage.feat(pcEM$most.conserved, pc$most.conserved,
 coverage.feat(pcEM$most.conserved, pc$most.conserved, 
              not=c(TRUE, FALSE), region.bounds=wholeChrom)
           
-plot.track(list(feat.track(pc$most.conserved, name="No estimation"),
-                feat.track(pcEM$most.conserved, name="With estimation")))
+plot.track(list(as.track.feat(pc$most.conserved, name="No estimation"),
+                as.track.feat(pcEM$most.conserved, name="With estimation")))
 @ 
 
 Observe that the coverage of the new elements is considerably higher.  Most

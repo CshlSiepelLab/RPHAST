@@ -17,6 +17,7 @@ URL: http://compgen.bscb.cornell.edu/rphast
 Copyright: The code in src/pcre is Copyright (c) 1997-2010 University
     of Cambridge.  All other code is Copyright (c) 2002-2010 University
     of California, Cornell University.
+Depends: stats
 Suggests: ape, seqLogo
 Collate: 'checkArgs.R' 'feat.R' 'hmm.R' 'listOfLists.R' 'msa.R'
     'phastCons.R' 'phyloFit.R' 'phyloP.R' 'plot.R' 'treeModel.R'

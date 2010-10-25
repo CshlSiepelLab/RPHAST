@@ -185,22 +185,22 @@ as.pointer.feat <- function(x) {
 ##' @S3method print feat
 print.feat <- function(x, ...) {
   cat(paste("Features object\n"))
-  write.feat(NULL, x)
+  write.feat(x, NULL)
 }
 
 
 ##' Write a features object to a file in GFF format.
 ##' @title Writing a features Object
-##' @param filename The name of the file to write to (will be overwritten)
 ##' @param x an object of type \code{feat}
+##' @param file The name of the file to write to (will be overwritten)
 ##' @keywords features GFF
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
-write.feat <- function(filename, x) {
-  check.arg(filename, "filename", "character", null.OK=TRUE)
+write.feat <- function(x, file) {
+  check.arg(file, "file", "character", null.OK=TRUE)
   if (is.null(x$externalPtr))
     x <- as.pointer.feat(x)
-  invisible(.Call("rph_gff_print", filename, x$externalPtr))
+  invisible(.Call("rph_gff_print", file, x$externalPtr))
 }
 
 
@@ -683,7 +683,8 @@ inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
 ##' features.
 ##' @param not If not \code{NULL}, a vector of logicals the same length
 ##' as the number of features
-##' provided.  For each value which is \code{TRUE}, the inverse of the feature
+##' provided (or will be recycled to this length).
+##' For each value which is \code{TRUE}, the inverse of the feature
 ##' will be used.  If any element of \code{not} is \code{TRUE}, then
 ##' the region.bounds arg must also be provided.  If \code{NULL}, do not
 ##' take the inverse of any features.
@@ -705,8 +706,9 @@ coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
   check.arg(or, "or", "logical", null.OK=FALSE)
   check.arg(get.feats, "get.feats", "logical", null.OK=FALSE)
   featlist <- list(...)
-  check.arg(not, "not", null.OK=TRUE, min.length=length(featlist),
+  check.arg(not, "not", null.OK=TRUE, min.length=1L,
             max.length=length(featlist))
+  not <- rep(not, length.out=length(featlist))
   if (is.null(not)) not <- rep(FALSE, length(featlist))
   if (sum(not==TRUE) > 0L) {
     if (is.null(region.bounds))
@@ -738,7 +740,7 @@ coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
 ##' @export
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
-addUTRs.feat <- function(x) {
+add.UTRs.feat <- function(x) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
@@ -759,7 +761,7 @@ addUTRs.feat <- function(x) {
 ##' @export
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
-addIntrons.feat <- function(x) {
+add.introns.feat <- function(x) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
@@ -775,14 +777,15 @@ addIntrons.feat <- function(x) {
 ##' the transcript_id must be indicated in the attribute field.
 ##' @return An object of type \code{feat}, with all the entries of the original object, but
 ##' also with stop codons, start, codons, 3' splice, and 5' splice sites annotated.
-##' @note If x is stored as a pointer to an object stored in C, signals will be
-##' added to x.
-##' @note Does not correctly handle case of splice site in middle of start
-##' or stop codon.
+##' @note \itemize{
+##' \item{If x is stored as a pointer to an object stored in C, signals will be
+##' added to x.}
+##' \item{Does not correctly handle case of splice site in middle of start
+##' or stop codon.}}
 ##' @export
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
-addSignals.feat <- function(x) {
+add.signals.feat <- function(x) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
@@ -801,13 +804,15 @@ addSignals.feat <- function(x) {
 ##' (as produced by addSignals.feat).
 ##' @return An object of type \code{feat}, in which CDS regions are ensured to
 ##' include start codons and exclude stop codons, as required by the GTF2 standard.
-##' @note If x is stored as a pointer to an object stored in C, signals will be
-##' added to x.
-##' @note Assumes at most one start_codon and at most one stop_codon per transcript.
+##' @note \itemize{
+##' \item{If x is stored as a pointer to an object stored in C, signals will be
+##' added to x.}
+##' \item{Assumes at most one start_codon and at most one stop_codon per transcript.}
+##' }
 ##' @export
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
-fixStartStop.feat <- function(x) {
+fix.start.stop.feat <- function(x) {
   if (is.null(x$externalPtr)) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
@@ -851,7 +856,7 @@ rbind.feat <- function(...) {
 ##' value.  Values will be recycled to the same length
 ##' as \code{nrow.feat(x)}.
 ##' @param drop A logical value saying whether to drop "left-over" elements
-##' which do not have the appropriate length.
+##' which do not have exactly length f.
 ##' @param start.from A character string, current valid values are "left"
 ##' (start split at smallest coordinate for each feature), or "right"
 ##' (start splitting at the last coordinate and work down).  Values will
@@ -922,9 +927,9 @@ sort.feat <- function(x, decreasing = FALSE, ...) {
 ##' each type of element in the annotations.  The second
 ##' column gives the fraction of 
 ##' x which fall in the corresponding annotation type.
-##' Assuming non-overlapping annotations which cover the
+##' Given non-overlapping annotations which cover the
 ##' entire range of interest, the second column should sum
-##' to 1.
+##' to 1 (otherwise not).
 ##' @export
 ##' @note If x or annotations are passed to this function as pointers to objects
 ##' stored in C, they will be sorted after the function call.
@@ -976,8 +981,7 @@ enrichment.feat <- function(x, annotations, region.bounds) {
   totalNumBase <- coverage.feat(region.bounds)
   for (anntype in annTypes) {
     annfeat <- annotations[annotations$feature == anntype,]
-    cat(dim(annfeat),"\n")
-    rv[[anntype]] <- coverage.feat(x, annfeat)*totalNumBase/(coverage.feat(annfeat)*coverage.feat(x))
+    rv[[anntype]] <- coverage.feat(x, annfeat, region.bounds)*totalNumBase/(coverage.feat(annfeat, region.bounds)*coverage.feat(x, region.bounds))
   }
   data.frame(type=names(rv), enrichment=as.numeric(rv), stringsAsFactors=TRUE)
 }
@@ -994,10 +998,11 @@ enrichment.feat <- function(x, annotations, region.bounds) {
 ##' is kept; otherwise the feature with the longest length.  If
 ##' x is a pointer to an object stored in C, the return value will also
 ##' be a pointer (and x will be altered to the return value).
-##' @note Long UTRs can have undesirable effects; may want to filter these
-##' out first.
-##' @note If x is a pointer to an object in C, it will be modified (to
-##' the return value).
+##' @note \itemize{
+##' \item{Long UTRs can have undesirable effects; may want to filter these
+##' out first.}
+##' \item{If x is a pointer to an object in C, it will be modified (to
+##' the return value).}}
 ##' @S3method unique feat
 ##' @export
 ##' @keywords features

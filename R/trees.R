@@ -76,7 +76,7 @@ numleaf.tree <- function(tree) {
 ##' @keywords trees
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
-branchlen.tree <- function(tree) {
+branchlength.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
             max.length=NULL)
   result <- numeric(length(tree))

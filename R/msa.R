@@ -140,6 +140,7 @@ msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
 ##' @seealso \code{\link{msa}}
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @S3method ncol msa
 ncol.msa <- function(x, refseq=NULL) {
   msa <- x
   if (is.null(msa$externalPtr) && is.null(refseq)) {
@@ -175,12 +176,15 @@ dim.msa <- function(x) {
 ##' column has at least two non-missing and non-gap characters.
 ##' @export
 ##' @keywords msa
+##' @seealso \code{pairwise.diff.msa} To get differences per base
+##' between pairs of sequences
 ##' @author Melissa J. Hubisz and Adam Siepel
 ninf.msa <- function(msa) {
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
   .Call("rph_msa_ninformative_sites", msa$externalPtr)
 }
+
 
 ##' Returns the number of sequence in an MSA alignment.
 ##' @title MSA Number of Sequences
@@ -190,12 +194,14 @@ ninf.msa <- function(msa) {
 ##' @seealso \code{\link{msa}}
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @S3method nrow msa
 nrow.msa <- function(msa) {
   if (is.null(msa$externalPtr)) {
     return(length(msa$seqs))
   }
   .Call("rph_msa_nseq", msa$externalPtr)
 }
+
 
 ##' Returns TRUE if the argument is a valid string describing a
 ##' multiple sequence alignment (MSA) format.
@@ -211,7 +217,7 @@ nrow.msa <- function(msa) {
 ##' @keywords msa
 ##' @export
 ##' @author Melissa J. Hubisz
-validFormatStr.msa <- function(format) {
+is.format.msa <- function(format) {
   if (is.null(format)) return(NULL)
   result <- logical(length(format))
   for (i in 1:length(format)) {
@@ -256,6 +262,7 @@ alphabet.msa <- function(msa) {
 ##' @keywords msa
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @S3method is.ordered msa
 is.ordered.msa <- function(msa) {
   if (!is.null(msa$externalPtr))
     return(.Call("rph_msa_isOrdered", msaP=msa$externalPtr))
@@ -329,7 +336,7 @@ as.pointer.msa <- function(src) {
 ##' @return A string describing an MSA file (one of "MAF", "FASTA",
 ##' "LAV", "SS", "MPM", "PHYLIP"), or NULL if a guess can't be made
 ##' based on the file extension.
-##' @seealso validFormatStr.msa
+##' @seealso is.format.msa
 ##' @keywords msa
 ##' @export
 ##' @author Melissa J. Hubisz
@@ -341,6 +348,7 @@ guess.format.msa  <- function(filename) {
   if (x=="FA"  || x=="fa") return("FASTA")
   if (x=="LAV" || x=="lav") return("LAV")
   if (x=="SS"  || x=="ss") return("SS")
+  if (x=="PH" || x== "ph" || x=="PHY" || x=="phy") return("PHYLIP")
   NULL
 }
 
@@ -348,8 +356,8 @@ guess.format.msa  <- function(filename) {
 ##' Writes a multiple sequence alignment (MSA) object to a file
 ##' in one of several formats.
 ##' @title Writing MSA Objects to Files
-##' @param msa an object of class msa
-##' @param filename File to write (will be overwritten).  If NULL, output
+##' @param x an object of class msa
+##' @param file File to write (will be overwritten).  If NULL, output
 ##' goes to terminal.
 ##' @param format format to write MSA object.  Valid values are "FASTA",
 ##' "PHYLIP", "MPM", or "SS".
@@ -359,16 +367,17 @@ guess.format.msa  <- function(filename) {
 ##' @keywords msa FASTA PHYLIP MPM SS
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
-write.msa <- function(msa, filename=NULL,
-                      format=c(guess.format.msa(filename), "FASTA")[1],
+write.msa <- function(x, file=NULL,
+                      format=c(guess.format.msa(file), "FASTA")[1],
                       pretty.print=FALSE) {
   #checks
-  check.arg(filename, "filename", "character", null.OK=TRUE)
+  check.arg(file, "file", "character", null.OK=TRUE)
   check.arg(format, "format", "character", null.OK=FALSE)
   check.arg(pretty.print, "pretty.print", "logical", null.OK=FALSE)
-  if (! validFormatStr.msa(format)) {
+  if (! is.format.msa(format)) {
     stop(paste("invalid MSA FORMAT \"", format, "\"", sep=""))
   }
+  msa <- x
   if (is.null(msa$externalPtr)) {
     printMsa <- as.pointer.msa(msa)
   } else {
@@ -376,7 +385,7 @@ write.msa <- function(msa, filename=NULL,
   }
   invisible(.Call("rph_msa_printSeq",
                   msaP=printMsa$externalPtr,
-                  filenameP=filename,
+                  fileP=file,
                   formatP=format,
                   pretty.printP=pretty.print))
 }
@@ -437,7 +446,7 @@ summary.msa <- function(object, ...,
   if (!printed && print.seq) {
     cat("$seq\n")
     if (is.null(format)) format <- "FASTA"
-      write.msa(msa, filename=NULL, format, pretty.print)
+      write.msa(msa, file=NULL, format, pretty.print)
     cat("\n")
   }
 }
@@ -446,7 +455,7 @@ summary.msa <- function(object, ...,
 ##' Prints an MSA (multiple sequence alignment) object.
 ##'
 ##' Valid formats for printing are "FASTA", "PHYLIP", "MPM", and "SS".
-##' See \code{\link{validFormatStr.msa}} for details on these formats.
+##' See \code{\link{is.format.msa}} for details on these formats.
 ##' If format is specified, the alignment is printed regardless of
 ##' print.seq.
 ##'
@@ -506,9 +515,9 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' @param tuple.size Integer.  If given, and if pointer.only is \code{TRUE},
 ##' MSA will be stored in sufficient statistics format, where each tuple
 ##' contains tuple.size consecutive columns of the alignment.
-##' @param do.cats Character vector.  If given, and if features is specified,
-##' then only the types of features named here will be represented in the
-##' returned alignment.
+##' @param do.cats Character vector if features is provided; integer vector
+##' if cats.cylce is provided.  If given, only the types of features named
+##' here will be represented in the (unordered) return alignment.
 ##' @param refseq Character string specifying a FASTA format file with a
 ##' reference sequence.  If given, the reference sequence will be
 ##' "filled in" whereever missing from the alignment.
@@ -527,11 +536,12 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' directly in R memory.  This improves performance and may be necessary
 ##' for large alignments, but reduces functionality.  See
 ##' \code{\link{msa}} for more details on MSA object storage options.
-##' @note If the input is in "MAF" format and features is specified, the
+##' @note \itemize{
+##' \item{If the input is in "MAF" format and features is specified, the
 ##' resulting alignment will be stripped of gaps in the reference (1st)
-##' sequence.
-##' @note If the features argument is an object stored in C, its values will
-##' be changed by this function!
+##' sequence.}
+##' \item{If the features argument is an object stored in C, its values will
+##' be changed by this function!}}
 ##' @return an MSA object.
 ##' @keywords msa FASTA MAF PHYLIP SS
 ##' @seealso \code{\link{msa}}, \code{\link{read.feat}}
@@ -550,6 +560,7 @@ read.msa <- function(filename,
                      seqnames=NULL, discard.seqnames=NULL,
                      pointer.only=FALSE) {
 
+  cats.cycle <- NULL  
   check.arg(filename, "filename", "character", null.OK=FALSE)
   check.arg(format, "format", "character", null.OK=FALSE)
   check.arg(alphabet, "alphabet", "character", null.OK=TRUE)
@@ -557,8 +568,18 @@ read.msa <- function(filename,
   check.arg(do.4d, "do.4d", "logical", null.OK=FALSE)
   check.arg(ordered, "ordered", "logical", null.OK=FALSE)
   check.arg(tuple.size, "tuple.size", "integer", null.OK=TRUE)
-  check.arg(do.cats, "do.cats", "character", null.OK=TRUE,
-            min.length=NULL, max.length=NULL)
+  check.arg(cats.cycle, "cats.cycle", "integer", null.OK=TRUE)
+  if (! (is.null(features) || is.null(cats.cycle)))
+    stop("cannot provide both features and cats.cycle")
+  if (!is.null(features)) {
+    check.arg(do.cats, "do.cats", "character", null.OK=TRUE,
+              min.length=NULL, max.length=NULL)
+  } else if (!is.null(cats.cycle)) {
+    check.arg(do.cats, "do.cats", "integer", null.OK=TRUE,
+              min.length=NULL, max.length=NULL)
+  } else if (!is.null(do.cats)) {
+    warning("do.cats ignored unless features or cats.cycle provided")
+  }
   check.arg(refseq, "refseq", "character", null.OK=TRUE)
   check.arg(offset, "offset", "integer", null.OK=TRUE)
   check.arg(seqnames, "seqnames", "character", null.OK=TRUE,
@@ -567,7 +588,7 @@ read.msa <- function(filename,
             min.length=NULL, max.length=NULL)
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
 
-  if (!validFormatStr.msa(format))
+  if (!is.format.msa(format))
     stop(paste("invalid format string", format))
   if (!is.null(tuple.size) && tuple.size <= 0)
     stop("tuple.size should be integer >= 1")
@@ -592,8 +613,9 @@ read.msa <- function(filename,
   msa <- .makeObj.msa()
   msa$externalPtr <- .Call("rph_msa_read", filename, format,
                            features$externalPtr, do.4d, alphabet,
-                           tuple.size, refseq, ordered, do.cats,
-                           offset, seqnames, discard.seqnames)
+                           tuple.size, refseq, ordered, cats.cycle,
+                           do.cats, offset, seqnames,
+                           discard.seqnames)
   if (format != "MAF") {
     if (!is.null(seqnames))
       msa <- sub.msa(msa, seqnames, keep=TRUE)
@@ -604,6 +626,7 @@ read.msa <- function(filename,
     msa <- from.pointer.msa(msa)
   msa
 }
+
 
 
 ##' DNA complement
@@ -630,7 +653,7 @@ complement <- function(x) {
 ##' @keywords msa
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
-reverse.complement <- function(x) {
+reverse.complement.msa <- function(x) {
   if (is.null(x$externalPtr)) {
     pointer.only <- FALSE
     x <- as.pointer.msa(x)
@@ -658,7 +681,6 @@ reverse.complement <- function(x) {
 ##' @param pointer.only If \code{TRUE}, return an msa object which is only
 ##' a pointer to a C structure (advanced use only).
 ##' @return A new MSA object containing a subset of the original MSA.
-##' @S3method sub msa
 ##' @note This function will not modify x even if it is stored as a pointer.
 ##' @export
 ##' @keywords msa
@@ -800,7 +822,6 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 
   # check if arguments are given as logicals.
   if (is.logical(rows)) {
-    cat("is.logical rows")
     rows = which(rep(rows, length.out = nrow.msa(x)))
   }
   if (is.logical(cols)) 
@@ -884,7 +905,8 @@ likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
 ##' @param object An object of type \code{tm} (or a list of these objects)
 ##' describing the phylogenetic model from which to simulate.  If it
 ##' is a list of tree models then an HMM should be provided to describe
-##' transition rates between models.
+##' transition rates between models.  Currently only models of order zero
+##' are supported.
 ##' @param nsim The number of columns in the simulated alignment.
 ##' @param seed A random number seed.  Either \code{NULL} (the default;
 ##' do not re-seed random  number generator), or an integer to be sent to
@@ -903,6 +925,8 @@ likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
 ##' @keywords msa hmm
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @importFrom stats simulate
+##' @S3method simulate msa
 simulate.msa <- function(object, nsim, seed=NULL, hmm=NULL, get.features=FALSE,
                          pointer.only=FALSE, ...) {
   nsites <- nsim
@@ -983,11 +1007,12 @@ sample.msa <- function(x, size, replace=FALSE, prob=NULL, pointer.only=FALSE) {
 ##' with feature type "CDS"
 ##' @return an unordered msa object containing only the sites which are
 ##' fourfold degenerate
-##' @note If x is stored as a pointer, it will be 
+##' @note \itemize{
+##' \item{If x is stored as a pointer, it will be 
 ##' reduced to four-fold degenerate sites, so the original alignment will be lost.
-##' Use get4d.msma(copy.msa(x), features) to avoid this behavior.
-##' @note For very large MSA objects it is more efficient to use the do.4d option
-##' in the read.msa function instead.
+##' Use get4d.msma(copy.msa(x), features) to avoid this behavior.}
+##' \item{For very large MSA objects it is more efficient to use the do.4d option
+##' in the read.msa function instead.}}
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 get4d.msa <- function(x, features) {
@@ -1109,11 +1134,12 @@ concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
 ##' @param ... Not currently used
 ##' @return A list of msa objects, representing the sub-alignments for
 ##' each element in f
-##' @note If f is stored as a pointer to an object in C, its values will
+##' @note \itemize{
+##' \item{If f is stored as a pointer to an object in C, its values will
 ##' be altered by this function.  Use
-##' \code{split.by.feature.msa(x, copy.feat(f), ...)} to avoid this behavior!
-##' @note x will not be altered even if it is stored as a pointer to an
-##' object in C.
+##' \code{split.by.feature.msa(x, copy.feat(f), ...)} to avoid this behavior!}
+##' \item{x will not be altered even if it is stored as a pointer to an
+##' object in C.}}
 ##' @keywords msa features
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
@@ -1162,12 +1188,13 @@ split.by.feature.msa <- function(x, f, drop=FALSE, pointer.only=FALSE, ...) {
 ##' \code{refseq==0 || refseq==NULL}, columns with gaps in the reference
 ##' sequence will be ignored, and will fall in "informative" or "uninformative"
 ##' features based on the informativeness of neighboring columns.
-##' @note If the msa object has an idx.offset, it is assumed to be a coordinate
+##' @note \itemize{
+##' \item{If the msa object has an idx.offset, it is assumed to be a coordinate
 ##' offset for the first species in the alignment.  So the idx.offset will
 ##' be added to the coordinates in the returned features object only if
-##' \code{refseq==1}.
-##' @note This function will not alter the value of x even if it is stored as
-##' a pointer.
+##' \code{refseq==1}.}
+##' \item{This function will not alter the value of x even if it is stored as
+##' a pointer.}}
 ##' @keywords msa
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
@@ -1215,3 +1242,167 @@ informative.regions.msa <- function(x, min.numspec, spec=NULL, refseq=1,
   as.data.frame.feat(feats)
 }
 
+
+##' Clean an alignment for codon analysis
+##' @param x An object of type \code{msa}
+##' @param refseq The name of the reference sequence to be used.  If given,
+##' strip all columns which contain gaps in refseq.  Once this is done,
+##' alignment should be in frame.  If \code{refseq==NULL} then alignment
+##' should be in frame as it is sent in (no gaps are stripped).
+##' @param strand Either "+" or "-".  If "-", reverse complement the
+##' alignment.
+##' @return An object of type \code{msa}.  It will be the same as the
+##' original msa, with the following modifications:
+##' \itemize{
+##' \item If refseq is not NULL, columns with gaps in refseq will be stripped.
+##' \item If strand is "-", the new msa will be the reverse complement of
+##' the original.
+##' \item After the gap stripping and reverse complementing steps, each
+##' sequence is searched for stop codons.  If encountered, the stop codon
+##' and the rest of the sequence to follow is converted to missing data.  The
+##' resulting msa has a length equal to the longest remaining sequence (end
+##' columns with all missing data are removed).
+##' }
+##' @note If the input msa (x) is stored as a pointer, its value will be
+##' changed to the return value of the function.
+##' @export
+##' @author Melissa J. Hubisz
+codon.clean.msa <- function(x, refseq=NULL, strand="+") {
+  check.arg(refseq, "refseq", "character", null.OK=TRUE, min.length=1L,
+            max.length=1L)
+  if (!is.msa(x)) stop("x should be object of type msa")
+  check.arg(strand, "strand", "character", null.OK=FALSE, min.length=1L,
+            max.length=1L)
+  if (is.null(x$externalPtr)) {
+    x <- as.pointer.msa(x)
+    pointer.only <- FALSE
+  } else pointer.only <- TRUE
+  .Call("rph_msa_codon_clean", x$externalPtr, refseq, strand)
+  if (pointer.only == FALSE) {
+    x <- from.pointer.msa(x)
+  }
+  x
+}
+
+
+
+##' Get the observed frequencies of states in an alignment
+##' @param align An object of type \code{msa}.
+##' @param mod An object of type \code{tm} representing a tree model.
+##' @return A numeric vector giving the observed frequencies of each state
+##' in the model
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+state.freq.msa <- function(align, mod) {
+  if (!is.msa(align)) stop("align should be object of type msa")
+  if (is.null(align$externalPtr))
+    align <- as.pointer.msa(align)
+  mod <- as.pointer.tm(mod)
+  .Call("rph_msa_get_base_freqs_tuples", align$externalPtr, mod$externalPtr)
+}
+
+
+##' Get the frequencies of characters in an alignment
+##' @param x An object of type \code{msa}
+##' @param seq A vector of character strings identifying the sequence(s)
+##' to get base frequencies for.  If \code{NULL}, use all sequences.
+##' @param ignore.missing If TRUE, ignore missing data characters ("N" and "?").
+##' @param ignore.gaps If TRUE, ignore gaps.
+##' @return A data frame with one row for each unique state (usually
+##' "A", "C", "G", "T", and possibly "N", "?", "-", counts for
+##' each state, and overall frequency of each state.
+##' @note Does not work with msa objects stored as a pointer to a C structure.
+##' @seealso \code{statfreq.msa}, which gets observed frequencies of states
+##' in an alignment with respect to a substitution model, and works for
+##' pointers.
+##' @export
+##' @author Melissa J. Hubisz
+base.freq.msa <- function(x, seq=NULL, ignore.missing=TRUE,
+                          ignore.gaps=TRUE) {
+  if (!is.msa(x)) stop("x should be object of type msa")
+  check.arg(seq, "seq", "character", null.OK=TRUE, min.length=1L,
+            max.length=NULL)
+  check.arg(ignore.missing, "ignore.missing", "logical", null.OK=FALSE,
+            min.length=1L, max.length=1L)
+  check.arg(ignore.gaps, "ignore.gaps", "logical", null.OK=FALSE,
+            min.length=1L, max.length=1L)
+  chars <- NULL
+  for (i in 1:nrow.msa(x)) {
+    if (is.null(seq) || is.element(names(x)[i], seq))
+      chars <- c(chars, strsplit(x$seqs[i], split='')[[1]])
+  }
+  if (ignore.missing) chars <- chars[chars != "?" & chars != "N"]
+  if (ignore.gaps) chars <- chars[chars != "-"]
+  if (length(chars) == 0L)
+    stop("No sequences found")
+  result <- table(chars)
+  rv <- data.frame(states=names(result), counts=as.integer(result))
+  rv <- data.frame(rv, freq=rv$counts/sum(rv$counts))
+  rv
+}
+
+##' Get the fraction of G's and C's in an alignment
+##' @param x An object of type \code{msa}
+##' @param seq A vector of character strings identifying the sequence(s)
+##' to use in the base frequency tabulation.  If \code{NULL}, use all
+##' sequences.
+##' @param ignore.missing If \code{FALSE}, count missing data in the
+##' denominator.
+##' @param ignore.gaps If \code{TRUE}, count gaps in the denominator.
+##' @return The fraction of bases which are C's and G's
+##' @export
+##' @author Melissa J. Hubisz
+gc.content.msa <- function(x, seq=NULL, ignore.missing=TRUE,
+                           ignore.gaps=TRUE) {
+  df <- base.freq.msa(x, seq, ignore.missing, ignore.gaps)
+  sum(df[df$states=="C" | df$states=="c" | df$states=="G" | df$states=="g","freq"])
+}
+
+
+
+##' Get pairwise differences per site between sequences
+##' @param x An object of type \code{msa}
+##' @param seq1 A character vector or integer index indicating seq1 (see Value)
+##' @param seq2 A character vector of integer index indicating seq2.  Can only be
+##' provided if seq1 is provided.
+##' @param ignore.missing A logical value indicating whether to compare
+##' sites where either sequence has missing data.
+##' @param ignore.gaps A logical value indicating whether to compare sites
+##' where either sequence contains a gap.
+##' @return If seq1 and seq2 are provided, returns a numeric value giving
+##' the fraction of sites in the alignment where seq1 and seq2 differ (or
+##' zero if there are no sites to compare).  If seq1 is provided and seq2
+##' is NULL, returns a numeric vector giving this value for seq1 compared
+##' to every sequence (including itself; order of results is same as order of
+##' sequences in alignment).  If both seq1 and seq2 are NULL, returns a matrix
+##' giving this value for every sequence compared with every other sequence.
+##' @export
+##' @seealso \code{ninf.msa} To count the number of non-gap and non-missing character
+##' @author Melissa J. Hubisz
+pairwise.diff.msa <- function(x, seq1=NULL, seq2=NULL, ignore.missing=TRUE,
+                      ignore.gaps=TRUE) {
+  if (!is.msa(x)) stop("x should be an object of type msa")
+  check.arg(ignore.missing, "ignore.missing", "logical", null.OK=FALSE)
+  check.arg(ignore.gaps, "ignore.gaps", "logical", null.OK=FALSE)
+  if ((!is.null(seq2)) && is.null(seq1))
+    stop("seq2 can only be provided if seq1 is provided")
+  if (!is.null(seq1)) {
+    if (length(seq1) != 1L) stop("seq1 should have length 1")
+    if (is.character(seq1)) {
+      newseq1 <- which(names(x) == seq1)
+      if (length(newseq1) == 0L) stop("no sequence named ", seq1, " in alignment")
+      seq1 <- newseq1
+    }
+  }
+  if (!is.null(seq2)) {
+    if (length(seq2) != 1L) stop("seq2 should have length 1")
+    if (is.character(seq2)) {
+      newseq2 <- which(names(x) == seq2)
+      if (length(newseq2) == 0L) stop("no sequence named ", seq2, " in alignment")
+      seq2 <- newseq2
+    }
+  }
+  if (is.null(x$externalPtr)) x <- as.pointer.msa(x)
+  rphast.simplify.list(.Call("rph_msa_fraction_pairwise_diff", x$externalPtr, seq1, seq2,
+                             ignore.missing, ignore.gaps))
+}

@@ -79,6 +79,8 @@ from.pointer.tm <- function(x) {
   tm$rate.weights <- .Call("rph_tm_freqK", x$externalPtr)
   tm$tree <- fix.semicolon.tree(.Call("rph_tm_tree", x$externalPtr))
   tm$root.leaf <- .rootLeaf.from.pointer.tm(x, tm$tree)
+  selection <- .Call("rph_tm_selection", x$externalPtr)
+  if (selection[1]==1) tm$selection <- selection[2]
   altmodel <- from.pointer.altmodel.tm(x)
   if (!is.null(altmodel)) tm$alt.model <- altmodel
   tm
@@ -100,7 +102,8 @@ as.pointer.tm <- function(tm) {
                          tm$nratecats,
                          tm$rate.consts,
                          tm$rate.weights,
-                         tm$root.leaf)
+                         tm$root.leaf,
+                         tm$selection)
   if (!is.null(tm$alt.model)) {
     if (!is.null(tm$alt.model$defn)) {
       numModel <- 1L
@@ -110,7 +113,7 @@ as.pointer.tm <- function(tm) {
         altmod <- tm$alt.model
       } else altmod <- tm$alt.model[[i]]
 
-      .Call("rph_tm_add_altmodel", x$externalPtr, altmod[["defn"]])
+      .Call("rph_tm_add_alt_mod", x$externalPtr, altmod[["defn"]])
       .Call("rph_tm_altmod_set_subst_mod", x$externalPtr, i,
             altmod[["subst.mod"]])
       .Call("rph_tm_altmod_set_backgd", x$externalPtr, i,
@@ -220,7 +223,7 @@ print.tm <- function(x, aslist=FALSE, ...) {
 ##' represents a defined substitution model
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
-isSubstMod.tm <- function(mod) {
+is.subst.mod.tm <- function(mod) {
   result <- logical(length(mod))
   for (i in 1:length(mod)) 
     result[i] <- .Call("rph_subst_mods_is_valid_string", mod[i])
@@ -265,6 +268,12 @@ subst.mods <- function() {
 ##' @param rate.weights Vector of numeric of length nratecats, determining
 ##' the weight of each rate category.  Must sum to 1 (will be normalized
 ##' otherwise).  May be defined implicitly by alpha.
+##' @param selection If not NULL, then this is a numeric value giving the
+##' selection parameter for this model.  If NULL then there is no selection
+##' in the model.  If selection==0.0, means that selection has no effect
+##' in the current model, but is part of the model, and by default the
+##' selection parameter will be optimized by phyloFit.  The rate matrix
+##' is assumed to already be scaled by the selection parameter, if provided.
 ##' @param root.leaf Usually NULL, but if set to the name of a leaf
 ##' node in the tree, the tree will be re-rooted at this leaf node.
 ##' @param likelihood an optional value giving the log likelihood of this
@@ -276,6 +285,7 @@ subst.mods <- function() {
 tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
                alphabet="ACGT", nratecats=1, 
                alpha=0.0, rate.consts=NULL, rate.weights=NULL,
+               selection=NULL,
                root.leaf=NULL, likelihood=NULL) {
   check.arg(tree, "tree", "character", null.OK=FALSE)
   check.arg(subst.mod, "subst.mod", "character", null.OK=FALSE)
@@ -289,9 +299,11 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
   check.arg(alpha, "alpha", "numeric", null.OK=FALSE)
   check.arg(rate.consts, "rate.consts", "numeric", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
+  check.arg(selection, "selection", "numeric", null.OK=TRUE,
+            min.length=1L, max.length=1L)
   check.arg(root.leaf, "root.leaf", "character", null.OK=TRUE)
 
-  if (!isSubstMod.tm(subst.mod))
+  if (!is.subst.mod.tm(subst.mod))
     stop("invalid subst mod ", subst.mod)
   matsize <- NULL
   if (!is.null(rate.matrix)) {
@@ -337,6 +349,7 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
   tm$rate.consts <- rate.consts
   tm$rate.weights <- rate.weights
   tm$tree <- fix.semicolon.tree(tree)
+  tm$selection <- selection
   tm$root.leaf <- root.leaf
   tm
 }
@@ -357,45 +370,34 @@ bgc.sel.factor <- function(x) {
 }
 
 
-bgc.sel.factors <- function(bgc, sel) {
-  c(bgc.sel.factor(sel+bgc),
-    bgc.sel.factor(sel),
-    bgc.sel.factor(sel-bgc))
-}
-
 
 ##' Apply bgc+selection parameters to a matrix
 ##' @param m A transition matrix
 ##' @param bgc The bgc (biased gene conversion) parameter, population-scaled.
 ##' @param sel The selection parameter (population-scaled0
+##' @param alphabet The alphabet used for nucleotide states
 ##' @return A matrix with bgc+sel applied.  This matrix may no longer be
 ##' time reversible.
 ##' @export
-##' @author Melissa J. Hubisz
-apply.bgc.sel <- function(m, bgc, sel) {
-  f <- matrix(NA, 4, 4)
-  fac <- bgc.sel.factor(bgc + sel)  # strong mutations
-  f[1,2] <- fac
-  f[1,3] <- fac
-  f[4,2] <- fac
-  f[4,3] <- fac
-  fac <- bgc.sel.factor(-bgc + sel)  # weak mutations
-  f[2,1] <- fac
-  f[2,4] <- fac
-  f[3,1] <- fac
-  f[3,4] <- fac
-  fac <- bgc.sel.factor(sel)  # neutral mutations
-  f[1,4] <- fac
-  f[2,3] <- fac
-  f[3,2] <- fac
-  f[4,1] <- fac
-  
-  m <- m*f
-  for (i in 1:4)
-    m[i,i] <- -sum(m[i,-i])
-  m
+##' @author Melissa J. Hubisz and Adam Siepel
+apply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
+  rphast.simplify.list(.Call("rph_tm_apply_selection_bgc",
+                             as.matrix(m), alphabet, sel, bgc))
 }
 
+
+##' Unapply bgc+selection parameters from a matrix
+##' @param m A transition matrix
+##' @param bgc The bgc parameter which was used to calculate m
+##' @param sel The selection parameter which was used to calculate m
+##' @param alphabet The alphabet used for nucleotide states
+##' @return A matrix reflecting m before bgc and sel were applied.
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
+  rphast.simplify.list(.Call("rph_tm_unapply_selection_bgc",
+                             as.matrix(m), alphabet, sel, bgc))
+}
 
 
 ##' Add a lineage-specific model
@@ -468,8 +470,7 @@ apply.bgc.sel <- function(m, bgc, sel) {
 ##' @param const.params A character vector indicating which parameters to
 ##' hold constant at their initial values, rather than being optimized
 ##' upon a call to phyloFit.  Possible values are the same as for
-##' separate.params, and can also be "ratematrix" for all parameters
-##' describing the rate matrix.
+##' separate.params.
 ##' @param backgd The initial equilibrium frequencies to use for this
 ##' model.  If \code{NULL}, use the same as in the main model.
 ##' @param rate.matrix  The initial rate matrix to use for this model.  If
@@ -503,7 +504,7 @@ add.alt.mod <- function(x,
   if (is.null(subst.mod)) subst.mod <- x[["subst.mod"]]
   if (subst.mod != x$subst.mod && !is.null(separate.params))
     stop("separate.params can only be non-NULL when the substitution model is the same as the main tree")
-  if (!isSubstMod.tm(subst.mod))
+  if (!is.subst.mod.tm(subst.mod))
     stop("unknown substitution mod ", subst.mod)
 
   if (subst.mod == x[["subst.mod"]]) {
@@ -520,57 +521,45 @@ add.alt.mod <- function(x,
         separate.params <- c(separate.params, "bgc")
     }
   }
-  
-  newmod <- list()
-  newmod[["defn"]] <- sprintf("%s:%s",
-                              ifelse(!is.null(branch), branch, label),
-                              ifelse(is.null(separate.params), subst.mod,
-                                     paste(separate.params, collapse=",")))
-  if (!is.null(const.params))
-    newmod[["defn"]] <- sprintf("%s:%s", newmod[["defn"]],
-                                paste(const.params, collapse=","))
 
-  newmod[["subst.mod"]] <- subst.mod
-  
-  if (is.null(backgd) && !is.null(separate.params) &&
-      length(grep("^backgd(\\[.*,.*\\]+){0,1}$", separate.params))!= 0L)
-    backgd <- x[["backgd"]]
-  if (!is.null(backgd))
-    newmod[["backgd"]] <- backgd
-  
-  if (!is.null(selection))
-    newmod[["selection"]] <- selection
-  if (!is.null(bgc))
-    newmod[["bgc"]] <- bgc
-  
-  if (is.null(rate.matrix)) {
-    newmod[["rate.matrix"]] <- x[["rate.matrix"]]
-    if ((!is.null(selection) && selection != 0) ||
-        (!is.null(bgc) && bgc != 0))
-      newmod[["rate.matrix"]] <- apply.bgc.sel(newmod[["rate.matrix"]],
-                                               ifelse(is.null(bgc), 0, bgc),
-                                               ifelse(is.null(selection), 0, selection))
-  } else newmod[["rate.matrix"]] <- rate.matrix
-  
-  if  (is.null(x[["alt.model"]])) {
-    x[["alt.model"]] <- newmod
-  } else {
-    if (!is.null(x$alt.model$defn)) {
-      altmod <- list()
-      altmod[[1]] <- x$alt.model
-      altmod[[2]] <- newmod
-      x[["alt.model"]] <- altmod
-    } else {
-      idx <- length(x[["alt.model"]])+1
-      x[["alt.model"]][[idx]] <- newmod
-    }
+  defn <- sprintf("%s:%s", ifelse(!is.null(branch), branch, label),
+                  ifelse(is.null(separate.params), subst.mod,
+                         paste(separate.params, collapse=",")))
+  origPtr <- as.pointer.tm(x)
+  .Call("rph_tm_add_alt_mod", origPtr$externalPtr, defn)
+  newmod <- from.pointer.tm(origPtr)
+
+  # apply selection and/or bgc to ls model if provided
+  if (! (is.null(bgc) && is.null(selection))) {
+    if (is.null(newmod$alt.model$defn)) {
+      nummod <- length(newmod$alt.model)
+      altmod <- newmod$alt.model[[nummod]]
+    } else altmod <- newmod$alt.model
+
+    # newmod$bgc should always be null
+    if (!is.null(newmod$selection)) {
+      currMat <- unapply.bgc.sel(newmod$rate.matrix,
+                                 alphabet=newmod$alphabet,
+                                 sel=newmod$selection)
+    } else currMat <- newmod$rate.matrix
+
+    altmod$rate.matrix <- apply.bgc.sel(currMat,
+                                        alphabet=newmod$alphabet,
+                                        bgc=if (is.null(bgc)) 0 else bgc,
+                                        sel=if (is.null(selection)) 0 else selection)
+    if (!is.null(selection)) altmod$selection <- selection
+    if (!is.null(bgc)) altmod$bgc <- bgc
+
+    if (is.null(newmod$alt.model$defn)) {
+      newmod$alt.model[[nummod]] <- altmod
+    } else newmod$alt.model <- altmod 
   }
-  x
+  newmod
 }
 
 
 
-##' Set the transition matrix of a tree model using model-specific parameters.
+##' Set the rate matrix of a tree model using model-specific parameters.
 ##'
 ##' The params argument is a numeric vector with the parameters specific to the
 ##' model being used.  Here is the meaning of params for each model:
@@ -580,15 +569,15 @@ add.alt.mod <- function(x,
 ##' transition-transversion ratio (kappa).}
 ##' \item{"HKY85+Gap": params should be a numeric vector of length 2; the first
 ##' element represents the transition/transversion ratio (kappa), and the second
-##' is the "gap parameter", the factor by which transition rates are multiplied
-##' if they involve an indel event.}
+##' is the "gap parameter", the factor by which substitution rates are
+##' multiplied if they involve an indel event.}
 ##' \item{"REV": params should be a numeric vector of length 6 (assuming a
 ##' model with 4 states).  With n states the vector should be of length
 ##' n*(n-1)/2.  The first parameter applies to the entry in the 1st row, 2nd
 ##' column; the next to the 1st row, 3rd column, etc until the end of the
 ##' first row; the next parameter applies to the 2nd row, 3rd column; etc.}
 ##' \item{"SSREV": params should be a numeric vector of length 4. Assuming
-##' an alphabet "ACGT", the first parameter is the transition rate from A->C,
+##' an alphabet "ACGT", the first parameter is the substitution rate from A->C,
 ##' C->A, T->G, and G->T.  The second is the rate from A->G, G->A, T->C,
 ##' and C->T,  The third is the rate from A->T and T->A, and the last is
 ##' C->G and G->C.}
@@ -600,19 +589,19 @@ add.alt.mod <- function(x,
 ##' order ACGT).  Parameters are filled in starting row 1, column 2, going
 ##' across and then down, filling in the matrix above the diagonal, and
 ##' reflecting into the matrix below the diagonal.  Only cells which
-##' represent a transition which requires exactly one mutation are filled in;
-##' a transition requiring greater than 1 mutation has rate 0.}
+##' represent a substitution which requires exactly one mutation are filled
+##' in; cells requiring greater than 1 mutation have rate 0.}
 ##' \item{"U2": Similar to R2, except parameters are a numeric vector of
 ##' length 96.  Parameters are filled in starting row 1, column to, going
 ##' across and then down, filling entire matrix (rather than refelcting
 ##' across the diagonal)}
 ##' \item{"R2S": Similar to R2, but with strand symmetry.  params should be a
 ##' vector of length 24.  Parameters are filled in a similar fashion as R2,
-##' except the same parameter applies to transitions which are strand
+##' except the same parameter applies to substitutions which are strand
 ##' symmetric.}
 ##' \item{"U2S": Similar to U2, but with strand symmetry.  params should be a
 ##' vector of length 48.  Parameters are filled in a similar fashion as U2,
-##' except the same parameter applies to transitions which are strand
+##' except the same parameter applies to substitutions which are strand
 ##' symmetric.}
 ##' \item{"R3","R3S","U3","U3S": Similar to R2, R2S, U2, and U2S, except there
 ##' are 64 states instead of 16.  params should be numeric vector of length
@@ -622,11 +611,11 @@ add.alt.mod <- function(x,
 ##' numeric vector of length appropriate for the model.  See details below.
 ##' @param scale A logical value.  If \code{TRUE}, scale the matrix so that the
 ##' expected number of mutations per unit time is one per base pair.
-##' @return An object of type \code{tm} with a transition matrix set according
+##' @return An object of type \code{tm} with a rate matrix set according
 ##' to params.
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
-set.trans.mat.tm <- function(x, params=NULL, scale=TRUE) {
+set.rate.matrix.tm <- function(x, params=NULL, scale=TRUE) {
   x <- as.pointer.tm(x)
   .Call("rph_tree_model_set_matrix", x$externalPtr, params, scale)
   from.pointer.tm(x)
@@ -638,12 +627,12 @@ set.trans.mat.tm <- function(x, params=NULL, scale=TRUE) {
 ##' the transition matrix under the substitution model indicated in x.
 ##' May be NULL for certain models which have no parameters (JC69, F81).
 ##' The meaning of the parameters is described in
-##' \code{\link{set.trans.mat.tm}}.
-##' @note The params returned may not describe the transition matrix passed
-##' in, if the transition matrix does not follow the model indicated in x.
+##' \code{\link{set.rate.matrix.tm}}.
+##' @note The params returned may not describe the rate matrix passed
+##' in, if the rate matrix does not follow the model indicated in x.
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
-get.trans.mat.params <- function(x) {
+get.rate.matrix.params.tm <- function(x) {
   x <- as.pointer.tm(x)
   .Call("rph_tree_model_get_rate_matrix_params", x$externalPtr)
 }

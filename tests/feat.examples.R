@@ -69,13 +69,13 @@ feature <- rep("CDS", 10)
 start <- seq(1, 100, by=10)
 end <- seq(10, 100, by=10)
 f <- feat(seq, src, feature, start, end)
-write.feat("test.gff", f)
+write.feat(f, "test.gff")
 #'
 unlink("test.gff") # clean up
 
 # non-example tests
 f <- feat(seq, src, feature, start, end)
-write.feat("test.gff", f)
+write.feat(f, "test.gff")
 unlink("test.gff")
 
 ################################################
@@ -203,7 +203,7 @@ unlink(featFile)
 rm(f, geneName)
 
 
-#' addUTRs
+#' add.UTRs.feat
 require("rphast")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 featFile <- "gencode.ENr334.gp"
@@ -212,12 +212,12 @@ f <- read.feat(featFile)
 table(f$feature)
 coverage.feat(f[f$feature=="CDS",])
 coverage.feat(f[f$feature=="exon",])
-f <- addUTRs.feat(f)
+f <- add.UTRs.feat(f)
 table(f$feature)
 coverage.feat(f[f$feature=="3'UTR",])
 coverage.feat(f[f$feature=="5'UTR",])
 
-#' addIntrons
+#' add.introns.feat
 require("rphast")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 featFile <- "gencode.ENr334.gp"
@@ -226,12 +226,12 @@ f <- read.feat(featFile)
 table(f$feature)
 coverage.feat(f[f$feature=="CDS",])
 coverage.feat(f[f$feature=="exon",])
-f <- addIntrons.feat(f)
+f <- add.introns.feat(f)
 table(f$feature)
 coverage.feat(f[f$feature=="intron",])
 
 
-#' addSignals
+#' add.signals.feat
 require("rphast")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 featFile <- "gencode.ENr334.gp"
@@ -240,7 +240,7 @@ f <- read.feat(featFile)
 table(f$feature)
 coverage.feat(f[f$feature=="CDS",])
 coverage.feat(f[f$feature=="exon",])
-f <- addSignals.feat(f)
+f <- add.signals.feat(f)
 table(f$feature)
 coverage.feat(f[f$feature=="3'splice",])
 coverage.feat(f[f$feature=="5'splice",])
@@ -248,19 +248,19 @@ coverage.feat(f[f$feature=="start_codon",])
 coverage.feat(f[f$feature=="stop_codon",])
 
 
-#' fixStartStop
+#' fix.start.stop.feat
 require("rphast")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 featFile <- "gencode.ENr334.gp"
 unzip(exampleArchive, featFile)
 f <- read.feat(featFile)
-f <- addSignals.feat(f)
+f <- add.signals.feat(f)
 # let's just look at one gene
 geneNames <- tagval.feat(f, "transcript_id")
 f <- f[geneNames==geneNames[1],]
 #'
 # This features file already is correct, so let's mess it up to see
-# how fixStartStop can fix it:
+# how fix.start.stop can fix it:
 #'
 #modify first CDS to not include start
 startCodon <- f[f$feature=="start_codon",]
@@ -270,8 +270,8 @@ f[firstCds,]$start <- startCodon$end+1
 stopCodon <- f[f$feature=="stop_codon",]
 lastCds <- which(f$feature=="CDS" & f$end+1==stopCodon$start)
 f[lastCds,]$end <- stopCodon$end
-# now call fixStartStop to fix
-f.fixed <- fixStartStop.feat(f)
+# now call fix.start.stop to fix
+f.fixed <- fix.start.stop.feat(f)
 #'
 # first CDS has been fixed to include start codon
 f[firstCds,]

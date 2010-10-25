@@ -66,7 +66,7 @@ smooth.wig <- function(coord, score, numpoints=300) {
 
 
 ##' Make browser-like plot in rphast
-##' @param x a list of tracks, created by the wig.track or feat.track
+##' @param x a list of tracks, created by the as.track.wig or as.track.feat
 ##' @param doLabels Logical.  Whether to plot the label above each plot.  Will be
 ##' recycled to the length of x.  Does not affect printing of shortLabels.
 ##' @param labels Labels to appear directly above each plot.
@@ -201,9 +201,12 @@ plot.track <- function(x,
 
 
 ##' Create a wig track
-##' @param coord A numeric vector of coordinates (to be used for x-axis)
-##' @param score A numeric vector of scores (y-axis coords), should be same length as coord
+##' @param wig A "wig" object (Must have elements wig$coord and wig$score which should both
+##' be numeric vectors).  coord/score may be passed directly instead.
 ##' @param name The name of the track (a character string)
+##' @param coord (Alternative to wig) A numeric vector of coordinates (to be used for x-axis)
+##' @param score (Alternative to wig) A numeric vector of scores (y-axis coords), should be
+##' same length as coord.
 ##' @param short.label An optional character string to be displayed in left
 ##' hand margin of track
 ##' @param col The color to be used to plot this track.
@@ -221,9 +224,20 @@ plot.track <- function(x,
 ##' @keywords plot
 ##' @export
 ##' @author Melissa J. Hubisz
-wig.track <- function(coord, score, name, short.label=NULL,
-                      col="black", ylim=NULL, smooth=FALSE, numpoints=250,
-                      horiz.line=NULL, horiz.lty=2, horiz.col="black") {
+as.track.wig <- function(wig=NULL, name, coord=NULL, score=NULL, short.label=NULL,
+                         col="black", ylim=NULL, smooth=FALSE, numpoints=250,
+                         horiz.line=NULL, horiz.lty=2, horiz.col="black") {
+  if (is.null(wig)) {
+    if (is.null(coord) || is.null(score))
+      stop("If wig not provided, coord and score must both be provided")
+  } else {
+    if (!(is.null(coord) && is.null(score)))
+      stop("If wig is provided, coord and score should not be provided")
+    if (ncol(wig) != 2 || names(wig)[1] != "coord") 
+      stop("wig should have two columns and the first should be named \"coord\"")
+    coord <- wig$coord
+    score <- wig[,2]
+  } 
   rv <- list()
   attr(rv, "class") <- "track"
   rv$data <- data.frame(coord=coord, score=score)
@@ -252,51 +266,31 @@ wig.track <- function(coord, score, name, short.label=NULL,
 ##' left hand margin of track
 ##' @param col The color to use plotting this track (can be a single
 ##' color or a color for each element)
-## @param show.strand If \code{NULL}, do not use strand data.  If "
+##' @param is.gene A logical value; if \code{TRUE}, extract and plot gene
+##' information from features.  The features which will be plotted are the
+##' ones with types "CDS", "exon", or "intron".  All others will be ignored.
+##' @param arrow.density (Only used if \code{is.gene==TRUE}.  The number of
+##' lines per inch used to denote strand in gene plots.
 ##' @return An object of type \code{track} which can be plotted with plot.track
 ##' function
 ##' @keywords plot
 ##' @export
 ##' @author Melissa J. Hubisz
-feat.track <- function(x, name, short.label=NULL, col="black") {
+as.track.feat <- function(x, name, short.label=NULL, col="black",
+                          is.gene=FALSE, arrow.density=10) {
   rv <- list()
   attr(rv, "class") <- "track"
   rv$data <- x
   rv$name <- name
   rv$short.label <- short.label
   rv$col <- col
-  rv$type="feat"
+  if (is.gene) {
+    rv$type = "gene"
+    rv$arrow.density=arrow.density
+  } else {
+    rv$type="feat"
+  }
   rv
 }
 
 
-
-##' Create a gene track
-##'
-##' This function expects a features object.  The features which will be
-##' plotted are the ones with types "CDS", "exon", or "intron".  All other
-##' features will be ignored.
-##' @param x An object of type \code{feat}
-##' @param name The name of the track (a character string)
-##' @param short.label An optional character string to be displayed in
-##' the left hand margin of the track
-##' @param col The color to use plotting this track
-##' @param arrow.density The number of lines per inch used to denote strand.
-##' @return An object of type \code{track} which can be plotted with
-##' the plot.track function
-##' @seealso addIntrons.feat to add intron annotations to a features object.
-##' @keywords plot
-##' @export
-##' @author Melissa J. Hubisz
-gene.track <- function(x, name, short.label=NULL,
-                       col="black", arrow.density=10) {
-  rv <- list()
-  attr(rv, "class") <- "track"
-  rv$data <- x
-  rv$name <- name
-  rv$short.label <- short.label
-  rv$col <- col
-  rv$type="gene"
-  rv$arrow.density <- arrow.density
-  rv
-}

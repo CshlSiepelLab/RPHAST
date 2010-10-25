@@ -30,9 +30,9 @@ summary(m)
 
 ################################################
 
-#' validFormatStr.msa
-validFormatStr.msa(c("MAF", "SS", "PHYLIP", "MPM", "LAV", "FASTA",
-                     "BAD_FORMAT_STRING"))
+#' is.format.msa
+is.format.msa(c("MAF", "SS", "PHYLIP", "MPM", "LAV", "FASTA",
+                "BAD_FORMAT_STRING"))
 
 ################################################
 
@@ -337,7 +337,7 @@ unlink(files) # clean up
 
 ################################################
 
-#' msa.likelhood
+#' likelihood.msa
 require("rphast")
 files <- c("rev.mod", "ENr334.maf", "ENr334.fa", "small.gff")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")

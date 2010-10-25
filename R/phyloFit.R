@@ -19,6 +19,7 @@ phyloFit <- function(msa,
                      nrates=1,
                      alpha=1,
                      rate.constants=NULL,
+                     selection=NULL,
                      init.random=FALSE,
                      init.parsimony=FALSE,
                      clock=FALSE,
@@ -35,7 +36,7 @@ phyloFit <- function(msa,
                      ) {
   if (nrow.msa(msa) > 2 && is.null(tree) && is.null(init.mod))
     stop("need tree if MSA has more than two sequences")
-  if (!isSubstMod.tm(subst.mod))
+  if (!is.subst.mod.tm(subst.mod))
     stop("invalid substitution model ", subst.mod)
   check.arg(tree, "tree", "character", null.OK=TRUE)
   check.arg(scale.only, "scale.only", "logical", null.OK=FALSE)
@@ -46,6 +47,7 @@ phyloFit <- function(msa,
     stop("alpha must be > 0")
   check.arg(rate.constants, "rate.constants", "numeric", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
+  check.arg(selection, "selection", "numeric", null.OK=TRUE)
   if (!is.null(init.mod))
     init.mod <- as.pointer.tm(init.mod)
   check.arg(no.opt, "no.opt", "character", null.OK=TRUE, min.length=1L,
@@ -101,7 +103,8 @@ phyloFit <- function(msa,
                               quiet,
                               no.opt,
                               bound,
-                              log.file)
+                              log.file,
+                              selection)
 
   #need to parse result to make a list in R
   numModels <- .Call("rph_phyloFit_result_num_models", result$externalPtr)

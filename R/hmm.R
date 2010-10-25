@@ -9,7 +9,7 @@
 
 ##' @nord
 ##' @export
-fixFreq.hmm <- function(freq, name, n) {
+fix.freq.hmm <- function(freq, name, n) {
   if (is.null(freq)) {
     freq <- rep(1/n, n)
   } else {
@@ -40,11 +40,11 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
   n <- nrow(trans.mat)
   if (ncol(trans.mat) != n)
     stop("trans.mat should be square")
-  eq.freq <- fixFreq.hmm(eq.freq, "eq.freq", n)
-  begin.freq <- fixFreq.hmm(begin.freq, "begin.freq", n)
+  eq.freq <- fix.freq.hmm(eq.freq, "eq.freq", n)
+  begin.freq <- fix.freq.hmm(begin.freq, "begin.freq", n)
   if (! is.null(end.freq))
-    end.freq <- fixFreq.hmm(end.freq, "end.freq", n)
-  for (i in 1:n) trans.mat[i,] <- fixFreq.hmm(trans.mat[i,], "trans.mat", n)
+    end.freq <- fix.freq.hmm(end.freq, "end.freq", n)
+  for (i in 1:n) trans.mat[i,] <- fix.freq.hmm(trans.mat[i,], "trans.mat", n)
   hmm <- .makeObj.hmm()
   hmm$trans.mat <- trans.mat
   hmm$eq.freq <- eq.freq
@@ -88,7 +88,7 @@ write.hmm <- function(x, filename, append=FALSE) {
 
 ##' @export
 ##' @nord
-stopIfNotValidHmm <- function(hmm){
+stop.if.not.valid.hmm <- function(hmm){
   if (is.null(hmm$trans.mat) ||
       is.null(hmm$eq.freq) ||
       is.null(hmm$begin.freq) ||
@@ -108,7 +108,7 @@ stopIfNotValidHmm <- function(hmm){
 ##' @keywords hmm
 ##' @author Melissa J. Hubisz
 nstate.hmm <- function(hmm) {
-  stopIfNotValidHmm(hmm)
+  stop.if.not.valid.hmm(hmm)
   nrow(hmm$trans.mat)
 }
 
@@ -126,7 +126,7 @@ as.pointer.hmm <- function(hmm) {
 ##' @export
 from.pointer.hmm <- function(x) {
   if (is.null(x$externalPtr)) {
-    stopIfNotValidHmm()
+    stop.if.not.valid.hmm()
     return(x)
   }
   hmm <- .makeObj.hmm()
@@ -163,7 +163,9 @@ from.pointer.hmm <- function(x) {
 ##' on both strands by "reflecting" the original HMM about the specified
 ##' states.  States can be described as a vector of integers or characters
 ##' in the same manner as states argument (above).  The new hmm will be
-##' used for prediction on both strands.
+##' used for prediction on both strands. NOTE: if reflect.strand is provided,
+##' the first state is treated as a "default" state and is implicitly included
+##' in the reflect.strand list!
 ##' @param features If non-NULL, compute the likelihood of each feature
 ##' under the phylo-HMM.
 ##' @param quiet If \code{TRUE}, suppress printing of progress information.

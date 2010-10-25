@@ -27,7 +27,7 @@ write.tm(tm, NULL)
 write.tm(tm, "test.mod")
 unlink(c(filename, "test.mod"))
 
-#' tm.summary
+#' summary.tm
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 filename <- "rev.mod"
 unzip(exampleArchive, filename)
@@ -44,11 +44,11 @@ is.list(as.list(tm))
 #' subst.mods
 subst.mods()
 
-#' isSubstMod.tm
-isSubstMod.tm(c("JC69", "K80", "F81", "HKY85", "HKY85+Gap",
-                "REV", "SSREV", "REV+GC", "UNREST", "R2", "U2", "R2S",
-                "U2S", "R3", "R3S", "U3", "U3S", "GC", "HB",
-                "bad.model"))
+#' is.subst.mod.tm
+is.subst.mod.tm(c("JC69", "K80", "F81", "HKY85", "HKY85+Gap",
+                  "REV", "SSREV", "REV+GC", "UNREST", "R2", "U2", "R2S",
+                  "U2S", "R3", "R3S", "U3", "U3S", "GC", "HB",
+                  "bad.model"))
 
 
 #' tm
