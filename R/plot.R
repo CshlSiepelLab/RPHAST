@@ -186,7 +186,7 @@ plot.track <- function(x,
     } else if (resultType[[i]] == "feat") {
       plot.feat(el$data,
                 y=mean(yrange), height=(yrange[2]-yrange[1]),
-                add=TRUE, fill.col=el$col)
+                add=TRUE, col=el$col, fill.col=el$col)
     } else if (resultType[[i]] == "gene") {
       plot.gene(el$data, y=mean(yrange), height=(yrange[2]-yrange[1]),
                 add=TRUE, col=el$col, arrow.density=el$arrow.density)

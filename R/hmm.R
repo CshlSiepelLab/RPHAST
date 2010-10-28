@@ -26,10 +26,10 @@ fix.freq.hmm <- function(freq, name, n) {
 ##' number of states, and element [i,j] is the rate of
 ##' transition from state i to state j
 ##' @param eq.freq A vector of length n giving the equilibrium
-##' frequencies of each state.  If NULL, assume a uniform distribution
-##' across states.
+##' frequencies of each state.  If NULL, calculate equilibrium frequencies
+##' that will make a reversible markov chain.
 ##' @param begin.freq A vector of length n giving the initial state
-##' frequencies.  If NULL, assume a uniform distribution across states.
+##' frequencies.  If NULL, use equilibrium frequencies.
 ##' @param end.freq A vector of length n giving the final state frequencies.
 ##' If NULL, do not condition on end frequencies.
 ##' @export
@@ -40,8 +40,15 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
   n <- nrow(trans.mat)
   if (ncol(trans.mat) != n)
     stop("trans.mat should be square")
+  if (is.null(eq.freq)) {
+    e <- eigen(trans.mat)
+    w <- which.min((Re(e$values)-1)*Re(e$values-1) + Im(e$values)*Im(e$values))
+    suppressWarnings(eq.freq <- as.numeric(solve(e$vectors)[w,]))
+  }
   eq.freq <- fix.freq.hmm(eq.freq, "eq.freq", n)
-  begin.freq <- fix.freq.hmm(begin.freq, "begin.freq", n)
+  if (is.null(begin.freq)) {
+    begin.freq <- eq.freq
+  } else begin.freq <- fix.freq.hmm(begin.freq, "begin.freq", n)
   if (! is.null(end.freq))
     end.freq <- fix.freq.hmm(end.freq, "end.freq", n)
   for (i in 1:n) trans.mat[i,] <- fix.freq.hmm(trans.mat[i,], "trans.mat", n)
@@ -152,7 +159,10 @@ from.pointer.hmm <- function(x) {
 ##' the states of interest in the phylo-HMM, or a vector of integers
 ##' corresponding to states in the transition matrix.  The post.probs will give
 ##' the probability of any of these states, and the viterbi regions reflect
-##' regions where the state is predicted to be any of these states.
+##' regions where the state is predicted to be any of these states.  If NULL,
+##' the post.probs will be a data frame with probabilities of each state at
+##' each site, and the viterbi algorithm will give the predicted state
+##' at every site.
 ##' @param viterbi A logical value indicating whether to predict a path through the phylo-HMM
 ##' using the Viterbi algorithm.
 ##' @param ref.idx An integer value.  Use the coordinate frame of the given sequence.
@@ -165,7 +175,8 @@ from.pointer.hmm <- function(x) {
 ##' in the same manner as states argument (above).  The new hmm will be
 ##' used for prediction on both strands. NOTE: if reflect.strand is provided,
 ##' the first state is treated as a "default" state and is implicitly included
-##' in the reflect.strand list!
+##' in the reflect.strand list!  Also, reflection is done assuming a
+##' reversible model.
 ##' @param features If non-NULL, compute the likelihood of each feature
 ##' under the phylo-HMM.
 ##' @param quiet If \code{TRUE}, suppress printing of progress information.
@@ -184,7 +195,7 @@ from.pointer.hmm <- function(x) {
 ##' @export
 ##' @keywords hmm
 ##' @author Melissa J. Hubisz and Adam Siepel
-score.hmm <- function(msa, mod, hmm, states, viterbi=TRUE, ref.idx=1,
+score.hmm <- function(msa, mod, hmm, states=NULL, viterbi=TRUE, ref.idx=1,
                       reflect.strand=NULL, features=NULL,
                       quiet=(!is.null(features))) {
   if (!is.null(features)) {
@@ -212,16 +223,117 @@ score.hmm <- function(msa, mod, hmm, states, viterbi=TRUE, ref.idx=1,
                          rho=NULL, target.coverage=NULL, expected.length=NULL, transitions=NULL,
                          estimate.rho=FALSE, estimate.expected.length=FALSE, estimate.transitions=FALSE,
                          estimate.trees=FALSE,
-                         viterbi=viterbi, score.viterbi=viterbi,
+                         viterbi=viterbi, score.viterbi=viterbi && !is.null(states),
                          gc=NULL, nrates=NULL, compute.lnl=TRUE, suppress.probs=FALSE,
                          ref.idx=ref.idx,
                          hmm=hmm,
                          states=states,
                          reflect.strand=reflect.strand, quiet=quiet)
-    if (!is.null(rv$most.conserved)) {
-      w <- which(names(rv) == "most.conserved")
-      names(rv)[w] <- "in.states"
-    }
   }
   rv
+}
+
+
+# NOTE: should this be put in phyloHmm.R? (maybe if we
+# add more phyloHmm functions)
+# DO NOT export; this doesn't really work.  It isi useful to show what
+# the reflected HMM looks like, but you can't use the result.  Maybe if
+# the tree models were reflected it would be OK, either that or we have
+# to record which states are reflected and pass this information onto the
+# C code somehow
+##' Reflect a phylo-hmm across a strand
+##' @param x An object of type hmm
+##' @param pivot.states The list of states to "reflect" across; these
+##' should be the states that are not strand-specific.  Can be an
+##' integer vector containing state indices, or a character vector
+##' corresponding to state names (in \code{row.names(x$trans.mat)})
+##' @param mods A list of objects of type \code{tm} representing phylogenetic
+##' models corresponding to each state in the hmm.  If given, then the
+##' models will also be reflected and the return value will be a list with
+##' a new hmm and a new list of models.
+##' @return If \code{mods==NULL} then a new hmm will be returned.  Otherwise
+##' a list containing the new hmm and the corresponding models will be
+##' returned.
+##' @author Melissa J. Hubisz and Adam Siepel
+reflect.phylo.hmm <- function(x, pivot.states, mods=NULL) {
+  if (is.character(pivot.states)) {
+    orig <- pivot.states
+    pivot.states <- sapply(pivot.states, function(x, mat) {
+      which(row.names(mat) == x)}, x$trans.mat)
+    if (length(pivot.states) != length(orig))
+      warning("some pivot.states elements not found in x")
+  } else {
+    nstate <- nrow(x$trans.mat)
+    check.arg(pivot.states, "pivot.states", "integer", null.OK=FALSE,
+              min.length=1L, max.length=nstate)
+    if (sum(pivot.states <= 0 | pivot.states > nstate) > 0L)
+      stop("invalid integers in pivot.states")
+  }
+  if (!is.null(mods)) {
+    if (length(mods) != nrow(x$trans.mat))
+      stop("mods should be a list whose length is the number of states in x")
+    for (i in 1:length(mods))
+      if (!is.tm(mods[[i]]))
+        stop("mods should be a list of objects of type tm")
+    useMods <- mods
+  } else {
+    useMods <- list()
+    fakeMat <- matrix(c(-3, 1, 1, 1, 1, -3, 1, 1, 1, 1, -3, 1, 1, 1, 1, -3), nrow=4)
+    fakeMod <- tm("((fake1, fake2), fake3)", subst.mod="REV",
+                  rate.matrix=fakeMat, backgd=rep(0.25, 4))
+    for (i in 1:nrow(x$trans.mat))
+      useMods[[i]] <- fakeMod
+  }
+  if (!is.element(1, pivot.states)) {
+    # swap state 1 and state pivot.states[1] because first state is always a pivot state
+    ord <- 1:nrow(x$trans.mat)
+    ord[1] <- pivot.states[1]
+    ord[pivot.states[1]] <- 1
+    x$trans.mat <- x$trans.mat[ord,ord]
+    x$eq.freq <- x$eq.freq[ord]
+    x$begin.freq <- x$begin.freq[ord]
+    if (!is.null(x$end.freq)) x$end.freq <- x$end.freq[ord]
+    useMods <- useMods[ord]
+    pivot.states[1] <- 1
+  }
+  xp <- as.pointer.hmm(x)
+  for (i in 1:length(useMods))
+    useMods[[i]] <- (as.pointer.tm(useMods[[i]]))$externalPtr
+  phyloHmm <- list()
+  phyloHmm$externalPtr <- .Call("rph_phylo_hmm_reflect_strand", xp$externalPtr, as.integer(pivot.states), useMods)
+  newhmm <- list()
+  newhmm$externalPtr <- .Call("rph_phylo_hmm_get_hmm", phyloHmm$externalPtr)
+  newhmm <- from.pointer.hmm(newhmm)
+  if (!is.null(row.names(x$trans.mat))) {
+    map <- .Call("rph_phylo_hmm_get_state_to_mod", phyloHmm$externalPtr) + 1
+    state.names <- character()
+    for (i in 1:length(map)) {
+      currname <- row.names(x$trans.mat)[map[i]]
+      if (is.element(i, pivot.states)) {
+        state.names[i] <- currname
+      } else {
+        plusname <- sprintf("%s +", currname);
+        minusname <- sprintf("%s -", currname)
+        if (is.element(plusname, state.names)) {
+          state.names[i] <- minusname
+        } else state.names[i] <- plusname
+      }
+    }
+    row.names(newhmm$trans.mat) <- state.names
+    colnames(newhmm$trans.mat) <- state.names
+  } else state.names <- NULL
+  if (!is.null(mods)) {
+    rv <- list()
+    rv$hmm <- newhmm
+    rv$mods <- list()
+    temp <- list()
+    for (i in 1:nrow(newhmm$trans.mat)) {
+      temp$externalPtr <- .Call("rph_phylo_hmm_get_treeModel",
+                                phyloHmm$externalPtr, i)
+      rv$mods[[i]] <- from.pointer.tm(temp)
+    }
+    if (!is.null(state.names)) names(rv$mods) <- state.names
+    return(rv)
+  }
+  newhmm
 }

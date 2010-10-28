@@ -55,6 +55,42 @@ phastCons.call <- function(msa,
   check.arg(ref.idx, "ref.idx", "integer", null.OK=FALSE)
   if (ref.idx < 0) stop("ref.idx must be >=0")
   if (ref.idx > nrow.msa(msa)) stop("ref.idx must be <= nrow.msa(msa)")
+
+  if (!is.null(hmm)) {
+    if (length(mod) != nrow(hmm$trans.mat))
+      stop("number of mods should be same as number of states in hmm")
+  }
+  ord <- NULL
+  if (!is.null(reflect.strand)) {
+    if (is.null(hmm)) {
+      warning("reflect.strand not used when hmm is NULL")
+    } else {
+      if (is.character(reflect.strand)) {
+        orig <- reflect.strand
+        reflect.strand <- sapply(reflect.strand, function(x, mat) {
+          which(row.names(mat) == x)}, hmm$trans.mat)
+        if (length(reflect.strand) != length(orig))
+          warning("some reflect.strand elements not found in hmm")
+      } else {
+        nstate <- nrow(hmm$trans.mat)
+        reflect.strand <- check.arg(reflect.strand, "reflect.strand", "integer", null.OK=FALSE,
+                                    min.length=1L, max.length=nstate)
+        if (sum(reflect.strand <= 0 | reflect.strand > nstate) > 0L)
+          stop("invalid integers in reflect.strand")
+      }
+      if (!is.element(1, reflect.strand)) {
+        ord <- 1:nrow(hmm$trans.mat)
+        ord[1] <- reflect.strand[1]
+        ord[reflect.strand[1]] <- 1
+        reflect.strand[1] <- 1
+        hmm$trans.mat <- hmm$trans.mat[ord,ord]
+        hmm$eq.freq <- hmm$eq.freq[ord]
+        hmm$begin.freq <- hmm$begin.freq[ord]
+        if (!is.null(hmm$end.freq)) hmm$end.freq <- hmm$end.freq[ord]
+        mod <- mod[ord]
+      }
+    }
+  }
   if (!is.null(states)) {
     if (is.null(hmm)) {
       warning("states is not used when hmm is NULL")
@@ -71,32 +107,24 @@ phastCons.call <- function(msa,
                   min.length=1L, max.length=nstate)
         if (sum(states <= 0 | states > nstate) > 0L)
           stop("invalid integers in states")
+        if (is.null(ord)) states <- which(is.element(ord, states))
       }
     }
   }
-  if (!is.null(reflect.strand)) {
-    if (is.null(hmm)) {
-      warning("reflect.strand not used when hmm is NULL")
-    } else {
-      if (is.character(reflect.strand)) {
-        orig <- reflect.strand
-        reflect.strand <- sapply(reflect.strand, function(x, mat) {
-          which(row.names(mat) == x)}, hmm$trans.mat)
-        if (length(reflect.strand) != length(orig))
-          warning("some reflect.strand elements not found in hmm")
-      } else {
-        nstate <- nrow(hmm$trans.mat)
-        check.arg(reflect.strand, "reflect.strand", "integer", null.OK=FALSE,
-                  min.length=1L, max.length=nstate)
-        if (sum(reflect.strand <= 0 | reflect.strand > nstate) > 0L)
-          stop("invalid integers in reflect.strand")
-      }
+  if (!is.null(hmm)) {
+    category.map <- sprintf("NCATS = %i ; ", nrow(hmm$trans.mat)-1)
+    if (is.null(row.names(hmm$trans.mat))) {
+      catnames <- as.character(1:nrow(hmm$trans.mat))
+    } else catnames <- row.names(hmm$trans.mat)
+    for (i in 1:nrow(hmm$trans.mat)) {
+      category.map <- sprintf("%s %s %i", category.map,
+                              catnames[i], i-1)
+      if (i != nrow(hmm$trans.mat))
+        category.map <- sprintf("%s ;", category.map)
     }
-  }
-  if (!is.null(hmm)) hmm <- as.pointer.hmm(hmm)
-  if (is.null(states) && (!is.null(hmm)) && (!suppress.probs || viterbi))
-    warning("no states given; scoring state 2")
-
+    hmmP <- as.pointer.hmm(hmm)
+  } else category.map <- NULL
+  
   # check for bad param combinations
   if (estimate.trees && estimate.rho)
     stop("cannot specify both estimate.trees and estimate.rho")
@@ -138,11 +166,23 @@ phastCons.call <- function(msa,
                   compute.lnl,
                   suppress.probs,
                   ref.idx,
-                  if (is.null(hmm)) NULL else hmm$externalPtr,
+                  if (is.null(hmm)) NULL else hmmP$externalPtr,
                   states,
                   reflect.strand,
-                  quiet)
-  rphast.simplify.list(result)
+                  quiet,
+                  category.map)
+  rv <- rphast.simplify.list(result)
+  if ((!is.null(hmm)) && is.null(states)) {
+    if (viterbi) {
+      w <- which(names(rv) == "most.conserved")
+      names(rv)[w] <- "viterbi"
+#      if (!is.null(row.names(hmm$trans.mat)))
+#        rv$viterbi$feature <- row.names(hmm$trans.mat)[as.integer(rv$viterbi$feature)]
+    }
+    if (!is.null(row.names(hmm$trans.mat))) 
+      names(rv$post.prob.wig) <- c("coord", row.names(hmm$trans.mat))
+  }
+  rv
 }
 
 

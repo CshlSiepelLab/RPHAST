@@ -32,7 +32,8 @@ copy.feat <- function(x) {
 ##' The function will guess the format of the input file automatically.
 ##'
 ##' @title Read a Feature File (GFF, BED, or GenePred)
-##' @param filename the name of the file
+##' @param filename the name of the file (can be GFF, BED, or GenePred: rphast
+##' will auto-detect)
 ##' @param pointer.only Whether to store object by reference instead of a
 ##' data.frame
 ##' @return If \code{pointer.only==FALSE}, a data.frame with columns corresponding
@@ -684,15 +685,10 @@ inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
 ##' @param not If not \code{NULL}, a vector of logicals the same length
 ##' as the number of features
 ##' provided (or will be recycled to this length).
-##' For each value which is \code{TRUE}, the inverse of the feature
-##' will be used.  If any element of \code{not} is \code{TRUE}, then
-##' the region.bounds arg must also be provided.  If \code{NULL}, do not
-##' take the inverse of any features.
-##' @param region.bounds An object of type \code{feat} which defines the
-##' start and end coordinates of all relevant chromosomes/regions in the
-##' provided feat objects.  Used for taking inverses of the feat objects as
-##' required by the argument \code{not}.  If \code{not==NULL} or
-##' \code{not==FALSE} for all feat objects, then this argument is not used.
+##' For each value which is \code{TRUE}, then any base *not* included in this
+##' feature will be counted.  (The negation is done before any other operation).
+##' If \code{NULL}, do not negate any features.  There must be at least one
+##' feature which is not negated (so that boundaries can be established).
 ##' @return The number of bases covered by the feat arguments, or the
 ##' combined feat object if \code{get.feats==TRUE}.
 ##' @note Any features object passed into this function which is stored as a
@@ -710,10 +706,9 @@ coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
             max.length=length(featlist))
   not <- rep(not, length.out=length(featlist))
   if (is.null(not)) not <- rep(FALSE, length(featlist))
-  if (sum(not==TRUE) > 0L) {
-    if (is.null(region.bounds))
-      stop("region.bounds must be provided to take inverse features")
-  }
+  if (sum(not == FALSE) == 0L)
+    stop("at least one feature must have not==FALSE")
+  region.bounds <- featlist[[which(not==FALSE)[1]]]
   for (i in 1:length(featlist)) {
     x <- featlist[[i]]
     if (not[i]) x <- inverse.feat(x, region.bounds)

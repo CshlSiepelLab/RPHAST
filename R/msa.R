@@ -1010,7 +1010,8 @@ sample.msa <- function(x, size, replace=FALSE, prob=NULL, pointer.only=FALSE) {
 ##' @note \itemize{
 ##' \item{If x is stored as a pointer, it will be 
 ##' reduced to four-fold degenerate sites, so the original alignment will be lost.
-##' Use get4d.msma(copy.msa(x), features) to avoid this behavior.}
+##' If features is stored as a pointer, it will also be altered.
+##' Use get4d.msma(copy.msa(x), copy.msa(features)) to avoid this behavior.}
 ##' \item{For very large MSA objects it is more efficient to use the do.4d option
 ##' in the read.msa function instead.}}
 ##' @export
@@ -1043,7 +1044,9 @@ get4d.msa <- function(x, features) {
 ##' appearing in the features object.
 ##' @note If x was loaded with \code{pointer.only==TRUE}, then x
 ##' will be modified to the return value of the function.
-##' Use \code{extract.feature.msa(copy.msa(x),...)} if you don't want this behavior!
+##' features will also be modified if it is stored as a pointer.
+##' Use \code{extract.feature.msa(copy.msa(x), copy.msa(features)...)}
+##' if you don't want this behavior!
 ##' @seealso \code{sub.msa}, \code{[.msa}
 ##' @keywords msa features
 ##' @export
