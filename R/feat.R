@@ -523,10 +523,9 @@ plot.gene <- function(x, y=0, height=1,
   if (sum(fexon) > 0L) {
     if (sum(fcds) > 0L) {
       region.bounds <- feat(seqname=seqname, start=min(x$start), end=max(x$end))
-      exon <- coverage.feat(x[fexon,], x[fcds,],
+      exon <- coverage.feat(x[fexon,], x[fcds,], region.bounds,
                             get.feats=TRUE,
-                            not=c(FALSE, TRUE),
-                            region.bounds=region.bounds)
+                            not=c(FALSE, TRUE, FALSE))
     } else exon <- x[fexon,]
     if (nrow.feat(exon) > 0L)
       plot.feat(exon, plottype="a", y=y, height=height/5, add=TRUE, col=col,
@@ -697,8 +696,7 @@ inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
 ##' @keywords features
 ##' @author Melissa J. Hubisz
 coverage.feat <- function(..., or=FALSE, get.feats=FALSE,
-                          not=NULL,
-                          region.bounds=NULL) {
+                          not=NULL) {
   check.arg(or, "or", "logical", null.OK=FALSE)
   check.arg(get.feats, "get.feats", "logical", null.OK=FALSE)
   featlist <- list(...)

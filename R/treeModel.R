@@ -89,42 +89,42 @@ from.pointer.tm <- function(x) {
 
 ##' @nord
 ##' @export
-as.pointer.tm <- function(tm) {
-  x <- list()
-  x$externalPtr <- .Call("rph_tm_new",
-                         tm$tree,
-                         tm$alphabet,
-                         tm$backgd,
-                         tm$rate.matrix,
-                         tm$subst.mod,
-                         tm$likelihood,
-                         tm[["alpha"]],
-                         tm$nratecats,
-                         tm$rate.consts,
-                         tm$rate.weights,
-                         tm$root.leaf,
-                         tm$selection)
-  if (!is.null(tm$alt.model)) {
-    if (!is.null(tm$alt.model$defn)) {
+as.pointer.tm <- function(x) {
+  rv <- list()
+  rv$externalPtr <- .Call("rph_tm_new",
+                          x$tree,
+                          x$alphabet,
+                          x$backgd,
+                          x$rate.matrix,
+                          x$subst.mod,
+                          x$likelihood,
+                          x[["alpha"]],
+                          x$nratecats,
+                          x$rate.consts,
+                          x$rate.weights,
+                          x$root.leaf,
+                          x$selection)
+  if (!is.null(x$alt.model)) {
+    if (!is.null(x$alt.model$defn)) {
       numModel <- 1L
-    } else numModel <- length(tm$alt.model)
+    } else numModel <- length(x$alt.model)
     for (i in 1:numModel) {
-      if (numModel == 1L && !is.null(tm$alt.model$defn)) {
-        altmod <- tm$alt.model
-      } else altmod <- tm$alt.model[[i]]
+      if (numModel == 1L && !is.null(x$alt.model$defn)) {
+        altmod <- x$alt.model
+      } else altmod <- x$alt.model[[i]]
 
-      .Call("rph_tm_add_alt_mod", x$externalPtr, altmod[["defn"]])
-      .Call("rph_tm_altmod_set_subst_mod", x$externalPtr, i,
+      .Call("rph_tm_add_alt_mod", rv$externalPtr, altmod[["defn"]])
+      .Call("rph_tm_altmod_set_subst_mod", rv$externalPtr, i,
             altmod[["subst.mod"]])
-      .Call("rph_tm_altmod_set_backgd", x$externalPtr, i,
+      .Call("rph_tm_altmod_set_backgd", rv$externalPtr, i,
             altmod[["backgd"]])
-      .Call("rph_tm_altmod_set_ratematrix", x$externalPtr, i,
+      .Call("rph_tm_altmod_set_ratematrix", rv$externalPtr, i,
             altmod[["rate.matrix"]])
-      .Call("rph_tm_altmod_set_sel_bgc", x$externalPtr, i,
+      .Call("rph_tm_altmod_set_sel_bgc", rv$externalPtr, i,
             altmod[["selection"]], altmod[["bgc"]])
     }
   }
-  x
+  rv
 }
 
 

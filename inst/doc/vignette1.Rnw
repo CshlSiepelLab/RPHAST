@@ -239,10 +239,10 @@ We can also plot them along the genomic region for visual comparison.
 coverage.feat(pcEM$most.conserved)
 coverage.feat(pcEM$most.conserved, pc$most.conserved)
 coverage.feat(pcEM$most.conserved, pc$most.conserved, or=TRUE)
-coverage.feat(pcEM$most.conserved, pc$most.conserved, 
-             not=c(FALSE, TRUE), region.bounds=wholeChrom)
-coverage.feat(pcEM$most.conserved, pc$most.conserved, 
-             not=c(TRUE, FALSE), region.bounds=wholeChrom)
+coverage.feat(pcEM$most.conserved, pc$most.conserved,
+             not=c(FALSE, TRUE))
+coverage.feat(pcEM$most.conserved, pc$most.conserved,
+             not=c(TRUE, FALSE))
           
 plot.track(list(as.track.feat(pc$most.conserved, name="No estimation"),
                 as.track.feat(pcEM$most.conserved, name="With estimation")))

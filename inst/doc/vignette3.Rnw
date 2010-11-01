@@ -184,11 +184,9 @@ get.trans.mat <- function(lambda, state.names, motifLen) {
   transMat
 }
 
-lambda <- 0.00005
+lambda <- 0.0001
 transMat <- get.trans.mat(lambda, names(mods), motifLen)
-eqFreq <- ifelse(names(mods) == "neutral", 0.9999, (1-0.9999)/motifLen)
-
-nrsfHmm <- hmm(transMat, eqFreq, begin.freq=eqFreq)
+nrsfHmm <- hmm(transMat)
 @ 
 
 As a very simple demonstration of how this model can be used for
@@ -236,11 +234,10 @@ true and predicted binding sites (Figure \ref{fig:vignette3-browser-view}).
 
 wholeRegion <- feat("hg18", src=".", feature="all",start=1, end=simLength)
 sensitivity <- coverage.feat(correct, predicted)/coverage.feat(correct)
-specificity <- coverage.feat(correct, predicted, not=c(TRUE, TRUE), 
-                            region.bounds=wholeRegion) /
-  coverage.feat(correct, not=TRUE, region.bounds=wholeRegion)
-ppv <- coverage.feat(correct, predicted, region.bounds=wholeRegion) /
-  coverage.feat(predicted, region.bounds=wholeRegion)
+specificity <- coverage.feat(correct, predicted, wholeRegion, not=c(TRUE, TRUE, FALSE))/ 
+  coverage.feat(correct, wholeRegion, not=c(TRUE, FALSE))
+ppv <- coverage.feat(correct, predicted) /
+  coverage.feat(predicted)
 cat(specificity, sensitivity, ppv, "\n")
 
 tracks <- list(as.track.feat(correct, "actual binding sites"),

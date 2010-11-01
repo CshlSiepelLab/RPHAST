@@ -33,6 +33,9 @@
 	  help("[.msa") not working previously)
 	* Switched order of arguments in write.feat to (feature, file) for 
 	  consistency with all other write functions.
+	* added functions postprob.msa, expected.subs.msa, and total.expected.subs.msa
+	* allow ref.idx argument in phyloP to refer to features object
+	* removed region.bounds argument from coverage.feat; now requires at least one objec have not=FALSE
 
 2010-09-17: 1.1 released
 	* updated DESCRIPTION

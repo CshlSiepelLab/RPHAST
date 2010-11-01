@@ -81,50 +81,28 @@ phyloFit <- function(msa,
       features <- as.pointer.feat(features)
   }
 
-  result <- list()
-  result$externalPtr <- .Call("rph_phyloFit",
-                              msa$externalPtr,
-                              tree,
-                              subst.mod,
-                              scale.only,
-                              scale.subtree,
-                              nrates,
-                              alpha,
-                              rate.constants,
-                              if (is.null(init.mod)) NULL else init.mod$externalPtr,
-                              init.backgd.from.data,
-                              init.random,
-                              init.parsimony,
-                              clock,
-                              EM,
-                              precision,
-                              features$externalPtr,
-                              ninf.sites,
-                              quiet,
-                              no.opt,
-                              bound,
-                              log.file,
-                              selection)
-
-  #need to parse result to make a list in R
-  numModels <- .Call("rph_phyloFit_result_num_models", result$externalPtr)
-  if (numModels > 1L)
-    resultList <- list()
-  for (i in 1:numModels) {
-    tm <- list()
-    tm$externalPtr <- .Call("rph_phyloFit_result_get_model",
-                            result$externalPtr, i)
-    tm <- from.pointer.tm(tm)
-
-    # need to incorporate error here if option was given
-
-    if (numModels==1L) return(tm)  # no need for labels if result has only
-                                   # one model
-    currName <- .Call("rph_phyloFit_result_get_name",
-                      result$externalPtr, i)
-    if (is.null(currName)) currName <- i
-    
-    resultList[[currName]] <- tm
-  }
-  resultList
+  rv <- .Call("rph_phyloFit",
+              msa$externalPtr,
+              tree,
+              subst.mod,
+              scale.only,
+              scale.subtree,
+              nrates,
+              alpha,
+              rate.constants,
+              if (is.null(init.mod)) NULL else init.mod$externalPtr,
+              init.backgd.from.data,
+              init.random,
+              init.parsimony,
+              clock,
+              EM,
+              precision,
+              features$externalPtr,
+              ninf.sites,
+              quiet,
+              no.opt,
+              bound,
+              log.file,
+              selection)
+  rphast.simplify.list(rv)
 }

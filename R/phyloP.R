@@ -135,7 +135,9 @@ phyloP.call<- function(mod,
 ##' conservation or acceleration in the subtree relative to the supertree.
 ##' This option is currently only available for method="LRT" or "SCORE".
 ##' @param ref.idx index of reference sequence in the alignment.  If zero,
-##' use frame of reference of entire alignment.
+##' use frame of reference of entire alignment.  If ref.idx==-1 and features
+##' are provided, try to guess the frame of reference of each individual
+##' feature based on sequence name.
 ##' @param outfile Character string.  If given, write results to given file.
 ##' @param outfile.only Logical.  If \code{TRUE}, do not return any
 ##' results to R (this may be useful if results are very large).
@@ -222,7 +224,8 @@ phyloP.prior <- function(mod, nsites=100, subtree=NULL, branches=NULL,
 ##' subtree given the supertree.  The branch above the specified node is
 ##' included with the subtree.
 ##' @param ref.idx index of reference sequence in the alignment.  If zero,
-##' use frame of reference of entire alignment.
+##' use frame of reference of entire alignment.  If -1 and features is used,
+##' try to guess the frame of reference for each feature based on sequence name.
 ##' @param outfile Character string.  If given, write results to given file.
 ##' @param outfile.only Logical.  If \code{TRUE}, do not return any
 ##' results to R (this may be useful for saving memory).

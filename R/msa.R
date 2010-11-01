@@ -849,6 +849,55 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 }
 
 
+##' Obtain posterior probilities of every state at every node
+##' @param x An object of type \code{msa}
+##' @param tm An object of type \code{tm}
+##' @return An array giving the posterior probabilities of all states at
+##' every ancestral node.
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+postprob.msa <- function(x, tm) {
+  if (!is.msa(x))
+    stop("x is not an MSA object")
+  if (is.null(x$externalPtr)) 
+    x <- as.pointer.msa(x)
+  tm <- as.pointer.tm(tm)
+  rphast.simplify.list(.Call("rph_msa_postprob", x$externalPtr, tm$externalPtr))
+}
+
+
+##' Obtain expected number of substitutions on each branch and site
+##' @param x An object of type \code{msa}
+##' @param tm An object of type \code{tm}
+##' @return An array giving the expected number of substitutions on each
+##' branch at each site, summed across all types of substitutions.
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+expected.subs.msa <- function(x, tm) {
+  if (!is.msa(x))
+    stop("x is not an MSA object")
+  if (is.null(x$externalPtr)) 
+    x <- as.pointer.msa(x)
+  tm <- as.pointer.tm(tm)
+  rphast.simplify.list(.Call("rph_msa_exp_subs", x$externalPtr, tm$externalPtr))
+}
+
+##' Obtain expected number of substitutions on each branch
+##' @param x An object of type \code{msa}
+##' @param tm An object of type \code{tm}
+##' @return An array giving the expected number of substitutions on each
+##' branch, summed across all types of substitutions.
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+total.expected.subs.msa <- function(x, tm) {
+  if (!is.msa(x))
+    stop("x is not an MSA object")
+  if (is.null(x$externalPtr)) 
+    x <- as.pointer.msa(x)
+  tm <- as.pointer.tm(tm)
+  rphast.simplify.list(.Call("rph_msa_exp_tot_subs", x$externalPtr, tm$externalPtr))
+}
+
 
 
 ##' Likelihood of an alignment given a tree model

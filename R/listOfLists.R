@@ -1,3 +1,21 @@
+
+##' @export
+##' @nord
+fill.in.array.lol <- function(lol, arr) {
+  if (is.list(lol)) {
+    for (i in 1:length(lol)) {
+      i1 <- rep(FALSE, length(lol))
+      i1[i] <- TRUE
+      idx <- array(rep(i1, prod(dim(arr))/length(lol)), dim=dim(arr))
+      arr[idx] <- fill.in.array.lol(lol[[i]], array(arr[idx], dim=dim(arr)[2:length(dim(arr))]))
+    }
+    return(arr)
+  }
+  return(lol)
+}
+  
+
+
 ##' @export
 ##' @nord
 rphast.simplify.list <- function(lol) {
@@ -10,6 +28,7 @@ rphast.simplify.list <- function(lol) {
   # conversion issues.  No way to assign "NA" in C so if frames are undefined
   # they are -1, set to NA here.
   isFeat <- (!is.null(currClass) && currClass=="feat")
+  isArray <- (!is.null(currClass) && currClass=="array")
   if (isFeat) {
     if (!is.null(lol$frame)) {
       lol$frame[lol$frame < 0] <- NA
@@ -19,6 +38,12 @@ rphast.simplify.list <- function(lol) {
   } else {
     isMatrix <- (!is.null(currClass) && currClass=="matrix")
     isDataFrame <- isFeat || (!is.null(currClass) && currClass=="data.frame")
+  }
+  if (isArray) {
+    arr <- array(dim=lol$dim, dimnames=lol$dimnames)
+    lol$dim <- NULL
+    lol$dimnames <- NULL
+    lol <- drop(fill.in.array.lol(lol, arr))
   }
   if (isMatrix || isDataFrame) {
     if (!is.null(lol$row.names)) {

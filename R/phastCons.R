@@ -142,6 +142,7 @@ phastCons.call <- function(msa,
       modList[[i]] <- as.pointer.tm(mod[[i]])$externalPtr
     }
   } else {
+    cat("calling as.pointer.tm mod$alpha=", mod$alpha, "mod[\"alpha\"]=",mod[["alpha"]], "\n")
     modList <- as.pointer.tm(mod)
   }
 

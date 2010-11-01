@@ -408,3 +408,38 @@ m <- msa(seqs=c("A--ACGTAT-", "AG-AGGTAA-", "AGGAGGTA--"),
 informative.regions.msa(m, 1, refseq=0)
 informative.regions.msa(m, 3, refseq=0)
 informative.regions.msa(m, 3, refseq=2, spec=c("mouse", "rat"))
+
+
+#' postprobs.msa
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, "ENr334.maf")
+m <- read.msa("ENr334.maf")
+mod <- phyloFit(m, tree="((human,(mm9,rn4)),canFam2)")
+x <- postprob.msa(sub.msa(m, start.col=41447839, end.col=41448033, refseq="hg18"), mod)
+dim(x)
+dimnames(x)
+x[,,"CCCC"]
+
+#' expected.subs.msa
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, "ENr334.maf")
+m <- read.msa("ENr334.maf")
+mod <- phyloFit(m, tree="((human,(mm9,rn4)),canFam2)")
+x <- expected.subs.msa(sub.msa(m, start.col=41447839, end.col=41448033, refseq="hg18"), mod)
+dim(x)
+dimnames(x)
+x[,"CCCC"]
+x["mm9-rn4",]
+
+#' total.expected.subs.msa
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, "ENr334.maf")
+m <- read.msa("ENr334.maf")
+mod <- phyloFit(m, tree="((human,(mm9,rn4)),canFam2)")
+x <- total.expected.subs.msa(sub.msa(m, start.col=41447839, end.col=41448033, refseq="hg18"), mod)
+dim(x)
+dimnames(x)
+x["mm9-rn4",,]
