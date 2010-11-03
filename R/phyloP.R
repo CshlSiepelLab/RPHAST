@@ -68,6 +68,7 @@ phyloP.call<- function(mod,
   }
   if (!is.null(features) && is.null(features$externalPtr)) 
     features <- as.pointer.feat(features)
+  on.exit(freeall.rphast)
   result <- .Call("rph_phyloP",
                   mod$externalPtr,
                   msaPtr,

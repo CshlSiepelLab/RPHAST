@@ -30,6 +30,7 @@ fix.semicolon.tree <- function(x) {
 ##' @export
 read.newick.tree <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
+  on.exit(freeall.rphast)
   tr <- .Call("rph_tree_read", filename)
   fix.semicolon.tree(tr)
 }
@@ -46,6 +47,7 @@ numnodes.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
             max.length=NULL)
   result <- integer(length(tree))
+  on.exit(freeall.rphast)
   for (i in 1:length(tree)) {
     result[i] <- .Call("rph_tree_numnodes", tree[i])
   }
@@ -64,6 +66,7 @@ numleaf.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
             max.length=NULL)
   result <- integer(length(tree))
+  on.exit(freeall.rphast)
   for (i in 1:length(tree)) {
     result[i] <- .Call("rph_tree_numnodes", tree[i])
   }
@@ -80,6 +83,7 @@ branchlength.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
             max.length=NULL)
   result <- numeric(length(tree))
+  on.exit(freeall.rphast)
   for (i in 1:length(tree))
     result[i] <- .Call("rph_tree_branchlen", tree[i])
   result
@@ -100,6 +104,7 @@ depth.tree <- function(tree, node) {
             max.length=NULL)
   node <- rep(node, length.out = length(tree))
   result <- numeric(length(tree))
+  on.exit(freeall.rphast)
   for (i in 1:length(tree))
     result[i] <- .Call("rph_tree_depth", tree[i], node[i])
   result
@@ -124,6 +129,7 @@ prune.tree <- function(tree, seqs, all.but=FALSE) {
             max.length=NULL)
   check.arg(all.but, "all.but", "logical", null.OK=FALSE)
   result <- character(length(tree))
+  on.exit(freeall.rphast)
   for (i in 1:length(tree)) {
     result[i] <- .Call("rph_tree_prune", tree[i], seqs, all.but)
   }
@@ -143,6 +149,7 @@ name.ancestors <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
             min.length=1, max.length=NULL)
   result <- character(length(tree))
+  on.exit(freeall.rphast)
   for (i in 1:length(tree)) {
     result[i] <- .Call("rph_tree_name_ancestors", tree[i])
   }
@@ -175,6 +182,7 @@ subtree <- function(tree, node, super.tree=FALSE) {
   node <- rep(node, length.out = length(tree))
   super.tree <- rep(super.tree, length.out = length(tree))
   result <- character(length(tree))
+  on.exit(freeall.rphast)
   for (i in 1:length(tree)) {
     if (super.tree[i]) {
       result[i] <- .Call("rph_tree_supertree", tree[i], node[i])
@@ -221,6 +229,7 @@ rescale.tree <- function(tree, scale, subtree=NULL, include.leading=FALSE) {
     include.leading <- rep(include.leading, length.out=length(tree))
   }
   result <- character(length(tree))
+  on.exit(freeall.rphast)
   for (i in 1:length(tree)) {
     if (!is.null(subtree)) {
       subtreeVal <- subtree[i]
@@ -250,6 +259,7 @@ rename.tree <- function(tree, old.names, new.names) {
             min.length=1, max.length=NULL)
   check.arg(new.names, "new.names", "character", null.OK=FALSE,
             min.length=length(old.names), max.length=length(old.names))
+  on.exit(freeall.rphast)
   fix.semicolon.tree(.Call("rph_tree_rename", tree, old.names, new.names))
 }
 
@@ -275,6 +285,7 @@ label.branches <- function(tree, branches, label) {
   check.arg(branches, "branches", "character", null.OK=FALSE,
             min.length=1L, max.length=NULL)
   check.arg(label, "label", "character", null.OK=FALSE)
+  on.exit(freeall.rphast)
   .Call("rph_tree_label_branches", tree, branches, label)
 }
 
@@ -300,6 +311,7 @@ label.subtree <- function(tree, node, label, include.leading=FALSE) {
   check.arg(node, "node", "character", null.OK=FALSE)
   check.arg(label, "label", "character", null.OK=FALSE)
   check.arg(include.leading, "include.leading", "logical", null.OK=FALSE)
+  on.exit(freeall.rphast)
   .Call("rph_tree_label_subtree", tree, node, include.leading, label)
 }
 
@@ -315,6 +327,7 @@ label.subtree <- function(tree, node, label, include.leading=FALSE) {
 summary.tree <- function(object, ...) {
   check.arg(object, "object", "character", null.OK=FALSE)
   tree <- object
+  on.exit(freeall.rphast)
   names <- .Call("rph_tree_summary_nodenames", tree)
   t <- .Call("rph_tree_summary_len", tree)
   if (sum(t < 0) >= 1L) t[t < 0] <- NA

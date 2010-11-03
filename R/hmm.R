@@ -73,6 +73,7 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
 ##' @author Melissa J. Hubisz and Adam Siepel
 read.hmm <- function(filename) {
   h <- .makeObj.hmm()
+  on.exit(freeall.rphast)
   h$externalPtr <- .Call("rph_hmm_new_from_file", filename)
   from.pointer.hmm(h)
 }
@@ -89,6 +90,7 @@ read.hmm <- function(filename) {
 ##' @author Melissa J. Hubisz and Adam Siepel
 write.hmm <- function(x, filename, append=FALSE) {
   h <- as.pointer.hmm(x)
+  on.exit(freeall.rphast)
   invisible(.Call("rph_hmm_print", h$externalPtr, filename, append))
 }
 
@@ -119,6 +121,10 @@ nstate.hmm <- function(hmm) {
   nrow(hmm$trans.mat)
 }
 
+# Note: hmm's are only stored internally as pointers, never by the user.
+# The memory pointed to is NOT protected.
+# Therefore from.pointer.hmm and as.pointer.hmm are internal functions
+# and do NOT call freeall.rphast
 
 ##' @export
 ##' @nord
@@ -300,6 +306,7 @@ reflect.phylo.hmm <- function(x, pivot.states, mods=NULL) {
   for (i in 1:length(useMods))
     useMods[[i]] <- (as.pointer.tm(useMods[[i]]))$externalPtr
   phyloHmm <- list()
+  on.exit(freeall.rphast)
   phyloHmm$externalPtr <- .Call("rph_phylo_hmm_reflect_strand", xp$externalPtr, as.integer(pivot.states), useMods)
   newhmm <- list()
   newhmm$externalPtr <- .Call("rph_phylo_hmm_get_hmm", phyloHmm$externalPtr)

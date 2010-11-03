@@ -148,7 +148,8 @@ phastCons.call <- function(msa,
 
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
-
+  
+  on.exit(freeall.rphast)
   result <- .Call("rph_phastCons",
                   msa$externalPtr,
                   modList,

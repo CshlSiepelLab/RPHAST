@@ -29,6 +29,11 @@ is.tm <- function(x) {
 }
 
 
+# NOTE: tm's are only stored as external pointers with RPHAST functions,
+# never by the user.  So from.pointer and as.pointer are internal functions.
+# Treemodels stored as external pointers are NOT protected.
+# from.pointer and as.pointer do not call freeall.rphast
+
 ##' @nord
 ##' @export
 from.pointer.one.altmodel.tm <- function(x, i) {
@@ -147,6 +152,7 @@ as.tm.list <- function(l) {
 read.tm <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
   x <- list()
+  on.exit(freeall.rphast)
   x$externalPtr <- .Call("rph_tm_read", filename)
   tm <- from.pointer.tm(x)
   tm
@@ -167,6 +173,7 @@ write.tm <- function(tm, filename=NULL, append=FALSE) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
   check.arg(append, "append", "logical", null.OK=TRUE)
   tm <- as.pointer.tm(tm)
+  on.exit(freeall.rphast)
   invisible(.Call("rph_tm_print", tm$externalPtr, filename, append))
 }
 
@@ -225,6 +232,7 @@ print.tm <- function(x, aslist=FALSE, ...) {
 ##' @author Melissa J. Hubisz and Adam Siepel
 is.subst.mod.tm <- function(mod) {
   result <- logical(length(mod))
+  on.exit(freeall.rphast)
   for (i in 1:length(mod)) 
     result[i] <- .Call("rph_subst_mods_is_valid_string", mod[i])
   result
@@ -237,6 +245,7 @@ is.subst.mod.tm <- function(mod) {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 subst.mods <- function() {
+  on.exit(freeall.rphast)
   .Call("rph_subst_mods_list_all", NULL)
 }
     
@@ -331,11 +340,10 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
   }
   
   if (!is.null(root.leaf)) {
-    cat("calling .Call\n")
+    on.exit(freeall.rphast)
     if ( ! (.Call("rph_tree_isNode", tree, root.leaf))) {
       stop("tree has no node named ", root.leaf)
     }
-    cat("done\n")
   }
 
   tm <- .makeObj.tm()
@@ -381,6 +389,7 @@ bgc.sel.factor <- function(x) {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 apply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
+  on.exit(freeall.rphast)
   rphast.simplify.list(.Call("rph_tm_apply_selection_bgc",
                              as.matrix(m), alphabet, sel, bgc))
 }
@@ -395,6 +404,7 @@ apply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
+  on.exit(freeall.rphast)
   rphast.simplify.list(.Call("rph_tm_unapply_selection_bgc",
                              as.matrix(m), alphabet, sel, bgc))
 }
@@ -526,6 +536,7 @@ add.alt.mod <- function(x,
                   ifelse(is.null(separate.params), subst.mod,
                          paste(separate.params, collapse=",")))
   origPtr <- as.pointer.tm(x)
+  on.exit(freeall.rphast)
   .Call("rph_tm_add_alt_mod", origPtr$externalPtr, defn)
   newmod <- from.pointer.tm(origPtr)
 
@@ -617,6 +628,7 @@ add.alt.mod <- function(x,
 ##' @export
 set.rate.matrix.tm <- function(x, params=NULL, scale=TRUE) {
   x <- as.pointer.tm(x)
+  on.exit(freeall.rphast)
   .Call("rph_tree_model_set_matrix", x$externalPtr, params, scale)
   from.pointer.tm(x)
 }
@@ -634,6 +646,7 @@ set.rate.matrix.tm <- function(x, params=NULL, scale=TRUE) {
 ##' @export
 get.rate.matrix.params.tm <- function(x) {
   x <- as.pointer.tm(x)
+  on.exit(freeall.rphast)
   .Call("rph_tree_model_get_rate_matrix_params", x$externalPtr)
 }
 

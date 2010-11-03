@@ -18,7 +18,7 @@ fill.in.array.lol <- function(lol, arr) {
 
 ##' @export
 ##' @nord
-rphast.simplify.list <- function(lol) {
+rphast.simplify.list <- function(lol, pointer.only=FALSE) {
   if (!is.list(lol)) return(lol)
   if (length(lol) == 1) 
     return(rphast.simplify.list(lol[[1]]))
@@ -37,7 +37,7 @@ rphast.simplify.list <- function(lol) {
     isMatrix <- FALSE
   } else {
     isMatrix <- (!is.null(currClass) && currClass=="matrix")
-    isDataFrame <- isFeat || (!is.null(currClass) && currClass=="data.frame")
+    isDataFrame <- (!is.null(currClass) && currClass=="data.frame")
   }
   if (isArray) {
     arr <- array(dim=lol$dim, dimnames=lol$dimnames)
