@@ -152,7 +152,7 @@ as.tm.list <- function(l) {
 read.tm <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
   x <- list()
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   x$externalPtr <- .Call("rph_tm_read", filename)
   tm <- from.pointer.tm(x)
   tm
@@ -173,7 +173,7 @@ write.tm <- function(tm, filename=NULL, append=FALSE) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
   check.arg(append, "append", "logical", null.OK=TRUE)
   tm <- as.pointer.tm(tm)
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   invisible(.Call("rph_tm_print", tm$externalPtr, filename, append))
 }
 
@@ -232,7 +232,7 @@ print.tm <- function(x, aslist=FALSE, ...) {
 ##' @author Melissa J. Hubisz and Adam Siepel
 is.subst.mod.tm <- function(mod) {
   result <- logical(length(mod))
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   for (i in 1:length(mod)) 
     result[i] <- .Call("rph_subst_mods_is_valid_string", mod[i])
   result
@@ -245,7 +245,7 @@ is.subst.mod.tm <- function(mod) {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 subst.mods <- function() {
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   .Call("rph_subst_mods_list_all", NULL)
 }
     
@@ -340,7 +340,7 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
   }
   
   if (!is.null(root.leaf)) {
-    on.exit(freeall.rphast)
+    on.exit(freeall.rphast())
     if ( ! (.Call("rph_tree_isNode", tree, root.leaf))) {
       stop("tree has no node named ", root.leaf)
     }
@@ -389,7 +389,9 @@ bgc.sel.factor <- function(x) {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 apply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
+  if (is.null(bgc)) bgc <- 0
+  if (is.null(sel)) sel <- 0
   rphast.simplify.list(.Call("rph_tm_apply_selection_bgc",
                              as.matrix(m), alphabet, sel, bgc))
 }
@@ -404,7 +406,9 @@ apply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
+  if (is.null(bgc)) bgc <- 0
+  if (is.null(sel)) sel <- 0
   rphast.simplify.list(.Call("rph_tm_unapply_selection_bgc",
                              as.matrix(m), alphabet, sel, bgc))
 }
@@ -484,7 +488,8 @@ unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
 ##' @param backgd The initial equilibrium frequencies to use for this
 ##' model.  If \code{NULL}, use the same as in the main model.
 ##' @param rate.matrix  The initial rate matrix to use for this model.  If
-##' \code{NULL}, initialize to main model.
+##' \code{NULL}, initialize to main model.  If provided, and selection and/or
+##' bgc are provided, assume that rate matrix is already scaled 
 ##' @param selection The selection parameter (from the sel+bgc model).
 ##' @param bgc The bgc parameter (from the sel+bgc model).
 ##' @return An object of type \code{tm}, identical to the input model but
@@ -628,7 +633,7 @@ add.alt.mod <- function(x,
 ##' @export
 set.rate.matrix.tm <- function(x, params=NULL, scale=TRUE) {
   x <- as.pointer.tm(x)
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   .Call("rph_tree_model_set_matrix", x$externalPtr, params, scale)
   from.pointer.tm(x)
 }
@@ -646,7 +651,7 @@ set.rate.matrix.tm <- function(x, params=NULL, scale=TRUE) {
 ##' @export
 get.rate.matrix.params.tm <- function(x) {
   x <- as.pointer.tm(x)
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   .Call("rph_tree_model_get_rate_matrix_params", x$externalPtr)
 }
 

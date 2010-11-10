@@ -59,3 +59,7 @@ temp <- phyloP(tm, msa, method="LRT", features=f)
 phyloP(tm, msa, method="LRT", outfile="test.out", outfile.only=TRUE)
 unlink("test.out")
 unlink(file)
+
+
+rm(list = ls())
+gc()

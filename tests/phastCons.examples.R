@@ -11,3 +11,6 @@ rv2 <- phastCons(msa, mod, estimate.trees=TRUE)
 names(rv2)
 rv2$tree.models
 unlink(files)
+
+rm(list = ls())
+gc()

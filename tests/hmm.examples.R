@@ -68,4 +68,6 @@ unlink(filename)
 #         eq.freq=c(0.6, 0.3, 0.1/3, 0.1/3, 0.1/3))
 #reflect.phylo.hmm(h, c("neutral", "conserved"))
 #
-#gc()
+
+rm(list = ls())
+gc()

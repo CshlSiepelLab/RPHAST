@@ -100,3 +100,8 @@ tm$alt.model$backgd <- c(0.9, 0.05, 0.03, 0.02)
 plot.altmodel.tm(tm, 1)
 plot.rate.matrix(tm[["rate.matrix"]], eq.freq=tm[["backgd"]], filled=FALSE, alphabet=tm[["alphabet"]])
 unlink(filename)
+
+
+rm(list=ls())
+gc()
+

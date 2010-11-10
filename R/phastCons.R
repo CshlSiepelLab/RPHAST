@@ -55,6 +55,8 @@ phastCons.call <- function(msa,
   check.arg(ref.idx, "ref.idx", "integer", null.OK=FALSE)
   if (ref.idx < 0) stop("ref.idx must be >=0")
   if (ref.idx > nrow.msa(msa)) stop("ref.idx must be <= nrow.msa(msa)")
+  if (is.null(msa$externalPtr))
+    msa <- as.pointer.msa(msa)
 
   if (!is.null(hmm)) {
     if (length(mod) != nrow(hmm$trans.mat))
@@ -142,14 +144,10 @@ phastCons.call <- function(msa,
       modList[[i]] <- as.pointer.tm(mod[[i]])$externalPtr
     }
   } else {
-    cat("calling as.pointer.tm mod$alpha=", mod$alpha, "mod[\"alpha\"]=",mod[["alpha"]], "\n")
     modList <- as.pointer.tm(mod)
   }
 
-  if (is.null(msa$externalPtr))
-    msa <- as.pointer.msa(msa)
-  
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   result <- .Call("rph_phastCons",
                   msa$externalPtr,
                   modList,

@@ -33,3 +33,6 @@ mod$AR$backgd
 phyloFit(m, init.mod=mod$AR, no.opt=NULL, quiet=TRUE)$backgd
 mod$AR$backgd
 #'
+
+rm(list = ls())
+gc()

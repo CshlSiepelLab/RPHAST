@@ -48,8 +48,6 @@ phyloFit <- function(msa,
   check.arg(rate.constants, "rate.constants", "numeric", null.OK=TRUE,
             min.length=NULL, max.length=NULL)
   check.arg(selection, "selection", "numeric", null.OK=TRUE)
-  if (!is.null(init.mod))
-    init.mod <- as.pointer.tm(init.mod)
   check.arg(no.opt, "no.opt", "character", null.OK=TRUE, min.length=1L,
             max.length=NULL)
   check.arg(init.random, "init.random", "logical", null.OK=FALSE)
@@ -80,8 +78,10 @@ phyloFit <- function(msa,
     if (is.null(features$externalPtr))
       features <- as.pointer.feat(features)
   }
+  if (!is.null(init.mod))
+    init.mod <- as.pointer.tm(init.mod)
 
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   rphast.simplify.list(.Call("rph_phyloFit",
                              msa$externalPtr,
                              tree,

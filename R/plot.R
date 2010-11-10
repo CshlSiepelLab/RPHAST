@@ -15,7 +15,8 @@ is.track <- function(x, ...) {
 ##' @param ... a list of tracks
 ##' @param na.rm logical, indicating if \code{NA}'s should be omitted
 ##' @return a numeric vector of length two giving the minimum and maximum
-##' coordinates in any element of the list
+##' coordinates in any wig or feature track in the list.  MSA tracks are
+##' *only* used if there are no wig or feature tracks.
 ##' @keywords plot
 ##' @export
 ##' @author Melissa J. Hubisz
@@ -24,14 +25,18 @@ range.track <- function(..., na.rm=FALSE) {
   if (length(l)==1 && !is.track(l[[1]])) 
     l <- l[[1]]
   currrange <- c()
+  msarange <- c()
   for (i in 1:length(l)) {
     if (!is.track(l[[i]])) stop("element ", i, " is not a track")
     if (l[[i]]$type == "wig") {
       currrange <- c(currrange, range(l[[i]]$data$coord, na.rm=na.rm))
-    } else {
+    } else if (l[[i]]$type != "msa") {
       currrange <- c(currrange, range.feat(l[[i]]$data, na.rm=na.rm))
+    } else { #msa track
+      msarange <- c(msarange, coord.range.msa(l[[i]]$data, l[[i]]$refseq))
     }
   }
+  if (length(currrange) == 0L) return(range(msarange))
   range(currrange)
 }
 
@@ -74,6 +79,7 @@ smooth.wig <- function(coord, score, numpoints=300) {
 ##' @param cex.labels The character expansion factor for the labels
 ##' @param cex.shortLabels The character expansion factor for the shortLabels
 ##' @param relWigSize The relative size of wig plots compared to feature plots
+##' @param relMsaSize The relative size of msa plots compared to feature plots
 ##' @param xlim The range of the x coordinate to be plotted.  If \code{NULL} (the default), will
 ##' use the entire range represented in the resultList.
 ##' @param xlab The label for the x axis
@@ -96,6 +102,7 @@ plot.track <- function(x,
                        cex.labels=1.0,
                        cex.shortLabels=0.75,
                        relWigSize=5,
+                       relMsaSize=5,
                        xlim=NULL,
                        xlab="coord", ylab="", blankSpace=0.25, axisDigits=3,
                        labelSpace=min(length(x)*0.05, 0.25),
@@ -110,6 +117,7 @@ plot.track <- function(x,
   numlabels <- sum(doLabels)
   
   check.arg(relWigSize, "relWigSize", "numeric", null.OK=FALSE)
+  check.arg(relMsaSize, "relMsaSize", "numeric", null.OK=FALSE)
   check.arg(xlim, "xlim", "numeric", null.OK=TRUE, min.length=2L, max.length=2L)
   check.arg(xlab, "xlab", "character", null.OK=FALSE)
   check.arg(ylab, "ylab", "character", null.OK=FALSE)
@@ -119,7 +127,8 @@ plot.track <- function(x,
 
   resultType <- character(length(tracks))
   for (i in 1:length(tracks)) resultType[i] <- tracks[[i]]$type
-  plotScale <- as.numeric(ifelse(resultType=="wig", relWigSize, 1))
+  plotScale <- as.numeric(ifelse(resultType=="wig", relWigSize,
+                                 ifelse(resultType=="msa", relMsaSize, 1)))
   plotScale <- plotScale/sum(plotScale)
 
   if (is.null(xlim))
@@ -183,6 +192,8 @@ plot.track <- function(x,
         for (i in 1:length(el$horiz.line)) 
           abline(h=horiz.line, lty=el$horiz.lty[i], col=el$horiz.col[i])
       }
+    } else if (resultType[[i]] == "msa") {
+      plot.msa(el$data, xlim=xlim, ylim=yrange, add=TRUE, pretty=el$pretty)
     } else if (resultType[[i]] == "feat") {
       plot.feat(el$data,
                 y=mean(yrange), height=(yrange[2]-yrange[1]),
@@ -191,8 +202,8 @@ plot.track <- function(x,
       plot.gene(el$data, y=mean(yrange), height=(yrange[2]-yrange[1]),
                 add=TRUE, col=el$col, arrow.density=el$arrow.density)
     } else stop("don't know track type ", resultType[[i]])
-    if (!is.null(el$shortLabel))
-      mtext(el$shortLabel, side=2, line=0.5, at=mean(yrange),
+    if (!is.null(el$short.label))
+      mtext(el$short.label, side=2, line=0.5, at=mean(yrange),
             las=1, cex=cex.shortLabels[i])
     maxy <- miny-blankSpace
   }
@@ -255,6 +266,42 @@ as.track.wig <- function(wig=NULL, name, coord=NULL, score=NULL, short.label=NUL
     rv$horiz.col <- rep(horiz.col, length.out=length(horiz.line))
   }
   rv$type="wig"
+  rv
+}
+
+
+##' Create an alignment track
+##' @param x An object of type \code{msa}
+##' @param name The name of the track (a character string)
+##' @param refseq A character string identifying the sequence whose
+##' coordinate range to use in the plot.  A value of \code{NULL} implies
+##' the frame of reference of the entire alignment.
+##' @param short.label An optional character string to be displayed in the
+##' left-hand margin of the track
+##' @param pretty If \code{TRUE}, display bases in the non-reference species
+##' which are identical to the reference species as a dot.
+##' @return An object of type \code{track} which can be plotted with the
+##' plot.track function
+##' @keywords plot
+##' @seealso plot.track
+##' @note alignment plots will only be displayed if the plot is zoomed in
+##' enough to show the alignment data.
+##' @export
+##' @author Melissa J. Hubisz
+as.track.msa <- function(x, name, refseq=names.msa(x)[1],
+                         short.label=NULL, pretty=TRUE) {
+  if (!is.msa(x)) stop("x is not msa object")
+  check.arg(refseq, "refseq", "character", null.OK=TRUE)
+  check.arg(name, "name", "character", null.OK=FALSE)
+  check.arg(short.label, "short.label", "character", null.OK=TRUE)
+  check.arg(pretty, "pretty", "logical", null.OK=FALSE)
+  rv <- list()
+  attr(rv, "class") <- "track"
+  rv$data <- x
+  rv$name <- name
+  rv$short.label <- short.label
+  rv$pretty <- pretty
+  rv$type <- "msa"
   rv
 }
 

@@ -280,4 +280,5 @@ f.fixed[firstCds,]
 f[lastCds,]
 f.fixed[lastCds,]
 
+rm(list = ls())
 gc()

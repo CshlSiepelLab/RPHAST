@@ -83,3 +83,7 @@ tree <- "(((hg18:0.01, panTro2:0.01)hg18-panTro2:0.07,
              0.269385)hg18-rn4:0.020666,canFam2:0.193569);"
 summary.tree(tree)
 summary.tree(label.subtree(tree, "mm9-rn4", "rodent", include.leading=TRUE))
+
+
+rm(list = ls())
+gc()

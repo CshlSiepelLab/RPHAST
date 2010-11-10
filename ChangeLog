@@ -11,12 +11,17 @@
 	* many changes to phyloFit; allow lineage-specific models, arbitrary
 	  parameter boundaries, hold specified boundaries constant.  Some
 	  of the default options are now different from command-line phyloFit.
+	* added plot.msa and as.track.msa functions which plot alignment; only
+	  currently works if alignment fits in the plotting window.  Also
+	  added coord.range.msa function to support this.
 	* added plot.rate.matrix (and plot.tm and plot.altmodel.tm)
 	* added set.rate.matrix.tm and get.rate.matrix.params.tm which set 
 	  a rate matrix based on substitution model parameters, or get the 
 	  substitution model parameters describing a rate matrix, respectively.
 	* added summary.tree function which returns a data frame with various
 	  information about each branch
+	* fixed bug in split.by.feature.msa in which offset of resulting msas
+	  was one higher than it should have been
 	* changed several function names to increase consistency in naming 
 	  conventions:
 	    addUTRs.feat -> add.UTRs.feat

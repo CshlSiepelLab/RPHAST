@@ -405,9 +405,9 @@ unlink(files)
 require("rphast")
 m <- msa(seqs=c("A--ACGTAT-", "AG-AGGTAA-", "AGGAGGTA--"),
          names=c("human", "mouse", "rat"))
-informative.regions.msa(m, 1, refseq=0)
-informative.regions.msa(m, 3, refseq=0)
-informative.regions.msa(m, 3, refseq=2, spec=c("mouse", "rat"))
+informative.regions.msa(m, 1, refseq=NULL)
+informative.regions.msa(m, 3, refseq=NULL)
+informative.regions.msa(m, 3, refseq="mouse", spec=c("mouse", "rat"))
 
 
 #' postprobs.msa
@@ -443,3 +443,21 @@ x <- total.expected.subs.msa(sub.msa(m, start.col=41447839, end.col=41448033, re
 dim(x)
 dimnames(x)
 x["mm9-rn4",,]
+
+
+#' plot.msa
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, "ENr334.maf")
+m <- read.msa("ENr334.maf")
+plot.msa(m)
+plot.msa(m[, 1:2])
+plot.msa(m[,1:20])
+plot.msa(m[1:3,1:40])
+plot.msa(m[,1:100])
+plot.msa(m[,1:50], refseq=NULL)
+rm(m)
+unlink("ENr334.maf")
+
+rm(list = ls())
+gc()

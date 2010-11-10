@@ -57,7 +57,6 @@ phyloP.call<- function(mod,
     warning("cannot use fit.model with a features file.  Setting fit.model=FALSE")
     fit.model <- FALSE
   }
-  mod <- as.pointer.tm(mod)
   if (is.null(msa)) {
     msaPtr <- NULL
   } else if (is.null(msa$externalPtr)) {
@@ -68,7 +67,8 @@ phyloP.call<- function(mod,
   }
   if (!is.null(features) && is.null(features$externalPtr)) 
     features <- as.pointer.feat(features)
-  on.exit(freeall.rphast)
+  mod <- as.pointer.tm(mod)
+  on.exit(freeall.rphast())
   result <- .Call("rph_phyloP",
                   mod$externalPtr,
                   msaPtr,

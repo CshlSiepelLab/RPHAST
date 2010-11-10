@@ -73,7 +73,7 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
 ##' @author Melissa J. Hubisz and Adam Siepel
 read.hmm <- function(filename) {
   h <- .makeObj.hmm()
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   h$externalPtr <- .Call("rph_hmm_new_from_file", filename)
   from.pointer.hmm(h)
 }
@@ -90,7 +90,7 @@ read.hmm <- function(filename) {
 ##' @author Melissa J. Hubisz and Adam Siepel
 write.hmm <- function(x, filename, append=FALSE) {
   h <- as.pointer.hmm(x)
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   invisible(.Call("rph_hmm_print", h$externalPtr, filename, append))
 }
 
@@ -306,7 +306,7 @@ reflect.phylo.hmm <- function(x, pivot.states, mods=NULL) {
   for (i in 1:length(useMods))
     useMods[[i]] <- (as.pointer.tm(useMods[[i]]))$externalPtr
   phyloHmm <- list()
-  on.exit(freeall.rphast)
+  on.exit(freeall.rphast())
   phyloHmm$externalPtr <- .Call("rph_phylo_hmm_reflect_strand", xp$externalPtr, as.integer(pivot.states), useMods)
   newhmm <- list()
   newhmm$externalPtr <- .Call("rph_phylo_hmm_get_hmm", phyloHmm$externalPtr)
