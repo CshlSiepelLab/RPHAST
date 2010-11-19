@@ -363,6 +363,35 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
 }
 
 
+##' Adjust tree model background frequencies while maintaining reversibility
+##' @param tm An object of type \code{tm}
+##' @param new.backgd A numeric vector of length 4 giving the background
+##' frequencies of A,C,G,T
+##' @param gc (Alternative to new.backgd) A numeric value giving the GC
+##' content, which is used to calculate new background frequencies.
+##' Assumes freq(C)==freq(G)==gc/2, and freq(A)==freq(T)==(1-gc)/2
+##' @note Currently only works with models of order 0, without lineage-
+##' specific models, and which use the default alphabet "ACGT".
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+mod.backgd.tm <- function(tm, new.backgd=NULL, gc=NULL) {
+  if (is.null(new.backgd)) {
+    if (is.null(gc)) stop("either new.backgd or gc should be provided")
+    if (length(gc) != 1L || gc < 0 || gc > 1) stop("invalid value of gc")
+    new.backgd <- c((1-gc)/2, gc/2, gc/2, (1-gc)/2)
+  }
+  if (length(new.backgd) != 4 ||
+      sum(new.backgd < 0) > 0 ||
+      sum(new.backgd > 1) > 0)
+    stop("invalid background frequencies")
+  on.exit(freeall.rphast())
+  tm <- as.pointer.tm(tm)
+  .Call("rph_tm_mod_freqs", tm$externalPtr, new.backgd)
+  tm <- from.pointer.tm(tm)
+  tm
+}
+
+
 ##' BGC+selection factor
 ##' @param x The cumulative effect of bgc and selection.  If bgc and sel are
 ##' population-scaled parameters describing biased gene conversion and selection,

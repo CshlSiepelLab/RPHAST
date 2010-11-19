@@ -146,8 +146,7 @@ phyloP.call<- function(mod,
 ##' output.  Possible formats depend on other options (see description below).
 ##' Current options are "default", "gff", or "wig".
 ##' @return A data frame containing scores and parameter estimates for
-##' every feature (if features is given) or for every base (otherwise).  All
-##' return objects are in 0-based coordinates.
+##' every feature (if features is given) or for every base (otherwise).
 ##' @keywords msa tm features
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel

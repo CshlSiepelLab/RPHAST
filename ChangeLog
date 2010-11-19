@@ -2,6 +2,11 @@
 	* improvements to memory handler, which previously slowed down rphast
 	  by 33%.  Now there is no significant increase in run-time, at least
 	  for the code in rphast/tests.
+	* fixed bug in plot.msa where alignment plot was placed wrongly when
+	  ploted with several tracks.
+	* changed phyloP to always return 1-based coordinates
+	* added function mod.backgd.tm which modifies background frequency of
+	  tree model while maintaining reversibility
 11-10-2010: 1.2 released 
 	* added memory handler so that memory allocated in C is no longer
 	  lost due to function interrupt (or failure to explicitly free it)

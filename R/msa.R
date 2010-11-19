@@ -172,7 +172,9 @@ ncol.msa <- function(x, refseq=NULL) {
 ##' @return A numeric vector of length 2 giving the smallest and highest
 ##' coordinate in the alignment.  If refseq is the first sequence in alignment,
 ##' offset.msa(x) is added to the range, otherwise it is ignored.
-coord.range.msa <- function(x, refseq=names.msa(x)[1], na.rm=FALSE) {
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+coord.range.msa <- function(x, refseq=names.msa(x)[1]) {
   if (!is.msa(x)) stop("x is not an MSA object")
   numcol <- ncol.msa(x, refseq)
   if (!is.null(refseq) && refseq==names.msa(x)[1]) {
@@ -1586,8 +1588,8 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
 
   y <- (1:numseq)*textCex*1.25*par("cex")*par("cin")[2]  # this is in inches
   if (max(y)-min(y) < height) {
-    y <- y/height*(ylim[2] - ylim[1])
-    y <- y - mean(y) + (ylim[2] - ylim[1])/2
+    y <- y/height*(ylim[2] - ylim[1]) 
+    y <- y - mean(y) + (ylim[2] - ylim[1])/2 + ylim[1]
   } else {
     y <- seq(from=ylim[1], to=ylim[2], length.out=length(names.msa(x))+2)[2:(numseq+1)]
   }
