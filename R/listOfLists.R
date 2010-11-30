@@ -20,6 +20,7 @@ fill.in.array.lol <- function(lol, arr) {
 ##' @nord
 rphast.simplify.list <- function(lol, pointer.only=FALSE) {
   if (!is.list(lol)) return(lol)
+  if (!is.null(lol$externalPtr)) return(lol)
   if (length(lol) == 1) 
     return(rphast.simplify.list(lol[[1]]))
   currClass <- attr(lol, "class")

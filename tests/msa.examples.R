@@ -381,10 +381,13 @@ mod3 <- mod
 mod3$backgd <- c(0.6, 0.1, 0.2, 0.1)
 m <- simulate.msa(mod, 20)
 m <- simulate.msa(list(mod, mod2, mod3), 20, hmm=h)
-m <- matrix(1, nrow=9, ncol=9)
+m <- matrix(1, nrow=3, ncol=3)
 h <- hmm(m)
-m <- simulate.msa(list(mod, mod2, mod3, mod, mod2, mod3, mod, mod2, mod3),
-                  20, hmm=h)
+l <- simulate.msa(list(mod, mod2, mod3), 100, get.features=TRUE, hmm=h)
+names(l)
+l$msa
+l$feats
+coverage.feat(l$feats[l$feats$feature=="state1",])
 unlink(filename)
 
 #' get4d.msa
@@ -458,6 +461,16 @@ plot.msa(m[,1:100])
 plot.msa(m[,1:50], refseq=NULL)
 rm(m)
 unlink("ENr334.maf")
+
+
+#' split.by.feature.msa
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, c("ENr334.maf", "gencode.ENr334.gff"))      
+m <- read.msa("ENr334.maf")
+feats <- read.feat("gencode.ENr334.gff")
+feats$seqname <- "hg18"
+cdsAlign <- split.by.feature.msa(m, feats[feats$feature=="CDS",])
 
 rm(list = ls())
 gc()

@@ -40,6 +40,7 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
   n <- nrow(trans.mat)
   if (ncol(trans.mat) != n)
     stop("trans.mat should be square")
+  for (i in 1:n) trans.mat[i,] <- fix.freq.hmm(trans.mat[i,], "trans.mat", n)
   if (is.null(eq.freq)) {
     e <- eigen(trans.mat)
     w <- which.min((Re(e$values)-1)*Re(e$values-1) + Im(e$values)*Im(e$values))
@@ -51,7 +52,6 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
   } else begin.freq <- fix.freq.hmm(begin.freq, "begin.freq", n)
   if (! is.null(end.freq))
     end.freq <- fix.freq.hmm(end.freq, "end.freq", n)
-  for (i in 1:n) trans.mat[i,] <- fix.freq.hmm(trans.mat[i,], "trans.mat", n)
   hmm <- .makeObj.hmm()
   hmm$trans.mat <- trans.mat
   hmm$eq.freq <- eq.freq
@@ -73,8 +73,7 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
 ##' @author Melissa J. Hubisz and Adam Siepel
 read.hmm <- function(filename) {
   h <- .makeObj.hmm()
-  on.exit(freeall.rphast())
-  h$externalPtr <- .Call("rph_hmm_new_from_file", filename)
+  h$externalPtr <- .Call.rphast("rph_hmm_new_from_file", filename)
   from.pointer.hmm(h)
 }
 
@@ -90,8 +89,7 @@ read.hmm <- function(filename) {
 ##' @author Melissa J. Hubisz and Adam Siepel
 write.hmm <- function(x, filename, append=FALSE) {
   h <- as.pointer.hmm(x)
-  on.exit(freeall.rphast())
-  invisible(.Call("rph_hmm_print", h$externalPtr, filename, append))
+  invisible(.Call.rphast("rph_hmm_print", h$externalPtr, filename, append))
 }
 
 
@@ -130,8 +128,8 @@ nstate.hmm <- function(hmm) {
 ##' @nord
 as.pointer.hmm <- function(hmm) {
   obj <- .makeObj.hmm()
-  obj$externalPtr <- .Call("rph_hmm_new", hmm$trans.mat, hmm$eq.freq,
-                           hmm$begin.freq, hmm$end.freq)
+  obj$externalPtr <- .Call.rphast("rph_hmm_new", hmm$trans.mat, hmm$eq.freq,
+                                  hmm$begin.freq, hmm$end.freq)
   obj
 }
 
@@ -143,10 +141,10 @@ from.pointer.hmm <- function(x) {
     return(x)
   }
   hmm <- .makeObj.hmm()
-  hmm$trans.mat = .Call("rph_hmm_transMat", x$externalPtr)
-  hmm$eq.freq = .Call("rph_hmm_eqFreq", x$externalPtr)
-  hmm$begin.freq = .Call("rph_hmm_beginFreq", x$externalPtr)
-  temp <- .Call("rph_hmm_endFreq", x$externalPtr)
+  hmm$trans.mat = .Call.rphast("rph_hmm_transMat", x$externalPtr)
+  hmm$eq.freq = .Call.rphast("rph_hmm_eqFreq", x$externalPtr)
+  hmm$begin.freq = .Call.rphast("rph_hmm_beginFreq", x$externalPtr)
+  temp <- .Call.rphast("rph_hmm_endFreq", x$externalPtr)
   if (!is.null(temp))
     hmm$end.freq <- temp
   rphast.simplify.list(hmm)
@@ -306,13 +304,16 @@ reflect.phylo.hmm <- function(x, pivot.states, mods=NULL) {
   for (i in 1:length(useMods))
     useMods[[i]] <- (as.pointer.tm(useMods[[i]]))$externalPtr
   phyloHmm <- list()
-  on.exit(freeall.rphast())
-  phyloHmm$externalPtr <- .Call("rph_phylo_hmm_reflect_strand", xp$externalPtr, as.integer(pivot.states), useMods)
+  phyloHmm$externalPtr <- .Call.rphast("rph_phmm_reflect_strand",
+                                       xp$externalPtr,
+                                       as.integer(pivot.states), useMods)
   newhmm <- list()
-  newhmm$externalPtr <- .Call("rph_phylo_hmm_get_hmm", phyloHmm$externalPtr)
+  newhmm$externalPtr <- .Call.rphast("rph_phmm_get_hmm",
+                                     phyloHmm$externalPtr)
   newhmm <- from.pointer.hmm(newhmm)
   if (!is.null(row.names(x$trans.mat))) {
-    map <- .Call("rph_phylo_hmm_get_state_to_mod", phyloHmm$externalPtr) + 1
+    map <- .Call.rphast("rph_phmm_get_state_to_mod",
+                        phyloHmm$externalPtr) + 1
     state.names <- character()
     for (i in 1:length(map)) {
       currname <- row.names(x$trans.mat)[map[i]]
@@ -335,8 +336,8 @@ reflect.phylo.hmm <- function(x, pivot.states, mods=NULL) {
     rv$mods <- list()
     temp <- list()
     for (i in 1:nrow(newhmm$trans.mat)) {
-      temp$externalPtr <- .Call("rph_phylo_hmm_get_treeModel",
-                                phyloHmm$externalPtr, i)
+      temp$externalPtr <- .Call.rphast("rph_phmm_get_treeModel",
+                                       phyloHmm$externalPtr, i)
       rv$mods[[i]] <- from.pointer.tm(temp)
     }
     if (!is.null(state.names)) names(rv$mods) <- state.names

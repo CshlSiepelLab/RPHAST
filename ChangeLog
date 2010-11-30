@@ -1,7 +1,16 @@
 ? : 1.3 (not yet released)
 	* improvements to memory handler, which previously slowed down rphast
 	  by 33%.  Now there is no significant increase in run-time, at least
-	  for the code in rphast/tests.
+	  for the code in rphast/tests.  It also no longer causes occasional
+	  segfaults when code is interrupted, since protection now occurs
+	  during the on.exit function instead of only when the function
+	  finishes cleanly.  We also protect all external pointer objects,
+	  rather than only the ones the user might see, which also cleans up
+	  potential segfaults and makes writing new RPHAST functions more 
+	  foolproof.
+	* fixed bug in phyloFit when optimizing codon models with the
+	  selection parameter; now rate matrix is scaled before applying
+	  selection parameter.
 	* fixed bug in plot.msa where alignment plot was placed wrongly when
 	  ploted with several tracks.
 	* changed phyloP to always return 1-based coordinates

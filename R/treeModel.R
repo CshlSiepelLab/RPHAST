@@ -23,9 +23,9 @@ is.tm <- function(x) {
 .rootLeaf.from.pointer.tm <- function(x, tree) {
   if (is.null(x$externalPtr))
     stop(".rootLeaf.from.pointer.tm expects list with externalPtr")
-  id <- .Call("rph_tm_rootLeaf", x$externalPtr)
+  id <- .Call.rphast("rph_tm_rootLeaf", x$externalPtr)
   if (is.null(id) || id == -1) return(NULL)
-  .Call("rph_tree_nodeName", tree, id)
+  .Call.rphast("rph_tree_nodeName", tree, id)
 }
 
 
@@ -38,16 +38,16 @@ is.tm <- function(x) {
 ##' @export
 from.pointer.one.altmodel.tm <- function(x, i) {
   rv <- list()
-  rv[["defn"]] <- .Call("rph_tm_altmodel_def", x$externalPtr, i)
-  rv[["subst.mod"]] <- .Call("rph_tm_altmodel_substMod", x$externalPtr, i)
-  val <- .Call("rph_tm_altmodel_backgd", x$externalPtr, i)
+  rv[["defn"]] <- .Call.rphast("rph_tm_altmodel_def", x$externalPtr, i)
+  rv[["subst.mod"]] <- .Call.rphast("rph_tm_altmodel_substMod", x$externalPtr, i)
+  val <- .Call.rphast("rph_tm_altmodel_backgd", x$externalPtr, i)
   if (!is.null(val)) rv[["backgd"]] <- val
-  rv[["rate.matrix"]] <- rphast.simplify.list(.Call("rph_tm_altmodel_rateMatrix",
+  rv[["rate.matrix"]] <- rphast.simplify.list(.Call.rphast("rph_tm_altmodel_rateMatrix",
                                                     x$externalPtr, i))
-  val <- .Call("rph_tm_altmodel_sel", x$externalPtr, i)
+  val <- .Call.rphast("rph_tm_altmodel_sel", x$externalPtr, i)
   if (!is.null(val))
     rv[["selection"]] <- val[1]
-  val <- .Call("rph_tm_altmodel_bgc", x$externalPtr, i)
+  val <- .Call.rphast("rph_tm_altmodel_bgc", x$externalPtr, i)
   if (!is.null(val))
     rv[["bgc"]] <- val[1]
   rv
@@ -56,7 +56,7 @@ from.pointer.one.altmodel.tm <- function(x, i) {
 ##' @nord
 ##' @export
 from.pointer.altmodel.tm <- function(x) {
-  numModel <- .Call("rph_tm_num_altmodel", x$externalPtr)
+  numModel <- .Call.rphast("rph_tm_num_altmodel", x$externalPtr)
   if (numModel == 0L) return(NULL)
   rv <- list()
   for (i in 1:numModel) {
@@ -73,18 +73,18 @@ from.pointer.tm <- function(x) {
   if (is.null(x$externalPtr))
     stop("from.pointer.tm expects list with externalPtr")
   tm <- .makeObj.tm()
-  tm$alphabet <- .Call("rph_tm_alphabet", x$externalPtr)
-  tm$backgd <- .Call("rph_tm_backgd", x$externalPtr)
-  tm$rate.matrix <- rphast.simplify.list(.Call("rph_tm_rateMatrix", x$externalPtr))
-  tm$subst.mod <- .Call("rph_tm_substMod", x$externalPtr)
-  tm$likelihood <- .Call("rph_tm_likelihood", x$externalPtr)
-  tm[["alpha"]]<- .Call("rph_tm_alpha", x$externalPtr)
-  tm$nratecats <- .Call("rph_tm_nratecats", x$externalPtr)
-  tm$rate.consts <- .Call("rph_tm_rK", x$externalPtr)
-  tm$rate.weights <- .Call("rph_tm_freqK", x$externalPtr)
-  tm$tree <- fix.semicolon.tree(.Call("rph_tm_tree", x$externalPtr))
+  tm$alphabet <- .Call.rphast("rph_tm_alphabet", x$externalPtr)
+  tm$backgd <- .Call.rphast("rph_tm_backgd", x$externalPtr)
+  tm$rate.matrix <- rphast.simplify.list(.Call.rphast("rph_tm_rateMatrix", x$externalPtr))
+  tm$subst.mod <- .Call.rphast("rph_tm_substMod", x$externalPtr)
+  tm$likelihood <- .Call.rphast("rph_tm_likelihood", x$externalPtr)
+  tm[["alpha"]]<- .Call.rphast("rph_tm_alpha", x$externalPtr)
+  tm$nratecats <- .Call.rphast("rph_tm_nratecats", x$externalPtr)
+  tm$rate.consts <- .Call.rphast("rph_tm_rK", x$externalPtr)
+  tm$rate.weights <- .Call.rphast("rph_tm_freqK", x$externalPtr)
+  tm$tree <- fix.semicolon.tree(.Call.rphast("rph_tm_tree", x$externalPtr))
   tm$root.leaf <- .rootLeaf.from.pointer.tm(x, tm$tree)
-  selection <- .Call("rph_tm_selection", x$externalPtr)
+  selection <- .Call.rphast("rph_tm_selection", x$externalPtr)
   if (selection[1]==1) tm$selection <- selection[2]
   altmodel <- from.pointer.altmodel.tm(x)
   if (!is.null(altmodel)) tm$alt.model <- altmodel
@@ -96,19 +96,19 @@ from.pointer.tm <- function(x) {
 ##' @export
 as.pointer.tm <- function(x) {
   rv <- list()
-  rv$externalPtr <- .Call("rph_tm_new",
-                          x$tree,
-                          x$alphabet,
-                          x$backgd,
-                          x$rate.matrix,
-                          x$subst.mod,
-                          x$likelihood,
-                          x[["alpha"]],
-                          x$nratecats,
-                          x$rate.consts,
-                          x$rate.weights,
-                          x$root.leaf,
-                          x$selection)
+  rv$externalPtr <- .Call.rphast("rph_tm_new",
+                                 x$tree,
+                                 x$alphabet,
+                                 x$backgd,
+                                 x$rate.matrix,
+                                 x$subst.mod,
+                                 x$likelihood,
+                                 x[["alpha"]],
+                                 x$nratecats,
+                                 x$rate.consts,
+                                 x$rate.weights,
+                                 x$root.leaf,
+                                 x$selection)
   if (!is.null(x$alt.model)) {
     if (!is.null(x$alt.model$defn)) {
       numModel <- 1L
@@ -118,15 +118,15 @@ as.pointer.tm <- function(x) {
         altmod <- x$alt.model
       } else altmod <- x$alt.model[[i]]
 
-      .Call("rph_tm_add_alt_mod", rv$externalPtr, altmod[["defn"]])
-      .Call("rph_tm_altmod_set_subst_mod", rv$externalPtr, i,
-            altmod[["subst.mod"]])
-      .Call("rph_tm_altmod_set_backgd", rv$externalPtr, i,
-            altmod[["backgd"]])
-      .Call("rph_tm_altmod_set_ratematrix", rv$externalPtr, i,
-            altmod[["rate.matrix"]])
-      .Call("rph_tm_altmod_set_sel_bgc", rv$externalPtr, i,
-            altmod[["selection"]], altmod[["bgc"]])
+      .Call.rphast("rph_tm_add_alt_mod", rv$externalPtr, altmod[["defn"]])
+      .Call.rphast("rph_tm_altmod_set_subst_mod", rv$externalPtr, i,
+                   altmod[["subst.mod"]])
+      .Call.rphast("rph_tm_altmod_set_backgd", rv$externalPtr, i,
+                   altmod[["backgd"]])
+      .Call.rphast("rph_tm_altmod_set_ratematrix", rv$externalPtr, i,
+                   altmod[["rate.matrix"]])
+      .Call.rphast("rph_tm_altmod_set_sel_bgc", rv$externalPtr, i,
+                   altmod[["selection"]], altmod[["bgc"]])
     }
   }
   rv
@@ -152,8 +152,7 @@ as.tm.list <- function(l) {
 read.tm <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
   x <- list()
-  on.exit(freeall.rphast())
-  x$externalPtr <- .Call("rph_tm_read", filename)
+  x$externalPtr <- .Call.rphast("rph_tm_read", filename)
   tm <- from.pointer.tm(x)
   tm
 }
@@ -173,8 +172,7 @@ write.tm <- function(tm, filename=NULL, append=FALSE) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
   check.arg(append, "append", "logical", null.OK=TRUE)
   tm <- as.pointer.tm(tm)
-  on.exit(freeall.rphast())
-  invisible(.Call("rph_tm_print", tm$externalPtr, filename, append))
+  invisible(.Call.rphast("rph_tm_print", tm$externalPtr, filename, append))
 }
 
 
@@ -232,9 +230,8 @@ print.tm <- function(x, aslist=FALSE, ...) {
 ##' @author Melissa J. Hubisz and Adam Siepel
 is.subst.mod.tm <- function(mod) {
   result <- logical(length(mod))
-  on.exit(freeall.rphast())
   for (i in 1:length(mod)) 
-    result[i] <- .Call("rph_subst_mods_is_valid_string", mod[i])
+    result[i] <- .Call.rphast("rph_subst_mods_is_valid_string", mod[i])
   result
 }
 
@@ -245,8 +242,7 @@ is.subst.mod.tm <- function(mod) {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 subst.mods <- function() {
-  on.exit(freeall.rphast())
-  .Call("rph_subst_mods_list_all", NULL)
+  .Call.rphast("rph_subst_mods_list_all", NULL)
 }
     
 
@@ -340,8 +336,7 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
   }
   
   if (!is.null(root.leaf)) {
-    on.exit(freeall.rphast())
-    if ( ! (.Call("rph_tree_isNode", tree, root.leaf))) {
+    if ( ! (.Call.rphast("rph_tree_isNode", tree, root.leaf))) {
       stop("tree has no node named ", root.leaf)
     }
   }
@@ -384,9 +379,8 @@ mod.backgd.tm <- function(tm, new.backgd=NULL, gc=NULL) {
       sum(new.backgd < 0) > 0 ||
       sum(new.backgd > 1) > 0)
     stop("invalid background frequencies")
-  on.exit(freeall.rphast())
   tm <- as.pointer.tm(tm)
-  .Call("rph_tm_mod_freqs", tm$externalPtr, new.backgd)
+  .Call.rphast("rph_tm_mod_freqs", tm$externalPtr, new.backgd)
   tm <- from.pointer.tm(tm)
   tm
 }
@@ -418,11 +412,10 @@ bgc.sel.factor <- function(x) {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 apply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
-  on.exit(freeall.rphast())
   if (is.null(bgc)) bgc <- 0
   if (is.null(sel)) sel <- 0
-  rphast.simplify.list(.Call("rph_tm_apply_selection_bgc",
-                             as.matrix(m), alphabet, sel, bgc))
+  rphast.simplify.list(.Call.rphast("rph_tm_apply_selection_bgc",
+                                    as.matrix(m), alphabet, sel, bgc))
 }
 
 
@@ -435,11 +428,8 @@ apply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
-  on.exit(freeall.rphast())
-  if (is.null(bgc)) bgc <- 0
-  if (is.null(sel)) sel <- 0
-  rphast.simplify.list(.Call("rph_tm_unapply_selection_bgc",
-                             as.matrix(m), alphabet, sel, bgc))
+  rphast.simplify.list(.Call.rphast("rph_tm_unapply_selection_bgc",
+                                    as.matrix(m), alphabet, sel, bgc))
 }
 
 
@@ -570,8 +560,7 @@ add.alt.mod <- function(x,
                   ifelse(is.null(separate.params), subst.mod,
                          paste(separate.params, collapse=",")))
   origPtr <- as.pointer.tm(x)
-  on.exit(freeall.rphast)
-  .Call("rph_tm_add_alt_mod", origPtr$externalPtr, defn)
+  .Call.rphast("rph_tm_add_alt_mod", origPtr$externalPtr, defn)
   newmod <- from.pointer.tm(origPtr)
 
   # apply selection and/or bgc to ls model if provided
@@ -662,8 +651,7 @@ add.alt.mod <- function(x,
 ##' @export
 set.rate.matrix.tm <- function(x, params=NULL, scale=TRUE) {
   x <- as.pointer.tm(x)
-  on.exit(freeall.rphast())
-  .Call("rph_tree_model_set_matrix", x$externalPtr, params, scale)
+  .Call.rphast("rph_tree_model_set_matrix", x$externalPtr, params, scale)
   from.pointer.tm(x)
 }
 
@@ -680,8 +668,7 @@ set.rate.matrix.tm <- function(x, params=NULL, scale=TRUE) {
 ##' @export
 get.rate.matrix.params.tm <- function(x) {
   x <- as.pointer.tm(x)
-  on.exit(freeall.rphast())
-  .Call("rph_tree_model_get_rate_matrix_params", x$externalPtr)
+  .Call.rphast("rph_tree_model_get_rate_matrix_params", x$externalPtr)
 }
 
 

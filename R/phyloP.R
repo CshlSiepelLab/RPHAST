@@ -68,27 +68,26 @@ phyloP.call<- function(mod,
   if (!is.null(features) && is.null(features$externalPtr)) 
     features <- as.pointer.feat(features)
   mod <- as.pointer.tm(mod)
-  on.exit(freeall.rphast())
-  result <- .Call("rph_phyloP",
-                  mod$externalPtr,
-                  msaPtr,
-                  method,
-                  mode,
-                  if (is.null(features)) NULL else features$externalPtr,
-                  basewise,
-                  subtree,
-                  branches,
-                  ref.idx,
-                  outfile,
-                  outfile.only,
-                  outfile.format,
-                  prior.only,
-                  nsites,
-                  post.only,
-                  fit.model,
-                  epsilon,
-                  confidence.interval,
-                  quantiles)
+  result <- .Call.rphast("rph_phyloP",
+                         mod$externalPtr,
+                         msaPtr,
+                         method,
+                         mode,
+                         if (is.null(features)) NULL else features$externalPtr,
+                         basewise,
+                         subtree,
+                         branches,
+                         ref.idx,
+                         outfile,
+                         outfile.only,
+                         outfile.format,
+                         prior.only,
+                         nsites,
+                         post.only,
+                         fit.model,
+                         epsilon,
+                         confidence.interval,
+                         quantiles)
   result <- rphast.simplify.list(result)
   if (outfile.only) return(invisible(NULL))
   result
