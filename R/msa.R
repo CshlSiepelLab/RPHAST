@@ -1519,8 +1519,8 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
 
   
   yrange <- par("usr")[3:4]  #y coordinate min and max
-  width <- par("fin")[1]   # width of plot window in inches
-  height <- par("fin")[2]/(yrange[2]-yrange[1])*(ylim[2]-ylim[1]) # height of window in inches
+  width <- par("pin")[1]   # width of plot window in inches
+  height <- par("pin")[2]/(yrange[2]-yrange[1])*(ylim[2]-ylim[1]) # height of window in inches
 
   numseq <- length(names.msa(x))
 
@@ -1552,8 +1552,8 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
   # if that doesn't fit then space evenly
 
   y <- (1:numseq)*textCex*1.25*par("cex")*par("cin")[2]  # this is in inches
-  if (max(y)-min(y) < height) {
-    y <- y/height*(ylim[2] - ylim[1]) 
+  if (max(y)-min(y) < height) {  # the optimal spacing fits vertically
+    y <- y/height*(ylim[2] - ylim[1])  # convert from inches to coordinates
     y <- y - mean(y) + (ylim[2] - ylim[1])/2 + ylim[1]
   } else {
     y <- seq(from=ylim[1], to=ylim[2], length.out=length(names.msa(x))+2)[2:(numseq+1)]
