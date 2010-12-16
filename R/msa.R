@@ -929,6 +929,22 @@ total.expected.subs.msa <- function(x, tm) {
                                     x$externalPtr, tm$externalPtr))
 }
 
+##' Obtain expected number of substitutions on each branch for each site
+##' @param x An object of type \code{msa}
+##' @param tm An object of type \code{tm}
+##' @return An array giving the expected number of substitutions on each
+##' branch, for each distinct alignment column, for each type of substitution.
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+col.expected.subs.msa <- function(x, tm) {
+  if (!is.msa(x))
+    stop("x is not an MSA object")
+  if (is.null(x$externalPtr)) 
+    x <- as.pointer.msa(x)
+  tm <- as.pointer.tm(tm)
+  rphast.simplify.list(.Call.rphast("rph_msa_exp_col_subs",
+                                    x$externalPtr, tm$externalPtr))
+}
 
 
 ##' Likelihood of an alignment given a tree model
@@ -1475,7 +1491,42 @@ pairwise.diff.msa <- function(x, seq1=NULL, seq2=NULL, ignore.missing=TRUE,
 }
 
 
+# TODO
+## Get amino acid sequences from an alignment
+## @param m An object of type \code{msa} representing the alignment.
+## @param f An object of type \code{feat} which describes the coding regions.
+## Coding regions should have feature type "CDS", and frame as specified
+## in the GFF standard (a NULL frame will be assumed to be frame 0).
+## @return A list with two elements: offset, which is an integer between
+## 0 and 2 giving an offset between the alignment and the translated
+## alignment, and trans, a vector of character strings representing the
+## translated alignment.  The length of trans will be approximately
+## one-third the length of the original alignment (depending on the
+## offset and one or two extra characters at the end).  The sequence
+## will contain the amino acid code for coding proteins, with a '$'
+## representing stop codons, and '/' denoting non-coding seqeunce.
+## @note Currently does not translate codons split up by spice sites, these
+## are treated as non-coding
+## @author Melissa J. Hubisz
+#translate.msa <- function(m, f) {
+#  if (!is.null(f$externalPtr)) f <- from.pointer.feat(f)
+#  coding <- f[f$feature=="CDS",]
+#  
+#}
+
+
 #TODO :implement pretty option
+# new options not implemented in plot.msa yet:
+## @param color.nonsyn If not \code{NULL}, use this color for codons that
+## do not match the codon in the first sequence.  strand and frame.start
+## should be set appropriately.
+## @param strand (For use with color.nonsyn) Either "+" or "-", indicating
+## the strand to be used for translating DNA and determining amino acids.
+## @param frame.start (For use with color.nonsyn) An integer from 1-3,
+## indicating the frame of the first base in the plot (1==first codon
+## position, 2=second codon position, 3=third).  If strand=="-",
+## frame.start is the frame of the base with the highest coordinate.
+
 ##' Plot an alignment
 ##' @param x An object of type \code{msa}
 ##' @param refseq A character string naming the reference sequence to use
@@ -1497,6 +1548,16 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
                      xlim=NULL, ylim=c(0,1),
                      add=FALSE, pretty=FALSE, min.char.size=0.05,
                      ...) {
+  if (!is.msa(x)) stop("first argument to plot.msa should be msa object")
+#  if (!is.null(color.nonsyn)) {
+#    color.nonsyn <- check.arg(color.nonsyn, "character", null.OK=FALSE)
+#    strand <- check.arg(strand, "character", null.OK=FALSE)
+#    if (strand != "+" && strand != "-") stop("strand should be \"+\" or \"-\"")
+#    frame.start <- check.arg(frame.start, "integer", null.OK=FALSE)
+#    if (frame.start < 1L || frame.start > 3L)
+#      stop("frame.start should be 1, 2, or 3")
+#  }
+  
   coordRange <- coord.range.msa(x, refseq)
   if (add) {
     xlim <- par("usr")[1:2]
@@ -1563,7 +1624,7 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
   longestName <- max(nchar(names.msa(x)))
   marSize <- par("mai")[2]  #margin size on left side
   nameCex <- min(marSize/(par("cin")[1]*longestName), cexHeight)
-  
+
   for (i in 1:numseq) {
     chars <- strsplit(x$seq[i], "")[[1]]
     if (pretty) {

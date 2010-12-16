@@ -45,6 +45,7 @@ rphast.simplify.list <- function(lol, pointer.only=FALSE) {
     lol$dim <- NULL
     lol$dimnames <- NULL
     lol <- drop(fill.in.array.lol(lol, arr))
+    return(lol)
   }
   if (isMatrix || isDataFrame) {
     if (!is.null(lol$row.names)) {

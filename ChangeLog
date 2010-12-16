@@ -16,6 +16,9 @@
 	* changed phyloP to always return 1-based coordinates
 	* added function mod.backgd.tm which modifies background frequency of
 	  tree model while maintaining reversibility
+	* added function col.expected.subs.msa
+	* use %g notation (instead of %f) to print branch lengths of trees;
+	  this avoids some loss of precision when passing trees to/from R/C.
 11-10-2010: 1.2 released 
 	* added memory handler so that memory allocated in C is no longer
 	  lost due to function interrupt (or failure to explicitly free it)
