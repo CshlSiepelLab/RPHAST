@@ -1491,28 +1491,38 @@ pairwise.diff.msa <- function(x, seq1=NULL, seq2=NULL, ignore.missing=TRUE,
 }
 
 
-# TODO
-## Get amino acid sequences from an alignment
-## @param m An object of type \code{msa} representing the alignment.
-## @param f An object of type \code{feat} which describes the coding regions.
-## Coding regions should have feature type "CDS", and frame as specified
-## in the GFF standard (a NULL frame will be assumed to be frame 0).
-## @return A list with two elements: offset, which is an integer between
-## 0 and 2 giving an offset between the alignment and the translated
-## alignment, and trans, a vector of character strings representing the
-## translated alignment.  The length of trans will be approximately
-## one-third the length of the original alignment (depending on the
-## offset and one or two extra characters at the end).  The sequence
-## will contain the amino acid code for coding proteins, with a '$'
-## representing stop codons, and '/' denoting non-coding seqeunce.
-## @note Currently does not translate codons split up by spice sites, these
-## are treated as non-coding
-## @author Melissa J. Hubisz
-#translate.msa <- function(m, f) {
-#  if (!is.null(f$externalPtr)) f <- from.pointer.feat(f)
-#  coding <- f[f$feature=="CDS",]
-#  
-#}
+##' Get amino acid sequences from an alignment
+##' @param m An object of type \code{msa} representing the alignment.  The
+##' alignment is assumed to be coding sequence, already in frame.
+##' @param one.frame A logical value indicating whether to use the same frame for
+##' all species in the alignment, or a separate frame for each species.  If
+##' \code{one.frame==TRUE} then every three columns of the alignment is translated
+##' into a codon, regardless of gaps within the alignment.  If
+##' \code{one.frame==FALSE}, gaps will shift the frame in the species where they
+##' occur.  In this case, the length of the seqeunces returned may not all be the
+##' same.
+##' @param frame An integer specifying an offset from the first column of the
+##' alignment where the coding region starts.  The default 0 means start at
+##' the beginning.  If \code{one.frame==FALSE}, frame can be a vector of integers,
+##' one for each species.  Otherwise it should be a single value.
+##' @return A vector of character strings representing the translated alignment.
+##' The characters are amino acid codes, with '$' representing a stop codon,
+##' and '*' denoting missing data or a codon with 1 or 2 gaps, and '-' denoting
+##' a codon with all gaps.
+##' @author Melissa J. Hubisz
+##' @export
+translate.msa <- function(m, one.frame=TRUE, frame=0) {
+  if (!is.msa(m)) stop("m is not MSA object")
+  one.frame <- check.arg(one.frame, "one.frame", "logical", null.OK=FALSE)
+  frame <- check.arg(frame, "frame", "integer", null.OK=FALSE, min.length=1L,
+            max.length=ifelse(one.frame, 1, nrow.msa(m)))
+  if (sum(frame < 0 || frame >= ncol.msa(m)) > 0L)
+      stop("frame should only contain values between 0 and ncol.msa(m)-1")
+  if (!one.frame) frame <- rep(frame, length.out=nrow.msa(m))
+  if (is.null(m$externalPtr))
+    m <- as.pointer.msa(m)
+  .Call.rphast("rph_msa_translate", m$externalPtr, one.frame, frame)
+}
 
 
 #TODO :implement pretty option
