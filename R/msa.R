@@ -954,14 +954,15 @@ col.expected.subs.msa <- function(x, tm) {
 ##' substitution
 ##' @param features A features object.  If non-null, compute likelihoods
 ##' for each feature rather than the whole alignment.
-##' @param by.column Logical indicating whether to get likelihoods for
-##' each alignment column.  If FALSE, returns total likelihood.  Ignored
-##' if features is not NULL.
-##' @return Either the likelihood of the entire alignment (if
+##' @param by.column Logical value.  If \code{TRUE}, return the log
+##' likelihood for each alignment column rather than total log
+##' likelihood. 
+##' Ignored if features is not NULL.
+##' @return Either the log likelihood of the entire alignment (if
 ##' \code{by.column==FALSE && is.null(features)},
-##' or a numeric vector giving the likelihood of each feature
-##' (if \code{!is.null(features)}), or a numeric vector giving the likelihood
-##' of each column (if \code{by.column==TRUE}).
+##' or a numeric vector giving the log likelihood of each feature
+##' (if \code{!is.null(features)}), or a numeric vector giving the
+##' log likelihood of each column (if \code{by.column==TRUE}).
 ##' @seealso \code{phyloFit}, \code{tm}
 ##' @keywords msa tm features
 ##' @export
