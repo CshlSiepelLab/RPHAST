@@ -410,11 +410,11 @@ write.msa <- function(x, file=NULL,
   } else {
     printMsa <- msa
   }
-  invisible(.Call("rph_msa_printSeq",
-                  msaP=printMsa$externalPtr,
-                  fileP=file,
-                  formatP=format,
-                  pretty.printP=pretty.print))
+  invisible(.Call.rphast("rph_msa_printSeq",
+                         msaP=printMsa$externalPtr,
+                         fileP=file,
+                         formatP=format,
+                         pretty.printP=pretty.print))
 }
 
 

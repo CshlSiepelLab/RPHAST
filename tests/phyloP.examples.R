@@ -38,28 +38,5 @@ t2 <- phyloP.sph(tm, msa)
 t2
 unlink(files)
 
-#tm <- read.tm("rev.mod")
-#msa <- sub.msa(read.msa("ENr334.fa", offset=41405894), end=10000)
-#t2 <- phyloP.sph(tm, msa, subtree="hg18", post.only=TRUE)  # this takes a couple minutes
-
-require("rphast")
-file <- "gencode.ENr334.gff"
-exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
-unzip(exampleArchive, file)
-resultCons <- phyloP(tm, msa)
-#resultAcc <- phyloP(tm, msa,  mode="ACC")
-#resultConAcc <- phyloP(tm, msa,  mode="CONACC")
-temp <- phyloP(tm, msa, mode="CONACC", outfile="test.out")
-smallMsa <- sub.msa(msa, start.col=1000, end.col=1200)
-#temp <- phyloP(tm, smallMsa, method="SPH")
-temp <- phyloP(tm, smallMsa, method="LRT", subtree="mm9-rn4", outfile="test.out")
-temp <- phyloP(tm, smallMsa, method="LRT", branches=c("mm9", "rn4"))
-f <- read.feat(file)
-temp <- phyloP(tm, msa, method="LRT", features=f)
-phyloP(tm, msa, method="LRT", outfile="test.out", outfile.only=TRUE)
-unlink("test.out")
-unlink(file)
-
-
 rm(list = ls())
 gc()
