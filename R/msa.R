@@ -34,7 +34,7 @@ copy.msa <- function(x) {
 ##' @keywords msa
 ##' @author Melissa J. Hubisz
 is.msa <- function(msa) {
-  attr(msa, "class")=="msa"
+  class(msa)=="msa"
 }
 
 
@@ -357,26 +357,31 @@ as.pointer.msa <- function(src) {
 }
 
 
-##' Guess the format of an MSA file by looking at the filename extension.
-##' @title MSA Format From Filename Extension
-##' @param filename The name of an MSA file
-##' @return A string describing an MSA file (one of "MAF", "FASTA",
-##' "LAV", "SS", "MPM", "PHYLIP"), or NULL if a guess can't be made
-##' based on the file extension.
+##' Guess the format of an MSA file by looking at the file contents.
+##' @title MSA Guess Format
+##' @param filename A vector of file names
+##' @param method Either "content" or "extension".  "content" implies to
+##' open the file and guess the format based on content; "extension" simply
+##' guesses based on the extension on the file name (it does not open the
+##' file).  This argument will be recycled to the length of filename.
+##' @return A character vector giving the format of each file
+##' (one of "MAF", "FASTA", "LAV", "SS", "PHYLIP", "MPM", or "UNKNOWN").
 ##' @seealso is.format.msa
 ##' @keywords msa
 ##' @export
 ##' @author Melissa J. Hubisz
-guess.format.msa  <- function(filename) {
+guess.format.msa  <- function(filename, method="content") {
   if (is.null(filename)) return(NULL)
-  x <- strsplit(filename, ".", fixed=TRUE)[[1]]
-  x <- x[length(x)]
-  if (x=="MAF" || x=="maf") return("MAF")
-  if (x=="FA"  || x=="fa") return("FASTA")
-  if (x=="LAV" || x=="lav") return("LAV")
-  if (x=="SS"  || x=="ss") return("SS")
-  if (x=="PH" || x== "ph" || x=="PHY" || x=="phy") return("PHYLIP")
-  NULL
+  result <- character(length(filename))
+  method <- rep(method, length.out=length(filename))
+  for (i in 1:length(filename)) {
+    if (method[i] == "content") {
+      result[i] <- .Call.rphast("rph_msa_format_for_content", filename[i])
+    } else if (method[i] == "extension") {
+      result[i] <- .Call.rphast("rph_msa_format_for_suffix", filename[i])
+    } else stop("guess.format.msa: unknown method ", method[i], "\n")
+  }
+  result
 }
 
 
@@ -395,7 +400,7 @@ guess.format.msa  <- function(filename) {
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 write.msa <- function(x, file=NULL,
-                      format=c(guess.format.msa(file), "FASTA")[1],
+                      format=ifelse((f <- guess.format.msa(file, method="extension"))=="UNKNOWN", "FASTA", f),
                       pretty.print=FALSE) {
   #checks
   check.arg(file, "file", "character", null.OK=TRUE)
@@ -1317,7 +1322,7 @@ informative.regions.msa <- function(x, min.numspec, spec=NULL,
   if (is.null(x$externalPtr))
     x <- as.pointer.msa(x)
 
-  feats <- .makeObj.feat()
+  feats <- .makeObj.feat(TRUE)
   feats$externalPtr <- .Call.rphast("rph_msa_informative_feats",
                                     x$externalPtr, min.numspec, spec, refseq,
                                     gaps.inf)
@@ -1403,6 +1408,7 @@ state.freq.msa <- function(align, mod) {
 base.freq.msa <- function(x, seq=NULL, ignore.missing=TRUE,
                           ignore.gaps=TRUE) {
   if (!is.msa(x)) stop("x should be object of type msa")
+  if (is.null(x$seqs)) stop("x does not have element named seqs")
   check.arg(seq, "seq", "character", null.OK=TRUE, min.length=1L,
             max.length=NULL)
   check.arg(ignore.missing, "ignore.missing", "logical", null.OK=FALSE,
@@ -1423,6 +1429,22 @@ base.freq.msa <- function(x, seq=NULL, ignore.missing=TRUE,
   rv <- data.frame(rv, freq=rv$counts/sum(rv$counts))
   rv
 }
+
+
+##' Get codon frequencies based on 3x4 model
+##' @param x An object of type msa.  It is assumed to represent in-frame codons.
+##' Length should be a multiple of 3.
+##' @return A vector of length 64 corresponding to the 64 codon frequencies.
+##' The frequencies corresponding to stop codons should be 0.
+##' @author Melissa J. Hubisz
+##' @export
+freq3x4.msa <- function(x) {
+  if (!is.msa(x)) stop("x should be object of type msa")
+  if (is.null(x$externalPtr))
+    x <- as.pointer.msa(x)
+  .Call.rphast("rph_msa_freq3x4", x$externalPtr)
+}
+
 
 ##' Get the fraction of G's and C's in an alignment
 ##' @param x An object of type \code{msa}

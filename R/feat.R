@@ -1,8 +1,10 @@
 #' @nord
 #' @export
-.makeObj.feat <- function() {
+.makeObj.feat <- function(isPointer) {
   feat <- list()
-  attr(feat, "class") <- "feat"
+  if (isPointer) {
+    attr(feat, "class") <- c("feat", "list")
+  } else attr(feat, "class") <- c("feat", "data.frame")
   feat
 }
 
@@ -20,7 +22,7 @@
 ##' @export
 copy.feat <- function(x) {
   if (is.null(x$externalPtr)) return(x)
-  result <- .makeObj.feat()
+  result <- .makeObj.feat(TRUE)
   result$externalPtr <- .Call.rphast("rph_gff_copy", x$externalPtr)
   result
 }
@@ -56,10 +58,10 @@ copy.feat <- function(x) {
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
 read.feat <- function(filename, pointer.only=FALSE) {
-  feat <- .makeObj.feat()
+  feat <- .makeObj.feat(TRUE)
   feat$externalPtr <- .Call.rphast("rph_gff_read", filename)
   if (!pointer.only) {
-    feat <- as.data.frame.feat(feat)
+    feat <- from.pointer.feat(feat)
   }
   feat
 }
@@ -142,7 +144,7 @@ feat <- function(seqname="default", src=".", feature=".",
                         as.character(src), as.character(feature),
                         as.integer(start), as.integer(end),
                         score, strand, frame, attribute)
-    x <- .makeObj.feat()
+    x <- .makeObj.feat(TRUE)
     x$externalPtr <- ptr
   } else {
     x <- data.frame(seqname=seqname, src=src, feature=feature,
@@ -151,6 +153,7 @@ feat <- function(seqname="default", src=".", feature=".",
     if (!is.null(strand)) x <- cbind(x, strand)
     if (!is.null(frame)) x <- cbind(x, frame)
     if (!is.null(attribute)) x <- cbind(x, attribute)
+    attr(x, "class") <- c("feat", "data.frame")
   }
   x
 }
@@ -214,9 +217,16 @@ write.feat <- function(x, file) {
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
 nrow.feat <- function(x) {
-  if (is.null(x$externalPtr))
-    return(dim(x)[1])
-  .Call.rphast("rph_gff_numrow", x$externalPtr)
+  if (is.data.frame(x)) {
+    attr(x, "class") <- "data.frame"
+    nrow(x)
+#    attr(x, "class") <- "data.frame"
+#    NextMethod("nrow", x)
+#    NextMethod()
+#    UseMethod("nrow", x)
+  } else {
+    .Call.rphast("rph_gff_numrow", x$externalPtr)
+  }
 }
 
 
@@ -231,9 +241,11 @@ nrow.feat <- function(x) {
 ##' @keywords features
 ##' @author Melissa J. Hubisz
 ncol.feat <- function(x) {
-  if (is.null(x$externalPtr))
-    return(dim(x)[2])
-  9 # feat objects stored in C always have 9 columns
+  if (is.data.frame(x)) {
+    attr(x, "class") <- "data.frame"
+#    NextMethod("nrow")
+    ncol(x)
+  } else return(9)  # feat objects stored in C always have 9 columns
 }
 
 
@@ -279,6 +291,20 @@ as.data.frame.feat <- function(x, row.names=NULL, optional=FALSE, ...) {
   attr(x, "class") <- "list"
   as.data.frame(x, row.names, optional, ...)
 }
+
+
+##' Convert a features object from C memory (external pointer) to R memory
+##' @param x A features object stored as a pointer to C memory
+##' @return A features object (inheriting from the data.frame class) stored
+##' in R memory
+##' @export
+##' @author Melissa J. Hubisz
+from.pointer.feat <- function(x) {
+  x <- as.data.frame.feat(x)
+  attr(x, "class") <- c("feat", "data.frame")
+  x
+}
+
 
 
 ##' Get the dimensions of a features object
@@ -365,7 +391,7 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
                       ylim=c(y-height*3/4, y+height*3/4), ...) {
 
   if (!is.null(x$externalPtr))
-    x <- as.data.frame.feat(x)
+    x <- from.pointer.feat(x)
   if (is.null(x$start) || is.null(x$end))
     stop("invalid features object")
   if (plottype=="a" && is.null(x$strand))
@@ -500,7 +526,7 @@ plot.gene <- function(x, y=0, height=1,
                       xlim=range.feat(x),
                       ylim=c(y-height*3/4, y+height*3/4), ...) {
   if (!is.null(x$externalPtr))
-    x <- as.data.frame.feat(x)
+    x <- from.pointer.feat(x)
   if (is.null(x$start) || is.null(x$end))
     stop("invalid features object")
 
@@ -635,13 +661,13 @@ overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
   if (is.null(filter$externalPtr))
     filter <- as.pointer.feat(filter)
 
-  rv <- .makeObj.feat()
+  rv <- .makeObj.feat(TRUE)
   rv$externalPtr <- .Call.rphast("rph_gff_overlapSelect",
                                  x$externalPtr, filter$externalPtr,
                                  numbase, min.percent, !overlapping,
                                  get.fragments)
   if (!is.null(rv) && !pointer.only) {
-    rv <- as.data.frame.feat(rv)
+    rv <- from.pointer.feat(rv)
   }
   if (nrow.feat(rv) == 0) return(NULL)
   rv
@@ -666,12 +692,12 @@ inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
     x <- as.pointer.feat(x)
   if (is.null(region.bounds$externalPtr))
     region.bounds <- as.pointer.feat(region.bounds)
-  rv <- .makeObj.feat()
+  rv <- .makeObj.feat(TRUE)
   rv$externalPtr <- .Call.rphast("rph_gff_inverse",
                                  x$externalPtr,
                                  region.bounds$externalPtr)
   if (!pointer.only)
-    rv <- as.data.frame.feat(rv)
+    rv <- from.pointer.feat(rv)
   rv
 }
 
@@ -722,11 +748,11 @@ coverage.feat <- function(..., or=FALSE, not=NULL, get.feats=FALSE,
     featlist[[i]] <- x$externalPtr
   }
   if (get.feats) {
-    rv <- .makeObj.feat()
+    rv <- .makeObj.feat(TRUE)
     rv$externalPtr <- .Call.rphast("rph_gff_featureBits", featlist,
                                    or, get.feats)
     if (pointer.only) return(rv)
-    return(as.data.frame.feat(rv))
+    return(from.pointer.feat(rv))
   }
   .Call.rphast("rph_gff_featureBits", featlist, or, get.feats)
 }
@@ -747,9 +773,9 @@ add.UTRs.feat <- function(x) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
   } else getDataFrame <- FALSE
-  rv <- .makeObj.feat()
+  rv <- .makeObj.feat(TRUE)
   rv$externalPtr <- .Call.rphast("rph_gff_add_UTRs", x$externalPtr)
-  if (getDataFrame) return(as.data.frame.feat(rv))
+  if (getDataFrame) return(from.pointer.feat(rv))
   rv
 }
 
@@ -768,9 +794,9 @@ add.introns.feat <- function(x) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
   } else getDataFrame <- FALSE
-  rv <- .makeObj.feat()
+  rv <- .makeObj.feat(TRUE)
   rv$externalPtr <- .Call.rphast("rph_gff_add_introns", x$externalPtr)
-  if (getDataFrame) return(as.data.frame.feat(rv))
+  if (getDataFrame) return(from.pointer.feat(rv))
   rv
 }
 
@@ -792,9 +818,9 @@ add.signals.feat <- function(x) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
   } else getDataFrame <- FALSE
-  rv <- .makeObj.feat()
+  rv <- .makeObj.feat(TRUE)
   rv$externalPtr <- .Call.rphast("rph_gff_add_signals", x$externalPtr)
-  if (getDataFrame) return(as.data.frame.feat(rv))
+  if (getDataFrame) return(from.pointer.feat(rv))
   rv
 }
 
@@ -819,9 +845,9 @@ fix.start.stop.feat <- function(x) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
   } else getDataFrame <- FALSE
-  rv <- .makeObj.feat()
+  rv <- .makeObj.feat(TRUE)
   rv$externalPtr <- .Call.rphast("rph_gff_fix_start_stop", x$externalPtr)
-  if (getDataFrame) return(as.data.frame.feat(rv))
+  if (getDataFrame) return(from.pointer.feat(rv))
   rv
 }
 
@@ -834,7 +860,7 @@ fix.start.stop.feat <- function(x) {
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
 rbind.feat <- function(...) {
-  feat <- .makeObj.feat()
+  feat <- .makeObj.feat(TRUE)
   featlist <- list(...)
   idx <- 1
   for (i in 1:length(featlist)) {
@@ -848,7 +874,7 @@ rbind.feat <- function(...) {
   }
   if (idx == 1) return(NULL)
   feat$externalPtr <- .Call.rphast("rph_gff_append", featlist)
-  as.data.frame.feat(feat)
+  from.pointer.feat(feat)
 }
 
 ##' Split features by length
@@ -886,12 +912,12 @@ split.feat <- function(x, f, drop=FALSE, start.from="left",
     stop("start.from invalid value (should be \"left\" or \"right\")")
   if (is.null(x$externalPtr))
     x <- as.pointer.feat(x)
-  splitFeat <- .makeObj.feat()
+  splitFeat <- .makeObj.feat(TRUE)
   splitFeat$externalPtr <- .Call.rphast("rph_gff_split", x$externalPtr,
                                         max.length, drop, 
                                         ifelse(start.from=="left", 0, 1))
   if (!pointer.only)
-    splitFeat <- as.data.frame.feat(splitFeat)
+    splitFeat <- from.pointer.feat(splitFeat)
   splitFeat
 }
 
@@ -912,9 +938,9 @@ split.feat <- function(x, f, drop=FALSE, start.from="left",
 sort.feat <- function(x, decreasing = FALSE, ...) {
   if (is.null(x$externalPtr))
     x <- as.pointer.feat(x)
-  rv <- .makeObj.feat()
+  rv <- .makeObj.feat(TRUE)
   rv$externalPtr <- .Call.rphast("rph_gff_sort", x$externalPtr)
-  rv <- as.data.frame.feat(rv)
+  rv <- from.pointer.feat(rv)
   if (decreasing) 
     rv <- rv[dim(rv)[1]:1,]
   rv
@@ -939,9 +965,9 @@ sort.feat <- function(x, decreasing = FALSE, ...) {
 ##' @author Melissa J. Hubisz
 composition.feat <- function(x, annotations) {
   if (!is.null(annotations$externalPtr))
-    annotations <- as.data.frame.feat(annotations)
+    annotations <- from.pointer.feat(annotations)
   if (!is.null(x$externalPtr))
-    x <- as.data.frame.feat(x)
+    x <- from.pointer.feat(x)
   annTypes <- unique(annotations$feature)
   rv <- list()
   for (anntype in annTypes) {
@@ -975,9 +1001,9 @@ composition.feat <- function(x, annotations) {
 ##' @author Melissa J. Hubisz
 enrichment.feat <- function(x, annotations, region.bounds) {
   if (!is.null(annotations$externalPtr))
-    annotations <- as.data.frame.feat(annotations)
+    annotations <- from.pointer.feat(annotations)
   if (!is.null(x$externalPtr))
-    x <- as.data.frame.feat(x)
+    x <- from.pointer.feat(x)
   annTypes <- unique(annotations$feature)
   rv <- list()
   totalNumBase <- coverage.feat(region.bounds)
@@ -1014,10 +1040,10 @@ unique.feat <- function(x, incomparables=FALSE, ...) {
     x <- as.pointer.feat(x)
     getDataFrame <- TRUE
   } else getDataFrame <- FALSE
-  rv <- .makeObj.feat()
+  rv <- .makeObj.feat(TRUE)
   rv$externalPtr <- .Call.rphast("rph_gff_nonOverlapping_genes", x$externalPtr)
   if (getDataFrame)
-    rv <- as.data.frame.feat(rv)
+    rv <- from.pointer.feat(rv)
   rv
 }
 

@@ -86,6 +86,8 @@ from.pointer.tm <- function(x) {
   tm$root.leaf <- .rootLeaf.from.pointer.tm(x, tm$tree)
   selection <- .Call.rphast("rph_tm_selection", x$externalPtr)
   if (selection[1]==1) tm$selection <- selection[2]
+  site.model <- .Call.rphast("rph_tm_site_model", x$externalPtr)
+  if (site.model) tm$site.model <- site.model
   altmodel <- from.pointer.altmodel.tm(x)
   if (!is.null(altmodel)) tm$alt.model <- altmodel
   tm
@@ -108,7 +110,8 @@ as.pointer.tm <- function(x) {
                                  x$rate.consts,
                                  x$rate.weights,
                                  x$root.leaf,
-                                 x$selection)
+                                 x$selection,
+                                 x$site.model)
   if (!is.null(x$alt.model)) {
     if (!is.null(x$alt.model$defn)) {
       numModel <- 1L
@@ -873,4 +876,41 @@ plot.altmodel.tm <- function(x, i=1, show.eq.freq=TRUE, max.cex=10.0,
                    eq.freq.col=eq.freq.col,
                    filled=filled,
                    add=add, ...)
+}
+
+##' Set up a tree model for branch site selection analysis
+##' @param mod an object of type \code{tm}
+##' @param foreground a character string giving a tree branch name or label
+##' identifying foreground branches
+##' @param bgc If \code{TRUE}, then use 8 categories of sites; four with bgc
+##' in the foreground and four without.
+##' @param altModel If \code{TRUE}, then optimize the foreground positive
+##' selection parameter (constrained > 0).  Otherwise hold constant at 0.
+##' @param init.sel.neg Initial value for negative selection parameter
+##' @param init.sel.pos Initial value for positive selection paramter
+##' @param init.bgc Initial value for bgc parameter (Ignored if bgc==FALSE)
+##' @param init.weights Numeric vector of length three giving the initial
+##' weight parameters.  The first two values determine the relative
+##' frequencies of negatively, neutral, and positively selected sites.  The
+##' last parameter determines the frequency of sites affected by bgc, and is
+##' ignored if bgc==FALSE. All values should be >= 0.
+##' @return An object of type \code{tm} which can be used as the init.mod
+##' argument to phyloFit to perform the branch-site test.
+##' @author Melissa J. Hubisz
+##' @export
+setup.branch.site.tm <- function(mod, foreground, bgc=FALSE, altModel=TRUE,
+                                 init.sel.neg=0, init.sel.pos=0,
+                                 init.bgc=0, init.weights=NULL) {
+  mod <- as.pointer.tm(mod)
+  if (!is.null(init.weights)) {
+    if (length(init.weights) != 3L && bgc)
+      stop("init.weights should be length 3 if bgc==TRUE")
+    if (length(init.weights) != 3L && init.weights != 2L && !bgc)
+      stop("init.weights should be length 2 or 3 if bgc==FALSE")
+    if (sum(init.weights < 0) > 0L)
+      stop("all values in init.weights should be >=0")
+  }
+  .Call.rphast("rph_tm_setup_site_model", mod$externalPtr, foreground, bgc,
+               altModel, init.sel.neg, init.sel.pos, init.bgc, init.weights)
+  from.pointer.tm(mod)
 }

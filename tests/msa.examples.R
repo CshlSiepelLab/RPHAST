@@ -37,11 +37,12 @@ is.format.msa(c("MAF", "SS", "PHYLIP", "MPM", "LAV", "FASTA",
 ################################################
 
 #' guess.format.msa
-guess.format.msa("file/asdf.fa")
-guess.format.msa("blah\blah.maf")
-guess.format.msa("abcd/efg/hij.ss")
-guess.format.msa("maf.fasta.lav")
-guess.format.msa("helloWorld")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+files <- c("ENr334.small.maf", "ENr334.fa", "ENr334.ss", "sol1.maf", "sol1.gp")
+unzip(exampleArchive, files=files)
+guess.format.msa(files)
+# the last file is not an alignment, which is why it returns UNKNOWN
+unlink(files)
 
 ################################################
 

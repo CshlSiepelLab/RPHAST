@@ -1,3 +1,18 @@
+2-8-2011:  1.3.1
+	* added max.EM.its argument to phyloFit
+	* added optim.rphast function
+	* updates to feat object; now it belongs to classes "feat" and
+	  "data.frame"
+	* update to guess.format.msa; now it opens up files and guesses format
+	  based on contents by default.
+	* added freq3x4.msa to calculate codon frequencies of an alignment using
+	  3x4 model
+	* added site.model flag to tree model object which indicates whether
+	  a tree model represents a Nielsen-Yang site model
+	* added function setup.branch.site.tm which takes a tree model and
+	  returns a tree model representing a branch-site model with a
+	  specified foreground branch.  The site-model can optionally
+	  include extra site categories with bgc on the foreground branch.
 12-22-2010 : 1.3
 	* improvements to memory handler, which previously slowed down rphast
 	  by 33%.  Now there is no significant increase in run-time, at least
