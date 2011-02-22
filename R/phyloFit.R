@@ -16,7 +16,7 @@ phyloFit <- function(msa,
 #                     reverse.groups=NULL,
                      scale.only=FALSE,
                      scale.subtree=NULL,
-                     nrates=1,
+                     nrates=NULL,
                      alpha=1,
                      rate.constants=NULL,
                      selection=NULL,
@@ -45,7 +45,7 @@ phyloFit <- function(msa,
   check.arg(tree, "tree", "character", null.OK=TRUE)
   check.arg(scale.only, "scale.only", "logical", null.OK=FALSE)
   check.arg(scale.subtree, "scale.subtree", "character", null.OK=TRUE)
-  check.arg(nrates, "nrates", "integer", null.OK=FALSE)
+  check.arg(nrates, "nrates", "integer", null.OK=TRUE)
   check.arg(alpha, "alpha", "numeric", null.OK=FALSE)
   if (!is.null(alpha) && alpha <= 0)
     stop("alpha must be > 0")

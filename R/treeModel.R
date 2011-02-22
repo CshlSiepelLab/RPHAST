@@ -905,7 +905,7 @@ setup.branch.site.tm <- function(mod, foreground, bgc=FALSE, altModel=TRUE,
   if (!is.null(init.weights)) {
     if (length(init.weights) != 3L && bgc)
       stop("init.weights should be length 3 if bgc==TRUE")
-    if (length(init.weights) != 3L && init.weights != 2L && !bgc)
+    if (length(init.weights) != 3L && length(init.weights) != 2L && !bgc)
       stop("init.weights should be length 2 or 3 if bgc==FALSE")
     if (sum(init.weights < 0) > 0L)
       stop("all values in init.weights should be >=0")
