@@ -21,4 +21,4 @@ Depends: stats
 Suggests: ape, seqLogo
 Collate: 'checkArgs.R' 'feat.R' 'hmm.R' 'listOfLists.R' 'msa.R'
     'optim.R' 'phastCons.R' 'phyloFit.R' 'phyloP.R' 'plot.R' 'rphast.R'
-    'treeModel.R' 'trees.R'
+    'tfbs.R' 'treeModel.R' 'trees.R'
