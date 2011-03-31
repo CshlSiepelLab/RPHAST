@@ -467,7 +467,10 @@ unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
 ##'
 ##' selection and bgc are optional parameters for the model with
 ##' biased gene conversion and selection.  If they are not provided this
-##' model is not used.
+##' model is not used.  Note that selection is defined relative to 
+##' selection in the main model, if x$selection is not NULL (so the
+##' total selection in the lineage-specific model is the sum of
+##' the selection value in the main and lineage-specific model.
 ##'
 ##' A tree model can have multiple lineage-specific models; if a later
 ##' model applies to the same branch as an earlier model, then the later one
@@ -512,7 +515,8 @@ unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
 ##' @param rate.matrix  The initial rate matrix to use for this model.  If
 ##' \code{NULL}, initialize to main model.  If provided, and selection and/or
 ##' bgc are provided, assume that rate matrix is already scaled 
-##' @param selection The selection parameter (from the sel+bgc model).
+##' @param selection The selection parameter (from the sel+bgc model), 
+##' relative to selection in the main model.
 ##' @param bgc The bgc parameter (from the sel+bgc model).
 ##' @return An object of type \code{tm}, identical to the input model but
 ##' with a new lineage-specific model added on.  This lineage-specific model
@@ -562,6 +566,9 @@ add.alt.mod <- function(x,
   defn <- sprintf("%s:%s", ifelse(!is.null(branch), branch, label),
                   ifelse(is.null(separate.params), subst.mod,
                          paste(separate.params, collapse=",")))
+  if (!is.null(const.params)) {
+    defn <- sprintf("%s:%s", defn, paste(const.params, sep=",", collapse=","))
+  }
   origPtr <- as.pointer.tm(x)
   .Call.rphast("rph_tm_add_alt_mod", origPtr$externalPtr, defn)
   newmod <- from.pointer.tm(origPtr)
@@ -580,10 +587,13 @@ add.alt.mod <- function(x,
                                  sel=newmod$selection)
     } else currMat <- newmod$rate.matrix
 
+    if (is.null(newmod$selection)) total.sel <- 0 else total.sel <- newmod$selection
+    if (!is.null(selection)) total.sel <- total.sel + selection
+    if (!is.null(newmod$selection)) total.sel <- 
     altmod$rate.matrix <- apply.bgc.sel(currMat,
                                         alphabet=newmod$alphabet,
                                         bgc=if (is.null(bgc)) 0 else bgc,
-                                        sel=if (is.null(selection)) 0 else selection)
+                                        sel=total.sel)
     if (!is.null(selection)) altmod$selection <- selection
     if (!is.null(bgc)) altmod$bgc <- bgc
 
