@@ -1009,7 +1009,7 @@ enrichment.feat <- function(x, annotations, region.bounds) {
   totalNumBase <- coverage.feat(region.bounds)
   for (anntype in annTypes) {
     annfeat <- annotations[annotations$feature == anntype,]
-    rv[[anntype]] <- coverage.feat(x, annfeat, region.bounds)*totalNumBase/(coverage.feat(annfeat, region.bounds)*coverage.feat(x, region.bounds))
+    rv[[anntype]] <- as.numeric(coverage.feat(x, annfeat, region.bounds))*as.numeric(totalNumBase)/(as.numeric(coverage.feat(annfeat, region.bounds))*as.numeric(coverage.feat(x, region.bounds)))
   }
   data.frame(type=names(rv), enrichment=as.numeric(rv), stringsAsFactors=TRUE)
 }
