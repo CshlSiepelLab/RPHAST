@@ -43,9 +43,9 @@ names.ms <- function(msListP) {
 
 ##' Clip sequences to supplied windows and group by GC content.
 ##' @title Clipping sequences to supplied windows and grouping by GC content
-##' @param[in,out] msP Multiple sequences
-##' @param[in] windowsP Set of windows 
-##' @param[in] ngroupsP Number of GC content groups
+##' @param msP Multiple sequences
+##' @param windowsP Set of windows 
+##' @param ngroupsP Number of GC content groups
 ##' @return List of windows, each window containing a Multiple Sequences object
 ##' @export
 split.ms <- function(msListP, windowsP) {
@@ -59,8 +59,8 @@ split.ms <- function(msListP, windowsP) {
 
 
 ##' Group by GC content
-##' @param[in]
-##' @param[in] ngroupsP Number of groups of GC content
+##' @param
+##' @param ngroupsP Number of groups of GC content
 ##' @return Sequences in Groups of GC content
 ##' @export
 group.ms <- function(msListP, ngroupsP) {
@@ -73,8 +73,8 @@ group.ms <- function(msListP, ngroupsP) {
 }
 
 ##' Build Markov Model
-##' @param[in] windowsP Single group of sequences, split by window
-##' @param[in] norderP Order of N-order Markov Model
+##' @param windowsP Single group of sequences, split by window
+##' @param norderP Order of N-order Markov Model
 ##' @return Markov Matrix
 ##' @export
 build.mm <- function(msListP, norderP) {
@@ -88,7 +88,7 @@ build.mm <- function(msListP, norderP) {
 }
 
 ##' Read PWM from a MEME formated file
-##' @param[in] filenameP Filename of the MEME formated file containing PWM as motif
+##' @param filenameP Filename of the MEME formated file containing PWM as motif
 ##' @return Position Weight Matrix from file
 ##' @export
 read.pwm <- function(filenameP) {
@@ -97,7 +97,6 @@ read.pwm <- function(filenameP) {
 }
 
 ##' Compute scores for a give PWM 
-##' @todo fill in params
 ##' @return scores
 ##' @export
 compute.scores <- function(msGroupListP, pwmP, mmListP) {
@@ -107,7 +106,6 @@ compute.scores <- function(msGroupListP, pwmP, mmListP) {
 }
 
 ##' Generate simulated sequence based on Markov Model
-##' @todo fill in params
 ##' @return simulated sequence
 ##' @export
 generate.seq <- function(mmP, lengthP) {
@@ -144,7 +142,6 @@ generate.seq <- function(mmP, lengthP) {
 #} 
 
 ##' FDR helper function
-##' @todo fill in params
 ##' @export
 calcFDR <- function(groupScoresReal, simulatedScores, realScoreIndex)
 {
@@ -171,7 +168,6 @@ calcFDR <- function(groupScoresReal, simulatedScores, realScoreIndex)
 }
 
 ##' Plot FDR scores 
-##' @todo fill in params
 ##' @export
 plot.fdr <- function(realSeqsScores, simSeqsScores) {
    xToPlot <- list();
