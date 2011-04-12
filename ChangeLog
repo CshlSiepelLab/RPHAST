@@ -1,4 +1,7 @@
-2-8-2011:  1.3.1
+3-26-2011:  1.3.3
+	* fixed bug in as.track.msa which (refseq arg was ignored)
+        * changed definition of selection in lineage-specific models to be
+	          the sum of mod$selection + mod$altmod$selection
 	* fixed bug causing segfault in concat.msa
 	* added max.EM.its argument to phyloFit
 	* added optim.rphast function

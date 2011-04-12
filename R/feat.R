@@ -79,7 +79,11 @@ read.feat <- function(filename, pointer.only=FALSE) {
 ##' Otherwise, it is a list containing a single element, which is
 ##' a pointer to an object stored in C.
 ##' @title Features Objects
-##' @param seqname a character vector containing the name of the sequence
+##' @param seqname a character vector containing the name of the sequence.  If
+##' the features correspond to regions of an alignment, then seqname
+##' should be the name of the sequence in the alignment that is used
+##' as the frame of reference in the features.  To use the entire alignment
+##' as a frame of reference, set seqname to "MSA".
 ##' @param src The source of the feature
 ##' @param feature The feature type name
 ##' @param start The start of the feature.  Sequence numbering begins at 1.

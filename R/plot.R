@@ -193,7 +193,7 @@ plot.track <- function(x,
           abline(h=horiz.line, lty=el$horiz.lty[i], col=el$horiz.col[i])
       }
     } else if (resultType[[i]] == "msa") {
-      plot.msa(el$data, xlim=xlim, ylim=yrange, add=TRUE, pretty=el$pretty)
+      plot.msa(el$data, xlim=xlim, ylim=yrange, add=TRUE, pretty=el$pretty, refseq=el$refseq)
     } else if (resultType[[i]] == "feat") {
       plot.feat(el$data,
                 y=mean(yrange), height=(yrange[2]-yrange[1]),
@@ -301,6 +301,7 @@ as.track.msa <- function(x, name, refseq=names.msa(x)[1],
   rv$name <- name
   rv$short.label <- short.label
   rv$pretty <- pretty
+  rv$refseq <- refseq
   rv$type <- "msa"
   rv
 }
