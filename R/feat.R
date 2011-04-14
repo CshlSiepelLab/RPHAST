@@ -640,9 +640,14 @@ hist.feat <- function(x, type="length", ...) {
 ##' If \code{TRUE}, return only the fragments of x that overlap
 ##' with filter.  In this case, the same fragments may be output multiple times, if they are
 ##' selected by multiple entries in filter.  numbase and min.percent apply in either case.
+##' When this option is used, the return value is a list with two gffs.  The first (named frags)
+##' contains the overlapping fragments, and the second (filter.frags) contain the fragments
+##' from filter which selected the overlapping fragments. 
 ##' @param pointer.only If \code{TRUE}, the return object will only be a
 ##' pointer to an object stored in C (useful for very large features; advanced use only).
-##' @return an object of type \code{feat} containing the selected entries from x.
+##' @return an object of type \code{feat} containing the selected entries from x (unless
+##' get.fragments==TRUE, then it returns a list with two \code{feat} objects; see
+##' get.fragments).
 ##' @note If either x or filter are feature objects stored as a pointer to C memory,
 ##' then this function may reorder the elements in these objects, but leave them
 ##' otherwise unchanged.
@@ -665,16 +670,26 @@ overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
   if (is.null(filter$externalPtr))
     filter <- as.pointer.feat(filter)
 
-  rv <- .makeObj.feat(TRUE)
-  rv$externalPtr <- .Call.rphast("rph_gff_overlapSelect",
-                                 x$externalPtr, filter$externalPtr,
-                                 numbase, min.percent, !overlapping,
-                                 get.fragments)
-  if (!is.null(rv) && !pointer.only) {
-    rv <- from.pointer.feat(rv)
+  rv <- list()
+  rv[[1]] <- .Call.rphast("rph_gff_overlapSelect",
+                          x$externalPtr, filter$externalPtr,
+                          numbase, min.percent, !overlapping,
+                          get.fragments)
+  if (get.fragments) {
+    rv <- rphast.simplify.list(rv)
+    if (!pointer.only) {
+      rv$frags <- from.pointer.feat(rv$frags)
+      rv$filter.frags <- from.pointer.feat(rv$filter.frags)
+    }
+    return(rv)
   }
-  if (nrow.feat(rv) == 0) return(NULL)
-  rv
+  feat.rv <- .makeObj.feat(TRUE)
+  feat.rv$externalPtr <- rv[[1]]
+  if (!is.null(rv) && !pointer.only) {
+    feat.rv <- from.pointer.feat(feat.rv)
+  }
+  if (nrow.feat(feat.rv) == 0) return(NULL)
+  feat.rv
 }
 
 
@@ -931,12 +946,11 @@ split.feat <- function(x, f, drop=FALSE, start.from="left",
 ##' @param decreasing Set to TRUE to sort from highest to lowest coordinates
 ##' @param ... Currently not used
 ##' @return An object of type \code{feat} sorted primarily by
-##' start position, then by end position.
+##' seqname, then by start position, then by end position.
 ##' @export
 ##' @S3method sort feat
-##' @note This function is not recommended if x is stored as a pointer to an
-##' object in C; in this case it may sort differently depending on how
-##' the object has been previously used.  x will be sorted if it is a pointer.
+##' @note If x is stored as a pointer to an object in C, the object will
+##' be modified to the return value.
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
 sort.feat <- function(x, decreasing = FALSE, ...) {
@@ -1105,4 +1119,22 @@ tagval <- function(x, tag) {
   tagval.feat(x=feat(start=rep(1, length(x)),
                 end=rep(2, length(x)), attribute=x),
               tag=tag)
+}
+
+
+##' Combine adjacent features with the same "feature" field
+##' @param x An object of type feat
+##' @return A features object in which adjacent features are
+##' combined into one longer feature.
+##' @note If x is stored as a pointer to a C structure, then
+##' x will be modified to the return value.
+##' @author Melissa J. Hubisz and Adam Siepel
+##' @export
+flatten.feat <- function(x) {
+  isPointer <- !is.null(x$externalPtr)
+  if (!isPointer) x <- as.pointer.feat(x)
+  sort.feat(x)
+  .Call.rphast("rph_gff_flatten", x$externalPtr)
+  if (!isPointer) return(from.pointer.feat(x))
+  x
 }
