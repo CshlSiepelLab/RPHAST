@@ -459,8 +459,6 @@ unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
 ##' third element is a list of parameters which will not be optimized by
 ##' phyloFit.
 ##'
-##' rate.matrix is the initial rate.matrix to use for this model.
-##'
 ##' backgd is the initial set of equilibrium frequencies for this model; if 
 ##' not present, then the equilibrium frequencies will be shared with the
 ##' main model.
@@ -509,12 +507,9 @@ unapply.bgc.sel <- function(m, bgc=0, sel=0, alphabet="ACGT") {
 ##' @param const.params A character vector indicating which parameters to
 ##' hold constant at their initial values, rather than being optimized
 ##' upon a call to phyloFit.  Possible values are the same as for
-##' separate.params.
+##' separate.params, although no boundaries can be given here.
 ##' @param backgd The initial equilibrium frequencies to use for this
 ##' model.  If \code{NULL}, use the same as in the main model.
-##' @param rate.matrix  The initial rate matrix to use for this model.  If
-##' \code{NULL}, initialize to main model.  If provided, and selection and/or
-##' bgc are provided, assume that rate matrix is already scaled 
 ##' @param selection The selection parameter (from the sel+bgc model), 
 ##' relative to selection in the main model.
 ##' @param bgc The bgc parameter (from the sel+bgc model).
@@ -527,7 +522,6 @@ add.alt.mod <- function(x,
                         branch=NULL, label=NULL,
                         subst.mod=NULL, separate.params=NULL,
                         const.params=NULL,
-                        rate.matrix=NULL,
                         backgd=NULL,
                         selection=NULL,
                         bgc=NULL) {
@@ -589,7 +583,6 @@ add.alt.mod <- function(x,
 
     if (is.null(newmod$selection)) total.sel <- 0 else total.sel <- newmod$selection
     if (!is.null(selection)) total.sel <- total.sel + selection
-    if (!is.null(newmod$selection)) total.sel <- 
     altmod$rate.matrix <- apply.bgc.sel(currMat,
                                         alphabet=newmod$alphabet,
                                         bgc=if (is.null(bgc)) 0 else bgc,
