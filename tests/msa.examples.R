@@ -472,7 +472,7 @@ plot.msa(m[1:3,1:40])
 plot.msa(m[,1:100])
 plot.msa(m[,1:50], refseq=NULL)
 plot.msa(m[,1:50], refseq=NULL, nuc.text=rep(paste(rep("ASDFG", 10), sep="", collapse=""), 2),
-         nuc.text.col=c("black", "red"), nuc.text.pos=c("top")
+         nuc.text.col=c("black", "red"), nuc.text.pos=c("top"))
 rm(m)
 unlink("ENr334.maf")
 
