@@ -409,12 +409,12 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
   x <- x[f,]
   
   if (plottype=="r" || plottype=="b") {
-    rect(x$start, y-height/2, x$end, y+height/2,
+    rect(x$start-0.5, y-height/2, x$end+0.5, y+height/2,
          col=fill.col, border=col, lty=lty,
          lwd=lwd)
   }
   if (plottype == "l")
-    segments(x$start, y, x$end, col=col, lty=lty, lwd=lwd)
+    segments(x$start-0.5, y, x$end+0.5, col=col, lty=lty, lwd=lwd)
   if (plottype == "a" || plottype == "b") {
     usr <- par("usr")
     pin <- par("pin")
@@ -428,8 +428,8 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
     if (sum(f) > 0) {
       xplus <- x[f,]
       for (i in 1:nrow.feat(xplus)) {
-        start <- xplus[i,]$start
-        end <- xplus[i,]$end
+        start <- xplus[i,]$start-0.5
+        end <- xplus[i,]$end+0.5
         xlen <- height/2/tan(angle)/upi[2]*upi[1]
         x0 <- seq(from = end + arrow.density*floor(xlen/arrow.density),
                   to = start-xlen, by=-arrow.density)
@@ -464,8 +464,8 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
     if (sum(f) > 0) {
       xneg <- x[f,]
       for (i in 1:nrow.feat(xneg)) {
-        start <- xneg[i,]$start
-        end <- xneg[i,]$end
+        start <- xneg[i,]$start-0.5
+        end <- xneg[i,]$end+0.5
         x0 <- seq(from=start - arrow.density*floor(xlen/arrow.density),
                   to = end+xlen, by=arrow.density)
 #        x0 <- seq(from=start-xlen, to=end+xlen, by=arrow.density)

@@ -1574,12 +1574,22 @@ translate.msa <- function(m, one.frame=TRUE, frame=0) {
 ##' higher row and are identical to corresponding base in 1st row.
 ##' @param min.char.size The smallest value (in inches) that a character can
 ##' be.  If characters need to be smaller than this, skip the plot.
+##' @param nuc.text If not NULL, can be a vector of character strings.  Each
+##' character string should be the same length as the MSA with respect to refseq.
+##' Each string will be displayed in its own row along with the alignment.
+##' @param nuc.text.pos If nuc.text is not NULL, can be either "top" or "bottom"
+##' to indicate where to place nuc.text relative to the alignment.  Will be recycled
+##' to the length of nuc.text.
+##' @param nuc.text.col If nuc.text is not NULL, color to be used for printing nuc.text.  Will
+##' be recycled to the length of nuc.text.
 ##' @param ... Additional arguments to be passed to plot()
 ##' @export
 ##' @author Melissa J. Hubisz
 plot.msa <- function(x, refseq=names.msa(x)[1],
                      xlim=NULL, ylim=c(0,1),
                      add=FALSE, pretty=FALSE, min.char.size=0.05,
+                     nuc.text=NULL, nuc.text.pos="bottom",
+                     nuc.text.col="black",
                      ...) {
   if (!is.msa(x)) stop("first argument to plot.msa should be msa object")
 #  if (!is.null(color.nonsyn)) {
@@ -1611,19 +1621,35 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
          ...)
   }
 
-  
   yrange <- par("usr")[3:4]  #y coordinate min and max
   width <- par("pin")[1]   # width of plot window in inches
   height <- par("pin")[2]/(yrange[2]-yrange[1])*(ylim[2]-ylim[1]) # height of window in inches
 
   numseq <- length(names.msa(x))
+  numrow <- numseq
+  
+  if (!is.null(nuc.text)) {
+    exp.length <- ncol.msa(x, refseq=refseq)
+    for (i in 1:length(nuc.text)) {
+      if (nchar(nuc.text[i]) != exp.length)
+        stop(nuc.text[i], " should be length ", exp.length, " got length ",
+             nchar(nuc.text[i]))
+      nuc.text[i] <- substr(nuc.text[i], xrange[1]-coordRange[1]+1,
+                            xrange[2] - coordRange[1]+1)
+    }
+    nuc.text.pos <- rep(nuc.text.pos, length.out=length(nuc.text))
+    if (sum(nuc.text.pos != "top" & nuc.text.pos != "bottom") > 0L)
+      stop("all elements of nuc.text.pos should be \"top\" or \"bottom\"")
+    nuc.text.col <- rep(nuc.text.col, length.out=length(nuc.text))
+    numrow <- numrow + length(nuc.text)
+  }
 
   x <- sub.msa(x, start.col=xrange[1], end.col=xrange[2],
                refseq=refseq)
   numch <- ncol.msa(x, refseq=refseq)
 
   chWidth <- width/numch  # amount of available space per character horizontal
-  chHeight <- height/numseq # amount of available space per character vertical
+  chHeight <- height/(numrow) # amount of available space per character vertical
   if (chWidth < min.char.size || chHeight < min.char.size) {
     warning("plot.msa could not plot alignment; characters too small")
     return(invisible(NULL))
@@ -1645,12 +1671,12 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
   # first try allowing half a character height between each line
   # if that doesn't fit then space evenly
 
-  y <- (1:numseq)*textCex*1.25*par("cex")*par("cin")[2]  # this is in inches
+  y <- (1:numrow)*textCex*1.25*par("cex")*par("cin")[2]  # this is in inches
   if (max(y)-min(y) < height) {  # the optimal spacing fits vertically
     y <- y/height*(ylim[2] - ylim[1])  # convert from inches to coordinates
     y <- y - mean(y) + (ylim[2] - ylim[1])/2 + ylim[1]
   } else {
-    y <- seq(from=ylim[1], to=ylim[2], length.out=length(names.msa(x))+2)[2:(numseq+1)]
+    y <- seq(from=ylim[1], to=ylim[2], length.out=numrow+2)[2:(numseq+1)]
   }
   y <- rev(y)
 
@@ -1658,6 +1684,17 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
   marSize <- par("mai")[2]  #margin size on left side
   nameCex <- min(marSize/(par("cin")[1]*longestName), cexHeight)
 
+  yidx <- 1
+  if (!is.null(nuc.text) && sum(nuc.text.pos=="top") > 0L) {
+    f <- nuc.text.pos=="top"
+    for (i in 1:sum(f)) {
+      text(x=seq(from=xrange[1], to=xrange[2], by=1), y=y[yidx],
+           labels=strsplit(nuc.text[f][i], "")[[1]], cex=textCex,
+           col=nuc.text.col[i])
+      yidx <- yidx+1
+    }
+  }
+  
   for (i in 1:numseq) {
     chars <- strsplit(x$seq[i], "")[[1]]
     if (pretty) {
@@ -1668,9 +1705,21 @@ plot.msa <- function(x, refseq=names.msa(x)[1],
       }
     }
     text(x=seq(from=xrange[1], to=xrange[2], by=1),
-         y=y[i],
+         y=y[yidx],
          labels=chars, cex=textCex)
-    mtext(names.msa(x)[i], line=0.5, side=2, at=y[i], las=1, cex=nameCex, ...)
+    mtext(names.msa(x)[i], line=0.5, side=2, at=y[yidx], las=1, cex=nameCex, ...)
+    yidx <- yidx + 1
   }
+
+  if (!is.null(nuc.text) && sum(nuc.text.pos=="bottom") > 0L) {
+    f <- nuc.text.pos=="bottom"
+    for (i in 1:sum(f)) {
+      text(x=seq(from=xrange[1], to=xrange[2], by=1), y=y[yidx],
+           labels=strsplit(nuc.text[f][i], "")[[1]], cex=textCex,
+           col=nuc.text.col[f][i])
+      yidx <- yidx+1
+    }
+  }
+
   invisible(NULL)
 }

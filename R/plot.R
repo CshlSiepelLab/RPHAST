@@ -193,7 +193,7 @@ plot.track <- function(x,
           abline(h=horiz.line, lty=el$horiz.lty[i], col=el$horiz.col[i])
       }
     } else if (resultType[[i]] == "msa") {
-      plot.msa(el$data, xlim=xlim, ylim=yrange, add=TRUE, pretty=el$pretty, refseq=el$refseq)
+      plot.msa(el$data, xlim=xlim, ylim=yrange, add=TRUE, pretty=el$pretty, refseq=el$refseq, nuc.text=el$nuc.text, nuc.text.pos=el$nuc.text.pos, nuc.text.col=el$nuc.text.col)
     } else if (resultType[[i]] == "feat") {
       plot.feat(el$data,
                 y=mean(yrange), height=(yrange[2]-yrange[1]),
@@ -280,6 +280,13 @@ as.track.wig <- function(wig=NULL, name, coord=NULL, score=NULL, short.label=NUL
 ##' left-hand margin of the track
 ##' @param pretty If \code{TRUE}, display bases in the non-reference species
 ##' which are identical to the reference species as a dot.
+##' @param nuc.text If not NULL, can be a vector of character strings.  Each
+##' character string should be the same length as the MSA with respect to refseq.
+##' @param nuc.text.pos If nuc.text is not NULL, can be either "top" or "bottom"
+##' to indicate where to place nuc.text relative to the alignment.  Will be recycled
+##' to the length of nuc.text.
+##' @param nuc.text.col If nuc.text is not NULL, color to be used for printing nuc.text.
+##' Will be recycled to the length of nuc.text.
 ##' @return An object of type \code{track} which can be plotted with the
 ##' plot.track function
 ##' @keywords plot
@@ -289,7 +296,9 @@ as.track.wig <- function(wig=NULL, name, coord=NULL, score=NULL, short.label=NUL
 ##' @export
 ##' @author Melissa J. Hubisz
 as.track.msa <- function(x, name, refseq=names.msa(x)[1],
-                         short.label=NULL, pretty=TRUE) {
+                         short.label=NULL, pretty=TRUE,
+                         nuc.text=NULL, nuc.text.pos="bottom",
+                         nuc.text.col="black") {
   if (!is.msa(x)) stop("x is not msa object")
   check.arg(refseq, "refseq", "character", null.OK=TRUE)
   check.arg(name, "name", "character", null.OK=FALSE)
@@ -302,6 +311,9 @@ as.track.msa <- function(x, name, refseq=names.msa(x)[1],
   rv$short.label <- short.label
   rv$pretty <- pretty
   rv$refseq <- refseq
+  rv$nuc.text <- nuc.text
+  rv$nuc.text.pos <- nuc.text.pos
+  rv$nuc.text.col <- nuc.text.col
   rv$type <- "msa"
   rv
 }

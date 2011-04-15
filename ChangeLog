@@ -1,4 +1,14 @@
-3-26-2011:  1.3.3
+3-26-2011:  1.4
+	* added nuc.text (and options nuc.text.pos, nuc.text.col) options to
+	  plot.msa and as.track.msa; this is for plotting additional text
+	  along the top or bottom of an alignment.
+        * fixed bug in alt.mod.tm (was ignoriong rate.matrix argument, which
+	  has been removed)
+        * modified overlap.feat to return list of two gffs when
+	  get.fragments==TRUE (one containing fragments and another containing
+	  features that selected the fragments)
+	* modified sort.feat to sort first by seqname, then by position
+	* added flatten.feat which merges adjacent features of the same type
 	* fixed bug in as.track.msa which (refseq arg was ignored)
         * changed definition of selection in lineage-specific models to be
 	          the sum of mod$selection + mod$altmod$selection
