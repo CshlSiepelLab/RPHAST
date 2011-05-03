@@ -414,7 +414,7 @@ informative.regions.msa(m, 3, refseq=NULL)
 informative.regions.msa(m, 3, refseq="mouse", spec=c("mouse", "rat"))
 
 
-#' postprobs.msa
+#' postprob.msa
 require("rphast")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 unzip(exampleArchive, "ENr334.maf")
