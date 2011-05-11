@@ -554,7 +554,7 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' reference sequence.  If given, the reference sequence will be
 ##' "filled in" whereever missing from the alignment.
 ##' @param offset An integer giving offset of reference sequence from
-##' beginning of chromosome.  Not used for MAF format.
+##' beginning of chromosome.  Not used for MAF or SS format.
 ##' @param seqnames A character vector.  If provided, discard any sequence
 ##' in the msa that is not named here.  This is only implemented efficiently
 ##' for MAF input files, but in this case, the reference sequence must be
@@ -854,10 +854,10 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 
   # check if arguments are given as logicals.
   if (is.logical(rows)) {
-    rows = which(rep(rows, length.out = nrow.msa(x)))
+    rows <- which(rep(rows, length.out = nrow.msa(x)))
   }
   if (is.logical(cols)) 
-    cols = which(rep(cols, length.out = ncol.msa(x)))
+    cols <- which(rep(cols, length.out = ncol.msa(x)))
 
   # if x is stored in R, sampling rows is easier and more efficient to do here
   if (!is.null(rows) && is.null(x$externalPtr)) {
@@ -878,6 +878,88 @@ strip.gaps.msa <- function(x, strip.mode=1) {
   if (!pointer.only) 
     rv <- from.pointer.msa(rv)
   rv
+}
+
+
+
+##' Replace subsets of an alignment
+##' @param x An object of type \code{msa}
+##' @param rows A numeric vector of sequence indices, character vector
+##' (containing sequence names), or logical vector.  If logical vector,
+##' it will be recycled as necessary to the length of \code{nrow.msa(x)}.
+##' If not provided, all rows are selected.
+##' @param cols A numeric vector of alignment columns, or a logical
+##' vector.  If logical vector it will be recycled to the same length
+##' as \code{ncol.msa(x)}.  Note that these are coordinates with respect
+##' to the entire alignment.  x$idx.offset is ignored here.  If cols is not
+##' provided, all columns are selected.
+##' @param value The value to replace in the indicated rows/columns.  Should
+##' be a character representing a base (ie, "A", "C", "G", "T", "N", "-").
+##' Can be a single value or a vector of values which match number of selected
+##' cells.  This value will be recycled to the necessary length, and an error
+##' produced if the necessary length is not an even multiple of
+##' \code{length(value)}.  Can also give a single character string, in which
+##' case it will be expanded into a vector using \code{strsplit}.
+##' @return An object of type \code{msa} with the chosen rows/columns
+##' replaced by value.
+##' @note If \code{x} is stored as a pointer, x will be changed to the
+##' return value.
+##' @usage \method{[}{msa}(x, rows, cols) <- value
+##' @export "[<-.msa"
+##' @author Melissa J. Hubisz
+"[<-.msa" <- function(x, rows, cols, value) {
+  if (!is.msa(x))
+    stop("[<-.msa expects x to be an msa object")
+  isPointer <- !is.null(x$externalPtr)
+  x <- as.pointer.msa(x)
+  if (!is.character(value))
+    stop("value should be of type character")
+  if (length(value)==1L && nchar(value) > 1L)
+    value <- strsplit(value, "")[[1]]
+  if (unique(sapply(value, nchar)) != 1L)
+    stop("each element of value should be a single character")
+
+  if (!missing(rows)) {
+    if (is.null(rows)) stop("rows cannot be NULL")
+  } else rows=NULL
+  if (!missing(cols)) {
+    if (is.null(cols)) stop("cols cannot be NULL")
+  } else cols=NULL
+
+  if (!is.null(rows)) {
+    # if rows are given by names, convert to integer
+    if (is.character(rows)) {# names are given
+      names <- names.msa(x)
+      rows <- as.numeric(sapply(rows, function(x) {which(x ==  names)}))
+      if (sum(is.na(rows)) > 0L)
+        stop("unknown names in first dimension subset")
+    }
+  }
+  
+  if (is.logical(rows)) {
+    if (nrow.msa(x) %% length(rows) != 0)
+      stop("number of rows in x is not a multiple of length(rows)")
+    rows <- which(rep(rows, length.out = nrow.msa(x)))
+  }
+  if (is.logical(cols)) {
+    if (ncol.msa(x) %% length(cols) != 0)
+      stop("number of cols in x is not a multiple of length(cols)")
+    cols <- which(rep(cols, length.out = ncol.msa(x)))
+  }
+  
+  # now get value in the correct dimensions if it isn't already
+  if (is.null(rows)) numrow <- nrow.msa(x) else numrow <- length(rows)
+  if (is.null(cols)) numcol <- ncol.msa(x) else numcol <- length(cols)
+  if (numrow*numcol %% length(value) != 0)
+    stop("number of items to replace is not a multiple of replacement length")
+
+  # don't do the recycling here; save memory and recycle in C code
+
+  .Call.rphast("rph_msa_square_bracket_equals", x$externalPtr,
+               rows, cols, value)
+  if (!isPointer)
+    x <- from.pointer.msa(x)
+  x
 }
 
 
