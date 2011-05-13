@@ -399,6 +399,9 @@ guess.format.msa  <- function(filename, method="content") {
 ##' @keywords msa FASTA PHYLIP MPM SS
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @usage write.msa(x, file=NULL,
+##' format=ifelse((f <- guess.format.msa(file, method="extension"))=="UNKNOWN", "FASTA", f),
+##' pretty.print=FALSE)
 write.msa <- function(x, file=NULL,
                       format=ifelse((f <- guess.format.msa(file, method="extension"))=="UNKNOWN", "FASTA", f),
                       pretty.print=FALSE) {

@@ -1052,6 +1052,15 @@ enrichment.feat <- function(x, annotations, region.bounds) {
 ##' @S3method unique feat
 ##' @export
 ##' @keywords features
+##' @note VERY IMPORTANT: this function is not currently implemented to look
+##' at chromosomes (ie the seqname field of the feature).  Therefore any
+##' genes which have overlapping coordinates REGARDLESS OF THE CHROMOSOME
+##' will be pruned to a single "non-overlapping" gene.  To get around this,
+##' first subset the features by chromosome and call uniq.feat on each
+##' subset.
+##' @note Also, this algorithm considers genes to be overlapping even if
+##' they are on different strands.  If this is undesirable, then subset
+##' the features by strand as well as chromosome.
 ##' @author Melissa J. Hubisz and Adam Siepel
 unique.feat <- function(x, incomparables=FALSE, ...) {
   if (is.null(x$externalPtr)) {
