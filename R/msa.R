@@ -1480,11 +1480,12 @@ state.freq.msa <- function(align, mod) {
 ##' @param seq A vector of character strings identifying the sequence(s)
 ##' to get base frequencies for.  If \code{NULL}, use all sequences.
 ##' @param ignore.missing If TRUE, ignore missing data characters ("N" and "?").
-##' @param ignore.gaps If TRUE, ignore gaps.
+##' Must be TRUE if seq is stored as a pointer.
+##' @param ignore.gaps If TRUE, ignore gaps.  Must be TRUE if seq is stored
+##' as a pointer.
 ##' @return A data frame with one row for each unique state (usually
 ##' "A", "C", "G", "T", and possibly "N", "?", "-", counts for
 ##' each state, and overall frequency of each state.
-##' @note Does not work with msa objects stored as a pointer to a C structure.
 ##' @seealso \code{statfreq.msa}, which gets observed frequencies of states
 ##' in an alignment with respect to a substitution model, and works for
 ##' pointers.
@@ -1493,13 +1494,22 @@ state.freq.msa <- function(align, mod) {
 base.freq.msa <- function(x, seq=NULL, ignore.missing=TRUE,
                           ignore.gaps=TRUE) {
   if (!is.msa(x)) stop("x should be object of type msa")
-  if (is.null(x$seqs)) stop("x does not have element named seqs")
   check.arg(seq, "seq", "character", null.OK=TRUE, min.length=1L,
             max.length=NULL)
   check.arg(ignore.missing, "ignore.missing", "logical", null.OK=FALSE,
             min.length=1L, max.length=1L)
   check.arg(ignore.gaps, "ignore.gaps", "logical", null.OK=FALSE,
             min.length=1L, max.length=1L)
+  if (!is.null(x$externalPtr)) {
+    if (!is.null(seq)) x <- sub.msa(x, seq, pointer.only=TRUE)
+    if (ignore.missing != TRUE)
+      stop("ignore.missing must be TRUE in base.freq.msa if x is stored as a pointer")
+    if (ignore.gaps != TRUE)
+      stop("ignore.gaps must be TRUE in base.freq.msa if x is stored as a pointer")
+    return(rphast.simplify.list(.Call.rphast("rph_msa_base_freq",
+                                             x$externalPtr)))
+  }
+  if (is.null(x$seqs)) stop("x does not have element named seqs")
   chars <- NULL
   for (i in 1:nrow.msa(x)) {
     if (is.null(seq) || is.element(names(x)[i], seq))
