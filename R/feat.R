@@ -882,17 +882,18 @@ rbind.feat <- function(...) {
   feat <- .makeObj.feat(TRUE)
   featlist <- list(...)
   idx <- 1
+  p.featlist <- list()
   for (i in 1:length(featlist)) {
     currfeat <- featlist[[i]]
-    if (!is.null(currfeat)) {
-      if (is.null(currfeat$externalPtr)) 
+    if (!is.null(currfeat) && nrow.feat(currfeat) > 0L) {
+      if (is.null(currfeat$externalPtr))
         currfeat <- as.pointer.feat(currfeat)
-      featlist[[idx]] <- currfeat$externalPtr
+      p.featlist[[idx]] <- currfeat$externalPtr
       idx <- idx+1
     }
   }
   if (idx == 1) return(NULL)
-  feat$externalPtr <- .Call.rphast("rph_gff_append", featlist)
+  feat$externalPtr <- .Call.rphast("rph_gff_append", p.featlist)
   from.pointer.feat(feat)
 }
 
