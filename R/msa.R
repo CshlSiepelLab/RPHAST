@@ -989,7 +989,8 @@ postprob.msa <- function(x, tm) {
 ##' @param x An object of type \code{msa}
 ##' @param tm An object of type \code{tm}
 ##' @return An array giving the expected number of substitutions on each
-##' branch at each site, summed across all types of substitutions.
+##' branch at each unique site pattern, summed across all types of
+##' substitutions.
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 expected.subs.msa <- function(x, tm) {
@@ -1002,11 +1003,11 @@ expected.subs.msa <- function(x, tm) {
                                     x$externalPtr, tm$externalPtr))
 }
 
-##' Obtain expected number of substitutions on each branch
+##' Obtain expected number of substitutions of each type on each branch
 ##' @param x An object of type \code{msa}
 ##' @param tm An object of type \code{tm}
 ##' @return An array giving the expected number of substitutions on each
-##' branch, summed across all types of substitutions.
+##' branch, for each type of substitution.
 ##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
 total.expected.subs.msa <- function(x, tm) {
@@ -1019,7 +1020,7 @@ total.expected.subs.msa <- function(x, tm) {
                                     x$externalPtr, tm$externalPtr))
 }
 
-##' Obtain expected number of substitutions on each branch for each site
+##' Obtain expected number of substitutions on each branch for each site pattern and each substitution type
 ##' @param x An object of type \code{msa}
 ##' @param tm An object of type \code{tm}
 ##' @return An array giving the expected number of substitutions on each
