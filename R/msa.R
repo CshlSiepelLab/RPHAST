@@ -956,6 +956,11 @@ strip.gaps.msa <- function(x, strip.mode=1) {
   if (numrow*numcol %% length(value) != 0)
     stop("number of items to replace is not a multiple of replacement length")
 
+  if (sum(cols < 1 | cols > ncol.msa(align)) != 0)
+    stop("cols out of range")
+  if (sum(rows < 1 | rows > nrow(align)) != 0)
+    stop("rows out of range")
+
   # don't do the recycling here; save memory and recycle in C code
 
   .Call.rphast("rph_msa_square_bracket_equals", x$externalPtr,
