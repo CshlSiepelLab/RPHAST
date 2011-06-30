@@ -45,9 +45,12 @@
 ##' without actually registering.
 ##' @export
 ##' @author Nicholas Peterson
-register.rphast <- function(name="", email="", institution="") {
-
-  invisible(read.table(file=paste("http://compgen.bscb.cornell.edu/rphast/register.php?name=", name, "&email=", email, "&institution=", institution, "&version=", packageDescription("rphast")$Version, "&isValid=TRUE", sep="")))
+register.rphast <- function(name="", email="", institution="", comments="") {
+  bName <- .Call.rphast("rph_base64_encode", name);
+  bEmail <- .Call.rphast("rph_base64_encode", email);
+  bInstitution <- .Call.rphast("rph_base64_encode", institution);
+  bComments <- .Call.rphast("rph_base64_encode", comments);
+  invisible(read.csv(file=paste("http://compgen.bscb.cornell.edu/rphast/register.php?name=", bName, "&email=", bEmail, "&institution=", bInstitution, "&version=", packageDescription("rphast")$Version, "&isValid=TRUE&comment=", bComments, sep="")))
   regDir <- Sys.getenv("rphastRegDir")
   dir.create(regDir, showWarnings=FALSE)
   invisible(file.create(paste(regDir, "registered", sep=""), showWarnings=FALSE))
