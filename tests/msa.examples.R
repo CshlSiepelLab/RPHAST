@@ -218,6 +218,16 @@ print(m[c(TRUE, FALSE, TRUE),], print.seq=TRUE)
 print(m[TRUE,], print.seq=TRUE)
 print("[.msa"(m, "mouse",c(1,6,3,5)), print.seq=TRUE)
 
+################################################
+
+#' [<-.msa
+require("rphast")
+m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
+         names=c("human", "mouse", "rat"))
+m[1:2,4:6] <- "G"
+m[1,] <- "A"
+m[,4:5] <- "-"
+m["rat",] <- "ABCDEF"
 
 ################################################
 
