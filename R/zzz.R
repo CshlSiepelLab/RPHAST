@@ -46,10 +46,10 @@
 ##' @export
 ##' @author Nicholas Peterson
 register.rphast <- function(name="", email="", institution="", comments="") {
-  bName <- .Call.rphast("rph_base64_encode", name);
-  bEmail <- .Call.rphast("rph_base64_encode", email);
-  bInstitution <- .Call.rphast("rph_base64_encode", institution);
-  bComments <- .Call.rphast("rph_base64_encode", comments);
+  bName <- URLencode(name, reserved=TRUE);
+  bEmail <- URLencode(email, reserved=TRUE);
+  bInstitution <- URLencode(institution, reserved=TRUE);
+  bComments <- URLencode(comments, reserved=TRUE);
   invisible(read.csv(file=paste("http://compgen.bscb.cornell.edu/rphast/register.php?name=", bName, "&email=", bEmail, "&institution=", bInstitution, "&version=", packageDescription("rphast")$Version, "&isValid=TRUE&comment=", bComments, sep="")))
   regDir <- Sys.getenv("rphastRegDir")
   dir.create(regDir, showWarnings=FALSE)
