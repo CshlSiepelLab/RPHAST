@@ -1,6 +1,4 @@
 
-##' @export
-##' @nord
 fill.in.array.lol <- function(lol, arr) {
   if (is.list(lol)) {
     for (i in 1:length(lol)) {
@@ -16,8 +14,6 @@ fill.in.array.lol <- function(lol, arr) {
   
 
 
-##' @export
-##' @nord
 rphast.simplify.list <- function(lol, pointer.only=FALSE) {
   if (!is.list(lol)) return(lol)
   if (!is.null(lol$externalPtr)) return(lol)

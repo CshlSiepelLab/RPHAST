@@ -1,5 +1,3 @@
-##' @nord
-##' @export
 phyloP.call<- function(mod,
                        msa=NULL,
                        method="LRT",
@@ -148,6 +146,7 @@ phyloP.call<- function(mod,
 ##' every feature (if features is given) or for every base (otherwise).
 ##' @keywords msa tm features
 ##' @export
+##' @example inst/examples/phyloP.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 phyloP <- function(mod,
                    msa,
@@ -194,6 +193,7 @@ phyloP <- function(mod,
 ##' number of substitutions and their probability under the null model.
 ##' If quantiles=TRUE, there will be 101 rows with the 0, 0.05, ..., 1.0th
 ##' quantile.
+##' @example inst/examples/phyloP-prior.R
 ##' @export
 phyloP.prior <- function(mod, nsites=100, subtree=NULL, branches=NULL,
                          outfile=NULL, outfile.only=FALSE,

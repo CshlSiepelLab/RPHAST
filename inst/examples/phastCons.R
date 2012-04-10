@@ -1,5 +1,3 @@
-#' phastCons
-require("rphast")
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 files <- c("ENr334.fa", "rev.mod")
 unzip(exampleArchive, files)
@@ -11,6 +9,3 @@ rv2 <- phastCons(msa, mod, estimate.trees=TRUE)
 names(rv2)
 rv2$tree.models
 unlink(files)
-
-rm(list = ls())
-gc()

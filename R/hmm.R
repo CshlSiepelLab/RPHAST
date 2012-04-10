@@ -1,14 +1,10 @@
 # make barebones hmm obj
-##' @nord
-##' @export
 .makeObj.hmm <- function() {
   hmm <- list()
   class(hmm) <- "hmm"
   hmm
 }
 
-##' @nord
-##' @export
 fix.freq.hmm <- function(freq, name, n) {
   if (is.null(freq)) {
     freq <- rep(1/n, n)
@@ -33,6 +29,7 @@ fix.freq.hmm <- function(freq, name, n) {
 ##' @param end.freq A vector of length n giving the final state frequencies.
 ##' If NULL, do not condition on end frequencies.
 ##' @export
+##' @example inst/examples/hmm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
                 end.freq=NULL) {
@@ -70,6 +67,7 @@ hmm <- function(trans.mat, eq.freq=NULL, begin.freq=NULL,
 ##' @return An hmm object
 ##' @export
 ##' @keywords hmm
+##' @example inst/examples/read-hmm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 read.hmm <- function(filename) {
   h <- .makeObj.hmm()
@@ -86,6 +84,7 @@ read.hmm <- function(filename) {
 ##' overwrite.
 ##' @export
 ##' @keywords hmm
+##' @example inst/examples/write-hmm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 write.hmm <- function(x, filename, append=FALSE) {
   h <- as.pointer.hmm(x)
@@ -93,8 +92,6 @@ write.hmm <- function(x, filename, append=FALSE) {
 }
 
 
-##' @export
-##' @nord
 stop.if.not.valid.hmm <- function(hmm){
   if (is.null(hmm$trans.mat) ||
       is.null(hmm$eq.freq) ||
@@ -124,8 +121,6 @@ nstate.hmm <- function(hmm) {
 # Therefore from.pointer.hmm and as.pointer.hmm are internal functions
 # and do NOT call freeall.rphast
 
-##' @export
-##' @nord
 as.pointer.hmm <- function(hmm) {
   obj <- .makeObj.hmm()
   obj$externalPtr <- .Call.rphast("rph_hmm_new", hmm$trans.mat, hmm$eq.freq,
@@ -133,8 +128,6 @@ as.pointer.hmm <- function(hmm) {
   obj
 }
 
-##' @nord
-##' @export
 from.pointer.hmm <- function(x) {
   if (is.null(x$externalPtr)) {
     stop.if.not.valid.hmm()
@@ -198,6 +191,7 @@ from.pointer.hmm <- function(x) {
 ##' \item{likelihood}{The likelihood of the data under the estimated model.}
 ##' @export
 ##' @keywords hmm
+##' @example inst/examples/score-hmm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 score.hmm <- function(msa, mod, hmm, states=NULL, viterbi=TRUE, ref.idx=1,
                       reflect.strand=NULL, features=NULL,
@@ -258,6 +252,7 @@ score.hmm <- function(msa, mod, hmm, states=NULL, viterbi=TRUE, ref.idx=1,
 ##' @return If \code{mods==NULL} then a new hmm will be returned.  Otherwise
 ##' a list containing the new hmm and the corresponding models will be
 ##' returned.
+##' @example inst/examples/reflect-phylo-hmm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 reflect.phylo.hmm <- function(x, pivot.states, mods=NULL) {
   if (is.character(pivot.states)) {

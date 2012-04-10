@@ -1,5 +1,3 @@
-##' @nord
-##' @export
 phastCons.call <- function(msa,
                            mod,
                            rho,
@@ -278,6 +276,7 @@ phastCons.call <- function(msa,
 ##' See CITE PHASTCONS PAPER for more details.
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/phastCons.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 phastCons <- function(msa,
                       mod,

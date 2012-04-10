@@ -1,6 +1,3 @@
-require("rphast")
-
-#' as.track.feat
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 featFile <- "sol1.gp"
 unzip(exampleArchive, featFile)
@@ -11,15 +8,3 @@ geneTrack <- as.track.feat(f, "gene track", is.gene=TRUE)
 plot.track(list(featTrack, geneTrack))
 plot.track(list(featTrack, geneTrack, geneTrack, geneTrack, geneTrack),
            xlim=c(14800, 16000))
-
-#' plot.gene
-exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
-featFile <- "sol1.gp"
-unzip(exampleArchive, featFile)
-f <- read.feat(featFile)
-plot.gene(f)
-plot.gene(f, xlim=c(0, 10000))  #zoom in
-
-
-rm(list = ls())
-gc()

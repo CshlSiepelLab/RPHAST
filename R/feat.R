@@ -1,5 +1,3 @@
-#' @nord
-#' @export
 .makeObj.feat <- function(isPointer) {
   feat <- list()
   if (isPointer) {
@@ -56,6 +54,7 @@ copy.feat <- function(x) {
 ##' @keywords BED
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @example inst/examples/read-feat.R
 ##' @export
 read.feat <- function(filename, pointer.only=FALSE) {
   feat <- .makeObj.feat(TRUE)
@@ -105,6 +104,7 @@ read.feat <- function(filename, pointer.only=FALSE) {
 ##' \code{\link{msa}} for more details on the pointer.only option.
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @example inst/examples/feat.R
 ##' @export
 feat <- function(seqname="default", src=".", feature=".",
                  start, end, score=NULL,
@@ -171,6 +171,7 @@ feat <- function(seqname="default", src=".", feature=".",
 ##' @seealso \code{\link{feat}} for more details on features storage
 ##' options.
 ##' @author Melissa J. Hubisz
+##' @example inst/examples/as-pointer-feat.R
 ##' @export
 as.pointer.feat <- function(x) {
   if (!is.null(x$externalPtr))
@@ -188,9 +189,10 @@ as.pointer.feat <- function(x) {
 ##' @param ... further arguments to be passed to or from other methods
 ##' @keywords features
 ##' @seealso \code{\link{write.feat}}
-##' @export
 ##' @author Melissa J. Hubisz and Adam Siepel
-##' @S3method print feat
+##' @method print feat
+##' @export
+##' @export print.feat
 print.feat <- function(x, ...) {
   cat(paste("Features object\n"))
   write.feat(x, NULL)
@@ -203,6 +205,7 @@ print.feat <- function(x, ...) {
 ##' @param file The name of the file to write to (will be overwritten)
 ##' @keywords features GFF
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @example inst/examples/write-feat.R
 ##' @export
 write.feat <- function(x, file) {
   check.arg(file, "file", "character", null.OK=TRUE)
@@ -217,8 +220,10 @@ write.feat <- function(x, file) {
 ##' @param x An object of type \code{feat}
 ##' @return An integer containing the number of rows in each features object
 ##' @export
-##' @S3method nrow feat
+##' @export nrow.feat
+##' @method nrow feat
 ##' @keywords features
+##' @example inst/examples/nrow-feat.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 nrow.feat <- function(x) {
   if (is.data.frame(x)) {
@@ -241,8 +246,10 @@ nrow.feat <- function(x) {
 ##' @note If the features object is stored as a pointer in C, the number
 ##' of columns is always 9.
 ##' @export
-##' @S3method ncol feat
+##' @export ncol.feat
+##' @method ncol feat
 ##' @keywords features
+##' @example inst/examples/ncol-feat.R
 ##' @author Melissa J. Hubisz
 ncol.feat <- function(x) {
   if (is.data.frame(x)) {
@@ -258,8 +265,10 @@ ncol.feat <- function(x) {
 ##' @param object an object of type \code{feat}
 ##' @param ... further arguments to be passed to or from other methods
 ##' @export
-##' @S3method summary feat
+##' @export summary.feat
+##' @method summary feat
 ##' @keywords features
+##' @example inst/examples/summary-feat.R
 ##' @author Melissa J. Hubisz
 summary.feat <- function(object, ...) {
   if (is.null(object$externalPtr)) {
@@ -285,7 +294,9 @@ summary.feat <- function(object, ...) {
 ##' and \code{\link{as.pointer.feat}} for conversion in the other
 ##' direction.
 ##' @export
-##' @S3method as.data.frame feat
+##' @export as.data.frame.feat
+##' @method as.data.frame feat
+##' @example inst/examples/as-data-frame-feat.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 as.data.frame.feat <- function(x, row.names=NULL, optional=FALSE, ...) {
   if (is.data.frame(x)) return(x)
@@ -317,9 +328,11 @@ from.pointer.feat <- function(x) {
 ##' @return An integer vector of length two containing the number of
 ##' rows and number of columns in the features object.
 ##' @export
-##' @S3method dim feat
+##' @export dim.feat
+##' @method dim feat
 ##' @keywords features
 ##' @author Melissa J. Hubisz
+##' @example inst/examples/dim-feat.R
 dim.feat <- function(x) {
   c(nrow.feat(x), ncol.feat(x))
 }
@@ -331,7 +344,8 @@ dim.feat <- function(x) {
 ##' @param na.rm Whether to remove values of NA before calculating range.
 ##' @return A vector of size 2 indicating minimum and maximum coord in
 ##' the features object
-##' @S3method range feat
+##' @method range feat
+##' @export range.feat
 ##' @export
 ##' @keywords features
 ##' @author Melissa J. Hubisz
@@ -377,10 +391,12 @@ range.feat <- function(..., na.rm=FALSE) {
 ## the lables for each element.  If \code{TRUE}, use x$feature for labels.
 ##' @param xlim A numerical vector of length 2 giving the range for the x-axis.
 ##' @param ylim A numerical vector of length 2 giving the range for the y-axis.
-##' @S3method plot feat
 ##' @param ... graphical parameters to be passed to \code{plot}.
+##' @method plot feat
+##' @export plot.feat
 ##' @export
 ##' @keywords features plot
+##' @example inst/examples/plot-feat.R
 ##' @author Melissa J. Hubisz
 plot.feat <- function(x, y=0, height=1, plottype="r",
                       arrow.density=5,
@@ -514,10 +530,12 @@ plot.feat <- function(x, y=0, height=1, plottype="r",
 ## the lables for each element.  If \code{TRUE}, use x$feature for labels.
 ##' @param xlim A numerical vector of length 2 giving the range for the x-axis.
 ##' @param ylim A numerical vector of length 2 giving the range for the y-axis.
-##' @S3method plot feat
 ##' @param ... graphical parameters to be passed to \code{plot}.
+##' @method plot gene
+##' @export plot.gene
 ##' @export
 ##' @keywords features plot
+##' @example inst/examples/plot-gene.R
 ##' @author Melissa J. Hubisz
 plot.gene <- function(x, y=0, height=1,
                       arrow.density=5,
@@ -576,7 +594,10 @@ plot.gene <- function(x, y=0, height=1,
 ##' @param ... additional arguments to be passed to \code{density}
 ##' @return A kernel density object as defined by \code{\link{density}}
 ##' @export
+##' @export density.feat
+##' @method density feat
 ##' @keywords features
+##' @importFrom stats density
 ##' @author Melissa J. Hubisz
 density.feat <- function(x, type="length", ...) {
   if (type == "length") {
@@ -600,7 +621,8 @@ density.feat <- function(x, type="length", ...) {
 ##' @param type a character string, denoting the value to make the histogram with.
 ##' Currently the only valid types are "length" or "score"
 ##' @param ... additional arguments to be passed to \code{hist}
-##' @S3method hist feat
+##' @method hist feat
+##' @export hist.feat
 ##' @export
 ##' @keywords features
 ##' @author Melissa J. Hubisz
@@ -653,6 +675,7 @@ hist.feat <- function(x, type="length", ...) {
 ##' otherwise unchanged.
 ##' @export
 ##' @keywords features
+##' @example inst/examples/overlap-feat.R
 ##' @author Melissa J. Hubisz
 overlap.feat <- function(x, filter, numbase=1, min.percent=NULL,
                          overlapping=TRUE, get.fragments=FALSE, pointer.only=FALSE) {
@@ -744,6 +767,7 @@ inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
 ##' pointer to an object stored in C may be reordered (sorted) by this function.
 ##' @export
 ##' @keywords features
+##' @example inst/examples/coverage-feat.R
 ##' @author Melissa J. Hubisz
 coverage.feat <- function(..., or=FALSE, not=NULL, get.feats=FALSE,
                           pointer.only=FALSE) {
@@ -786,6 +810,7 @@ coverage.feat <- function(..., or=FALSE, not=NULL, get.feats=FALSE,
 ##' to x.
 ##' @export
 ##' @keywords features
+##' @example inst/examples/add-UTRs-feat.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 add.UTRs.feat <- function(x) {
   if (is.null(x$externalPtr)) {
@@ -807,6 +832,7 @@ add.UTRs.feat <- function(x) {
 ##' added to x.
 ##' @export
 ##' @keywords features
+##' @example inst/examples/add-introns-feat.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 add.introns.feat <- function(x) {
   if (is.null(x$externalPtr)) {
@@ -831,6 +857,7 @@ add.introns.feat <- function(x) {
 ##' or stop codon.}}
 ##' @export
 ##' @keywords features
+##' @example inst/examples/add-signals-feat.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 add.signals.feat <- function(x) {
   if (is.null(x$externalPtr)) {
@@ -858,6 +885,7 @@ add.signals.feat <- function(x) {
 ##' }
 ##' @export
 ##' @keywords features
+##' @example inst/examples/fix-start-stop-feat.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 fix.start.stop.feat <- function(x) {
   if (is.null(x$externalPtr)) {
@@ -916,6 +944,8 @@ rbind.feat <- function(...) {
 ##' with all features of length > max.length broken into segments
 ##' (starting from the first position in feature).  The last piece
 ##' of each split segment may be smaller than max.length
+##' @method split feat
+##' @export split.feat
 ##' @export
 ##' @keywords features
 ##' @author Melissa J. Hubisz
@@ -948,8 +978,9 @@ split.feat <- function(x, f, drop=FALSE, start.from="left",
 ##' @param ... Currently not used
 ##' @return An object of type \code{feat} sorted primarily by
 ##' seqname, then by start position, then by end position.
+##' @method sort feat
+##' @export sort.feat
 ##' @export
-##' @S3method sort feat
 ##' @note If x is stored as a pointer to an object in C, the object will
 ##' be modified to the return value.
 ##' @keywords features
@@ -1050,7 +1081,8 @@ enrichment.feat <- function(x, annotations, region.bounds) {
 ##' out first.}
 ##' \item{If x is a pointer to an object in C, it will be modified (to
 ##' the return value).}}
-##' @S3method unique feat
+##' @method unique feat
+##' @export unique.feat
 ##' @export
 ##' @keywords features
 ##' @note VERY IMPORTANT: this function is not currently implemented to look
@@ -1091,6 +1123,7 @@ unique.feat <- function(x, incomparables=FALSE, ...) {
 ##' NA for no value).
 ##' @export
 ##' @keywords features GFF
+##' @example inst/examples/tagval-feat.R
 ##' @author Melissa J. Hubisz
 tagval.feat <- function(x, tag) {
   check.arg(tag, "tag", "character", null.OK=FALSE)
@@ -1123,6 +1156,7 @@ tagval.feat <- function(x, tag) {
 ##' NA for no value).
 ##' @export
 ##' @keywords GFF
+##' @example inst/examples/tagval.R
 ##' @author Melissa J. Hubisz
 tagval <- function(x, tag) {
   check.arg(x, "x", "character", null.OK=FALSE, min.length=1L, max.length=NULL)

@@ -1,6 +1,4 @@
 # make barebones msa obj
-##' @nord
-##' @export
 .makeObj.msa <- function() {
   x <- list()
   class(x) <- "msa"
@@ -85,6 +83,7 @@ is.msa <- function(msa) {
 ##' @useDynLib rphast
 ##' @keywords msa
 ##' @export msa
+##' @example inst/examples/msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
                 offset=NULL, pointer.only=FALSE) {
@@ -143,8 +142,10 @@ msa <- function(seqs, names = NULL, alphabet="ACGT", is.ordered=TRUE,
 ##' @keywords msa
 ##' @seealso \code{\link{msa}}
 ##' @export
+##' @export ncol.msa
 ##' @author Melissa J. Hubisz and Adam Siepel
-##' @S3method ncol msa
+##' @example inst/examples/ncol-msa.R
+##' @method ncol msa
 ncol.msa <- function(x, refseq=NULL) {
   if (is.null(x$externalPtr) && is.null(refseq)) {
     return(nchar(x$seqs[1]))
@@ -187,7 +188,8 @@ coord.range.msa <- function(x, refseq=names.msa(x)[1]) {
 ##' @param x An object of type \code{msa}
 ##' @return An integer vector of length two giving number of species and
 ##' number of columns in the alignment
-##' @S3method dim msa
+##' @method dim msa
+##' @export dim.msa
 ##' @export
 ##' @keywords msa
 ##' @author Melissa J. Hubisz and Adam Siepel
@@ -219,8 +221,10 @@ ninf.msa <- function(x) {
 ##' @keywords msa
 ##' @seealso \code{\link{msa}}
 ##' @export
+##' @export nrow.msa
 ##' @author Melissa J. Hubisz and Adam Siepel
-##' @S3method nrow msa
+##' @example inst/examples/nrow-msa.R
+##' @method nrow msa
 nrow.msa <- function(x) {
   if (is.null(x$externalPtr)) {
     return(length(x$seqs))
@@ -242,6 +246,7 @@ nrow.msa <- function(x) {
 ##' input parameter is a valid format string.
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/is-format-msa.R
 ##' @author Melissa J. Hubisz
 is.format.msa <- function(format) {
   if (is.null(format)) return(NULL)
@@ -259,6 +264,7 @@ is.format.msa <- function(format) {
 ##' from the beginning of a chromosome.
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/offset-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 offset.msa <- function(x) {
   if (!is.null(x$externalPtr)) {
@@ -274,6 +280,7 @@ offset.msa <- function(x) {
 ##' @return the valid non-missing-data characters for an MSA object.
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/alphabet-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 alphabet.msa <- function(x) {
   if (!is.null(x$externalPtr)) {
@@ -288,8 +295,10 @@ alphabet.msa <- function(x) {
 ##' @return a boolean indicating whether the columns are in order
 ##' @keywords msa
 ##' @export
+##' @export is.ordered.msa
 ##' @author Melissa J. Hubisz and Adam Siepel
-##' @S3method is.ordered msa
+##' @example inst/examples/is-ordered-msa.R
+##' @method is.ordered msa
 is.ordered.msa <- function(x) {
   if (!is.null(x$externalPtr)) {
     return(.Call.rphast("rph_msa_isOrdered", msaP=x$externalPtr))
@@ -306,7 +315,9 @@ is.ordered.msa <- function(x) {
 ##' NULL if they are not defined
 ##' @keywords msa
 ##' @export
-##' @S3method names msa
+##' @export names.msa
+##' @method names msa
+##' @example inst/examples/names-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 names.msa <- function(x) {
   if (!is.null(x$externalPtr)) {
@@ -324,6 +335,7 @@ names.msa <- function(x) {
 ##' @seealso \code{\link{msa}} for details on MSA storage options.
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/from-pointer-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 from.pointer.msa <- function(src) {
   if (is.null(src$externalPtr)) return(src)
@@ -345,6 +357,7 @@ from.pointer.msa <- function(src) {
 ##' @seealso \code{\link{msa}} for details on MSA storage options.
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/as-pointer-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 as.pointer.msa <- function(src) {
   if (!is.null(src$externalPtr)) return(src)
@@ -369,6 +382,7 @@ as.pointer.msa <- function(src) {
 ##' @seealso is.format.msa
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/guess-format-msa.R
 ##' @author Melissa J. Hubisz
 guess.format.msa  <- function(filename, method="content") {
   if (is.null(filename)) return(NULL)
@@ -440,7 +454,9 @@ write.msa <- function(x, file=NULL,
 ##' @keywords msa
 ##' @seealso \code{\link{print.msa}}
 ##' @export
-##' @S3method summary msa
+##' @export summary.msa
+##' @method summary msa
+##' @example inst/examples/summary-msa.R
 ##' @author Melissa J. Hubisz
 summary.msa <- function(object, ...,
                         print.seq=ifelse(ncol.msa(object)*nrow.msa(object) < 500, TRUE, FALSE),
@@ -511,7 +527,9 @@ summary.msa <- function(object, ...,
 ##' @param pretty.print whether to pretty.print pretty-print sequence if printing alignment
 ##' @keywords msa
 ##' @export
-##' @S3method print msa
+##' @export print.msa
+##' @method print msa
+##' @example inst/examples/print-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TRUE, FALSE),
                       format=NULL, pretty.print=FALSE) {
@@ -578,6 +596,7 @@ print.msa <- function(x, ..., print.seq=ifelse(ncol.msa(x)*nrow.msa(x) < 500, TR
 ##' @keywords msa FASTA MAF PHYLIP SS
 ##' @seealso \code{\link{msa}}, \code{\link{read.feat}}
 ##' @export
+##' @example inst/examples/read-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 read.msa <- function(filename,
                      format=c(guess.format.msa(filename), "FASTA")[1],
@@ -718,6 +737,7 @@ reverse.complement.msa <- function(x) {
 ##' it may be ordered after this call.  Otherwise it will not be changed.
 ##' @export
 ##' @keywords msa
+##' @example inst/examples/sub-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 sub.msa <- function(x, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
                     refseq=NULL, pointer.only=FALSE) {
@@ -766,6 +786,7 @@ sub.msa <- function(x, seqs=NULL, keep=TRUE, start.col=NULL, end.col=NULL,
 ##' otherwise the return value will be stored in R.
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/strip-gaps-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 strip.gaps.msa <- function(x, strip.mode=1) {
   names <- NULL
@@ -830,11 +851,14 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' coordinates, and \code{\link{extract.feature.msa}} which can subset based
 ##' on genomic coordinates denoted in a features object.
 ##' @usage \method{[}{msa}(x, rows, cols, pointer.only)
-##' @S3method "[" msa
+##' @method "[" msa
 ##' @note This function will not alter the value of x even if it is stored as
 ##' a pointer to a C structure.
 ##' @keywords msa
 ##' @export "[.msa"
+##' @export
+##' @rdname square-bracket-msa
+##' @example inst/examples/square-bracket-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 "[.msa" <- function(x, rows, cols, pointer.only=FALSE) {
   if (!missing(rows)) {
@@ -909,6 +933,8 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' return value.
 ##' @usage \method{[}{msa}(x, rows, cols) <- value
 ##' @export "[<-.msa"
+##' @rdname square-bracket-assign-msa
+##' @example inst/examples/square-bracket-assign-msa.R
 ##' @author Melissa J. Hubisz
 "[<-.msa" <- function(x, rows, cols, value) {
   if (!is.msa(x))
@@ -956,9 +982,9 @@ strip.gaps.msa <- function(x, strip.mode=1) {
   if (numrow*numcol %% length(value) != 0)
     stop("number of items to replace is not a multiple of replacement length")
 
-  if (sum(cols < 1 | cols > ncol.msa(align)) != 0)
+  if (sum(cols < 1 | cols > ncol.msa(x)) != 0)
     stop("cols out of range")
-  if (sum(rows < 1 | rows > nrow(align)) != 0)
+  if (sum(rows < 1 | rows > nrow(x)) != 0)
     stop("rows out of range")
 
   # don't do the recycling here; save memory and recycle in C code
@@ -978,6 +1004,7 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' @return An array giving the posterior probabilities of all states at
 ##' every ancestral node.
 ##' @export
+##' @example inst/examples/postprob-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 postprob.msa <- function(x, tm) {
   if (!is.msa(x))
@@ -997,6 +1024,7 @@ postprob.msa <- function(x, tm) {
 ##' branch at each unique site pattern, summed across all types of
 ##' substitutions.
 ##' @export
+##' @example inst/examples/expected-subs-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 expected.subs.msa <- function(x, tm) {
   if (!is.msa(x))
@@ -1014,6 +1042,7 @@ expected.subs.msa <- function(x, tm) {
 ##' @return An array giving the expected number of substitutions on each
 ##' branch, for each type of substitution.
 ##' @export
+##' @example inst/examples/total-expected-subs-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 total.expected.subs.msa <- function(x, tm) {
   if (!is.msa(x))
@@ -1031,6 +1060,7 @@ total.expected.subs.msa <- function(x, tm) {
 ##' @return An array giving the expected number of substitutions on each
 ##' branch, for each distinct alignment column, for each type of substitution.
 ##' @export
+##' @example inst/examples/col-expected-subs-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 col.expected.subs.msa <- function(x, tm) {
   if (!is.msa(x))
@@ -1062,6 +1092,7 @@ col.expected.subs.msa <- function(x, tm) {
 ##' @seealso \code{phyloFit}, \code{tm}
 ##' @keywords msa tm features
 ##' @export
+##' @example inst/examples/likelihood-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
   if (is.null(features))
@@ -1117,9 +1148,11 @@ likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
 ##' @return An object of type MSA containing the simulated alignment.
 ##' @keywords msa hmm
 ##' @export
+##' @export simulate.msa
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @importFrom stats simulate
-##' @S3method simulate msa
+##' @method simulate msa
+##' @example inst/examples/simulate-msa.R
 simulate.msa <- function(object, nsim, seed=NULL, hmm=NULL, get.features=FALSE,
                          pointer.only=FALSE, ...) {
   nsites <- nsim
@@ -1175,9 +1208,11 @@ simulate.msa <- function(object, nsim, seed=NULL, hmm=NULL, get.features=FALSE,
 ##' @note This function is implemented using R's sample function in
 ##' conjunction with "[.msa".  It will not alter the value of x even if it
 ##' is stored as a pointer.
-##' @S3method sample msa
+##' @method sample msa
 ##' @keywords msa
+##' @export sample.msa
 ##' @export
+##' @example inst/examples/sample-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 sample.msa <- function(x, size, replace=FALSE, prob=NULL, pointer.only=FALSE) {
   check.arg(size, "size", "integer", null.OK=FALSE)
@@ -1205,6 +1240,7 @@ sample.msa <- function(x, size, replace=FALSE, prob=NULL, pointer.only=FALSE) {
 ##' \item{For very large MSA objects it is more efficient to use the do.4d option
 ##' in the read.msa function instead.}}
 ##' @export
+##' @example inst/examples/get4d-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 get4d.msa <- function(x, features) {
   if (is.null(x$externalPtr))
@@ -1329,7 +1365,10 @@ concat.msa <- function(msas, ordered=FALSE, pointer.only=FALSE) {
 ##' @note Neither x nor f will be altered by this function if they are stored
 ##' as pointers.
 ##' @keywords msa features
+##' @method split by.feature.msa
+##' @export split.by.feature.msa
 ##' @export
+##' @example inst/examples/split-by-feature-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 split.by.feature.msa <- function(x, f, drop=FALSE, pointer.only=FALSE, ...) {
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
@@ -1377,6 +1416,7 @@ split.by.feature.msa <- function(x, f, drop=FALSE, pointer.only=FALSE, ...) {
 ##' a pointer.}}
 ##' @keywords msa
 ##' @export
+##' @example inst/examples/informative-regions-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 informative.regions.msa <- function(x, min.numspec, spec=NULL,
                                     refseq=names.msa(x)[1], gaps.inf=FALSE) {
@@ -1684,7 +1724,10 @@ translate.msa <- function(m, one.frame=TRUE, frame=0) {
 ##' @param nuc.text.col If nuc.text is not NULL, color to be used for printing nuc.text.  Will
 ##' be recycled to the length of nuc.text.
 ##' @param ... Additional arguments to be passed to plot()
+##' @method plot msa
+##' @export plot.msa
 ##' @export
+##' @example inst/examples/plot-msa.R
 ##' @author Melissa J. Hubisz
 plot.msa <- function(x, refseq=names.msa(x)[1],
                      xlim=NULL, ylim=c(0,1),

@@ -1,5 +1,3 @@
-##' @nord
-##' @export
 .makeObj.tm <- function() {
   tm <- list()
   class(tm) <- "tm"
@@ -18,8 +16,6 @@ is.tm <- function(x) {
 }
 
 
-##' @export
-##' @nord
 .rootLeaf.from.pointer.tm <- function(x, tree) {
   if (is.null(x$externalPtr))
     stop(".rootLeaf.from.pointer.tm expects list with externalPtr")
@@ -34,8 +30,6 @@ is.tm <- function(x) {
 # Treemodels stored as external pointers are NOT protected.
 # from.pointer and as.pointer do not call freeall.rphast
 
-##' @nord
-##' @export
 from.pointer.one.altmodel.tm <- function(x, i) {
   rv <- list()
   rv[["defn"]] <- .Call.rphast("rph_tm_altmodel_def", x$externalPtr, i)
@@ -53,8 +47,6 @@ from.pointer.one.altmodel.tm <- function(x, i) {
   rv
 }
 
-##' @nord
-##' @export
 from.pointer.altmodel.tm <- function(x) {
   numModel <- .Call.rphast("rph_tm_num_altmodel", x$externalPtr)
   if (numModel == 0L) return(NULL)
@@ -67,8 +59,6 @@ from.pointer.altmodel.tm <- function(x) {
 }
 
 
-##' @nord
-##' @export
 from.pointer.tm <- function(x) {
   if (is.null(x$externalPtr))
     stop("from.pointer.tm expects list with externalPtr")
@@ -94,8 +84,6 @@ from.pointer.tm <- function(x) {
 }
 
 
-##' @nord
-##' @export
 as.pointer.tm <- function(x) {
   rv <- list()
   rv$externalPtr <- .Call.rphast("rph_tm_new",
@@ -137,8 +125,6 @@ as.pointer.tm <- function(x) {
 
 
 # should we check to make sure it has all the necessary elements and no extra ones?
-##' @nord
-##' @export
 as.tm.list <- function(l) {
   class(l) <- "tm"
   l
@@ -151,6 +137,7 @@ as.tm.list <- function(l) {
 ##' @seealso \code{\link{tm}}
 ##' @keywords tm
 ##' @export
+##' @example inst/examples/read-tm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 read.tm <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
@@ -170,6 +157,7 @@ read.tm <- function(filename) {
 ##' @seealso \code{\link{tm}}
 ##' @keywords tm
 ##' @export
+##' @example inst/examples/write-tm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 write.tm <- function(tm, filename=NULL, append=FALSE) {
   check.arg(filename, "filename", "character", null.OK=TRUE)
@@ -185,8 +173,10 @@ write.tm <- function(tm, filename=NULL, append=FALSE) {
 ##' @param ... Parameters to be passed to/from other functions
 ##' @seealso \code{\link{tm}}
 ##' @export
+##' @export summary.tm
 ##' @keywords tm
-##' @S3method summary tm
+##' @method summary tm
+##' @example inst/examples/summary-tm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 summary.tm <- function(object, ...) {
   write.tm(object, NULL)
@@ -199,7 +189,9 @@ summary.tm <- function(object, ...) {
 ##' @param ... arguments to be passed to/from other functions
 ##' @seealso \code{\link{tm}}
 ##' @export
-##' @S3method as.list tm
+##' @export as.list.tm
+##' @method as.list tm
+##' @example inst/examples/as-list-tm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 as.list.tm <- function(x, ...) {
   class(x) <- "list"
@@ -214,8 +206,10 @@ as.list.tm <- function(x, ...) {
 ##' @param ... arguments to be passed to/from other functions
 ##' @seealso \code{\link{tm}}
 ##' @export
+##' @export print.tm
 ##' @keywords tm
-##' @S3method print tm
+##' @method print tm
+##' @example inst/examples/print-tm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 print.tm <- function(x, aslist=FALSE, ...) {
   if (aslist) print(as.list(x), ...)
@@ -230,6 +224,7 @@ print.tm <- function(x, aslist=FALSE, ...) {
 ##' @return A vector of logical values indicating whether each string
 ##' represents a defined substitution model
 ##' @export
+##' @example inst/examples/is-subst-mod-tm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 is.subst.mod.tm <- function(mod) {
   result <- logical(length(mod))
@@ -243,6 +238,7 @@ is.subst.mod.tm <- function(mod) {
 ##' @return a character vector with the names of all valid substitution
 ##' models
 ##' @export
+##' @example inst/examples/subst-mods.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 subst.mods <- function() {
   .Call.rphast("rph_subst_mods_list_all", NULL)
@@ -289,6 +285,7 @@ subst.mods <- function() {
 ##' @keywords tm
 ##' @return An object of class \code{tm} representing a phylogenetic model.
 ##' @export
+##' @example inst/examples/tm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
                alphabet="ACGT", nratecats=1, 
@@ -371,6 +368,7 @@ tm <- function(tree, subst.mod, rate.matrix=NULL, backgd=NULL,
 ##' @note Currently only works with models of order 0, without lineage-
 ##' specific models, and which use the default alphabet "ACGT".
 ##' @export
+##' @example inst/examples/mod-backgd-tm.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 mod.backgd.tm <- function(tm, new.backgd=NULL, gc=NULL) {
   if (is.null(new.backgd)) {
@@ -705,6 +703,8 @@ get.rate.matrix.params.tm <- function(x) {
 ##' a new plot.
 ##' @param ... Further arguments to be passed to \code{plot}.
 ##' @author Melissa J. Hubisz
+##' @method plot rate.matrix
+##' @export plot.rate.matrix
 ##' @export
 plot.rate.matrix <- function(x, eq.freq=NULL, max.cex=10.0,
                              eq.freq.max.cex=5.0,
@@ -805,6 +805,9 @@ plot.rate.matrix <- function(x, eq.freq=NULL, max.cex=10.0,
 ##' a new plot.
 ##' @param ... Further arguments to be passed to \code{plot}.
 ##' @author Melissa J. Hubisz
+##' @example inst/examples/plot-tm.R
+##' @method plot tm
+##' @export plot.tm
 ##' @export
 plot.tm <- function(x, show.eq.freq=TRUE, max.cex=10.0,
                     eq.freq.max.cex=5.0,
@@ -851,6 +854,9 @@ plot.tm <- function(x, show.eq.freq=TRUE, max.cex=10.0,
 ##' a new plot.
 ##' @param ... Further arguments to be passed to \code{plot}.
 ##' @author Melissa J. Hubisz
+##' @example inst/examples/plot-altmodel-tm.R
+##' @method plot altmodel.tm
+##' @export plot.altmodel.tm
 ##' @export
 plot.altmodel.tm <- function(x, i=1, show.eq.freq=TRUE, max.cex=10.0,
                              eq.freq.max.cex=5.0,

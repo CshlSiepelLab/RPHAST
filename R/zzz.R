@@ -1,5 +1,3 @@
-##' @export
-##' @nord
 .onAttach <- function(libname, pkgname) {
   if(Sys.info()[[1]] == "Windows") { 
     regDir <- paste(shell("echo %appdata%", intern=TRUE), "\\rphast\\", sep="")
@@ -41,6 +39,7 @@
 ##' will not share your email address with anyone.
 ##' @param institution Your Institution (Optinal).  Let us know where
 ##' you are from.
+##' @param comments Anything else you'd like to tell us!
 ##' @seealso \code{\link{nothanks.rphast}} to get rid of registration reminders
 ##' without actually registering.
 ##' @export

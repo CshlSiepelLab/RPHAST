@@ -18,6 +18,8 @@ is.track <- function(x, ...) {
 ##' coordinates in any wig or feature track in the list.  MSA tracks are
 ##' *only* used if there are no wig or feature tracks.
 ##' @keywords plot
+##' @method range track
+##' @export range.track
 ##' @export
 ##' @author Melissa J. Hubisz
 range.track <- function(..., na.rm=FALSE) {
@@ -94,6 +96,8 @@ smooth.wig <- function(coord, score, numpoints=300) {
 ##' @param ... Other options to be passed to \code{plot}.  See \link{par}.
 ##' @seealso \code{plotPhast}, which may be easier to use but less flexible
 ##' @keywords plot
+##' @method plot track
+##' @export plot.track
 ##' @export
 ##' @author Melissa J. Hubisz
 plot.track <- function(x,
@@ -335,6 +339,7 @@ as.track.msa <- function(x, name, refseq=names.msa(x)[1],
 ##' function
 ##' @keywords plot
 ##' @export
+##' @example inst/examples/as-track-feat.R
 ##' @author Melissa J. Hubisz
 as.track.feat <- function(x, name, short.label=NULL, col="black",
                           is.gene=FALSE, arrow.density=10) {

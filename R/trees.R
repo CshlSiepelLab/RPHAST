@@ -7,6 +7,7 @@
 ##' @return The same value, but with a semi-colon added to the end
 ##' of any strings which did not already end in semi-colons.
 ##' @export
+##' @example inst/examples/fix-semicolon-tree.R
 ##' @author Melissa J. Hubisz
 fix.semicolon.tree <- function(x) {
   n <- nchar(x)
@@ -28,6 +29,7 @@ fix.semicolon.tree <- function(x) {
 ##' @keywords trees newick
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
+##' @example inst/examples/read-newick-tree.R
 read.newick.tree <- function(filename) {
   check.arg(filename, "filename", "character", null.OK=FALSE)
   tr <- .Call.rphast("rph_tree_read", filename)
@@ -42,6 +44,7 @@ read.newick.tree <- function(filename) {
 ##' @keywords trees
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
+##' @example inst/examples/numnodes-tree.R
 numnodes.tree <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE, min.length=1,
             max.length=NULL)
@@ -116,6 +119,7 @@ depth.tree <- function(tree, node) {
 ##' @return a vector of character strings representing the pruned trees.
 ##' @keywords trees
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @example inst/examples/prune-tree.R
 ##' @export
 prune.tree <- function(tree, seqs, all.but=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -138,6 +142,7 @@ prune.tree <- function(tree, seqs, all.but=FALSE) {
 ##' ancestors named.
 ##' @keywords trees
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @example inst/examples/name-ancestors.R
 ##' @export
 name.ancestors <- function(tree) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -162,6 +167,7 @@ name.ancestors <- function(tree) {
 ##' which are not descendants of the given node.
 ##' @keywords trees
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @example inst/examples/subtree.R
 ##' @export
 subtree <- function(tree, node, super.tree=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -197,6 +203,7 @@ subtree <- function(tree, node, super.tree=FALSE) {
 ##' @return A vector of trees whose branches have been scaled
 ##' @keywords trees
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @example inst/examples/rescale-tree.R
 ##' @export
 rescale.tree <- function(tree, scale, subtree=NULL, include.leading=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -242,6 +249,7 @@ rescale.tree <- function(tree, scale, subtree=NULL, include.leading=FALSE) {
 ##' given in old.names are replaced with values from new.names
 ##' @keywords trees
 ##' @author Melissa J. Hubisz and Adam Siepel
+##' @example inst/examples/rename-tree.R
 ##' @export
 rename.tree <- function(tree, old.names, new.names) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -268,6 +276,7 @@ rename.tree <- function(tree, old.names, new.names) {
 ##' to the node name in the tree string.
 ##' @keywords trees
 ##' @author  Melissa J. Hubisz
+##' @example inst/examples/label-branches.R
 ##' @export
 label.branches <- function(tree, branches, label) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -293,6 +302,7 @@ label.branches <- function(tree, branches, label) {
 ##' to the node name in the tree string.
 ##' @keywords trees
 ##' @author  Melissa J. Hubisz
+##' @example inst/examples/label-subtree.R
 ##' @export
 label.subtree <- function(tree, node, label, include.leading=FALSE) {
   check.arg(tree, "tree", "character", null.OK=FALSE,
@@ -310,7 +320,10 @@ label.subtree <- function(tree, node, label, include.leading=FALSE) {
 ##' @return A data frame with a row for every node, containing columns:
 ##' branch length (tparent), distance to root (troot), name, label (if tree labels
 ##' present), and parent, rchild, lchild.
+##' @method summary tree
+##' @export summary.tree
 ##' @export
+##' @example inst/examples/summary-tree.R
 ##' @author Melissa J. Hubisz and Adam Siepel
 summary.tree <- function(object, ...) {
   check.arg(object, "object", "character", null.OK=FALSE)
