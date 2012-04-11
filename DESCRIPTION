@@ -14,7 +14,7 @@ Description: RPHAST is an R interface to the PHAST pacakge
     elements based on conservation or custom phylogenetic hidden Markov
     models.  It can also perform many basic operations on multiple
     sequence alignments and phylogenetic trees.
-Version: 1.3.9
+Version: 1.3.12
 URL: http://compgen.bscb.cornell.edu/rphast
 Date: 2011-02-08
 Depends:

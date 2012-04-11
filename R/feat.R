@@ -32,8 +32,8 @@ copy.feat <- function(x) {
 ##' The function will guess the format of the input file automatically.
 ##'
 ##' @title Read a Feature File (GFF, BED, or GenePred)
-##' @param filename the name of the file (can be GFF, BED, or GenePred: rphast
-##' will auto-detect)
+##' @param filename the name of the file (can be GFF, BED, GenePred, or wig:
+##' rphast will auto-detect)
 ##' @param pointer.only Whether to store object by reference instead of a
 ##' data.frame
 ##' @return If \code{pointer.only==FALSE}, a data.frame with columns corresponding
@@ -1182,3 +1182,81 @@ flatten.feat <- function(x) {
   if (!isPointer) return(from.pointer.feat(x))
   x
 }
+
+
+##' Read a wig file
+##'
+##' Reads fixed or variable step wig files.  Stores them as a
+##' features object.
+##' @param file The file to read
+##' @param pointer.only If \code{TRUE}, store as a pointer to a
+##' C structure
+##' @return A GFF object representing data in wig file
+##' @export
+read.wig <- function(file, pointer.only=FALSE) {
+  read.feat(file, pointer.only=pointer.only)
+}
+
+
+##' Write a fixedStep wig file
+##' @title Writing a wig file
+##' @param chrom A character vector giving chromosome name for each point.
+##' Will be recycled to length(start)
+##' @param start An integer vector giving start coordinate for each point.
+##' @param score A numeric vector giving score at each point
+##' Will be recycled to length(start)
+##' @param span An integer giving span (ie, length) of each element (all
+##' elements must have the same length, so only a single value is allowed).
+##' @param file The name of the file to write to (will be overwritten).
+##' A value of NULL implies write to console.
+##' @param append Whether to append to the file.  If FALSE, file will be
+##' overwritten.
+##' @keywords wig fixedStep
+##' @author Melissa J. Hubisz
+##' @export
+##' @example inst/examples/write-wig.R
+write.wig <- function(chrom, start, score, span=1, file=NULL, append=FALSE) {
+  chrom <- check.arg(chrom, "chrom", "character", null.OK=FALSE, max.length=NULL)
+  start <- check.arg(start, "start", "integer", null.OK=FALSE, max.length=NULL)
+  score <- check.arg(score, "score", "numeric", null.OK=FALSE, max.length=NULL)
+  span <- check.arg(span, "span", "integer", null.OK=FALSE)
+  file <- check.arg(file, "file", "character", null.OK=TRUE)
+  append <- check.arg(append, "append", "logical", null.OK=FALSE)
+  if (span <= 0) stop("span should be integer >= 1")
+
+  if (length(chrom) > length(start))
+    stop("length(chrom) > length(start)")
+  if (length(score) > length(start))
+    stop("length(score) > length(start)")
+  
+  invisible(.Call.rphast("rph_wig_print",
+                         feat(seqname=chrom, start=start, end=start+span-1,
+                              score=score, pointer.only=TRUE)$externalPtr,
+                         file,
+                         append))
+}
+
+
+##' Write a features object in fixedStep wig format
+##' @param x An object of type feat
+##' @param file The name of the file to write to.  A value of NULL
+##' implies write to console.
+##' @param append If TRUE, append to the file.  Otherwise overwrite.
+##' @keywords wig fixedStep GFF features
+##' @author Melissa J. Hubisz
+##' @note Wig format only contains chromosome, coordinates, and score.  Any
+##' other data will be lost.
+##' @note This function will quit with an error if the elements of x are
+##' not all the same length (as required by fixedStep wig format).
+##' @note If x is stored as a pointer to a C structure, the elements
+##' will be sorted by this function.
+##' @example inst/examples/write-wig-feat.R
+##' @export
+write.wig.feat <- function(x, file=NULL, append=FALSE) {
+  append <- check.arg(append, "append", "logical", null.OK=FALSE)
+  file <- check.arg(file, "file", "character", null.OK=TRUE)
+  if (is.null(x$externalPtr))
+    x <- as.pointer.feat(x)
+  invisible(.Call.rphast("rph_wig_print", x$externalPtr, file, append))
+}
+           
