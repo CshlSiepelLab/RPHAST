@@ -1001,19 +1001,25 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' Obtain posterior probilities of every state at every node
 ##' @param x An object of type \code{msa}
 ##' @param tm An object of type \code{tm}
-##' @return An array giving the posterior probabilities of all states at
-##' every ancestral node.
+##' @param every.site If \code{TRUE}, return probabilities for every site
+##' rather than every site pattern (this may be very redundant and large
+##' for a large alignment with few species).
+##' @return An array giving the posterior probabilities of all states for
+##' every unique site pattern, or for every site if every.site is
+##' \code{TRUE}
 ##' @export
 ##' @example inst/examples/postprob-msa.R
 ##' @author Melissa J. Hubisz and Adam Siepel
-postprob.msa <- function(x, tm) {
+postprob.msa <- function(x, tm, every.site=FALSE) {
   if (!is.msa(x))
     stop("x is not an MSA object")
   if (is.null(x$externalPtr)) 
     x <- as.pointer.msa(x)
   tm <- as.pointer.tm(tm)
+  every.site <- check.arg(every.site, "every.site", "logical", null.OK=FALSE)
   rphast.simplify.list(.Call.rphast("rph_msa_postprob",
-                                    x$externalPtr, tm$externalPtr))
+                                    x$externalPtr, tm$externalPtr,
+                                    every.site))
 }
 
 
