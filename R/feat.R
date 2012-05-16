@@ -139,6 +139,10 @@ feat <- function(seqname="default", src=".", feature=".",
              min.length=len, max.length=len)
   check.arg(pointer.only, "pointer.only", "logical", null.OK=FALSE)
 
+# NOTE: I'd like to impose this, but in some genepred files elements have length -1
+#  if (sum(end - start < 0) > 0)
+#    stop("Error: end should be >= start for all features")
+
   if (pointer.only) {
     if (!is.null(score)) score <- as.numeric(score)
     if (!is.null(strand)) strand <- as.character(strand)
@@ -1110,9 +1114,10 @@ unique.feat <- function(x, incomparables=FALSE, ...) {
 
 ##' Extract value from tag-value formatted attribute in features object
 ##' @param x A features object of type \code{feat}.  The attribute field
-##' should be in tag-value format (as described in the GFF standard; ie,
-##' "tag1 val1a val1b; tag2 val2 ; ...",
-##' where vals are in quotes if they are strings. 
+##' should be in tag-value format (either GFF 2 standard; ie,
+##' "tag1 val1a val1b; tag2 val2 ; ...", or, GFF 3 standard; ie,
+##' "tag1=val1a,val1b;tag2=val2; ...".
+##' where vals are in quotes if they are strings.  
 ##' @param tag The tag whose values are to be extracted.
 ##' @return If there is at most one relevant value for each feature,
 ##' a character vector of the same length as x will be returned, containing
@@ -1144,8 +1149,9 @@ tagval.feat <- function(x, tag) {
 
 ##' Extract value from tag-value formatted attributes
 ##' @param x A vector of character strings in tag-val format (as
-##' described in the GFF standard; ie, "tag1 val1a val1b; tag2 val2 ; ...",
-##' where vals are in quotes if they are strings. 
+##' described in the GFF 2 standard; ie, "tag1 val1a val1b; tag2 val2 ; ...",
+##' or in the GFF 3 format "tag1=val1a,val1b; tag2=val2; ..."),
+##' where vals are in quotes if they are strings.
 ##' @param tag The tag whose values are to be extracted.
 ##' @return If there is at most one value per tag for each element of x,
 ##' a character vector of the same length as x will be returned, containing
