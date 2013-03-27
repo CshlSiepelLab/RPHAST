@@ -1,0 +1,372 @@
+%
+% NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+% likely to be overwritten.
+%
+% \VignetteIndexEntry{vignette1}
+% \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
+% \VignettePackage{rphast}
+
+\documentclass[10pt,nogin]{article}
+\usepackage{Sweave}
+\usepackage{url}
+\usepackage{amsmath,epsfig,fullpage,hyperref}
+\usepackage[authoryear,round]{natbib}
+\usepackage{hyperref}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\RPHAST}{\Rpackage{RPHAST}}
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\ws}[0]{W$\rightarrow$S}
+\newcommand{\sw}[0]{S$\rightarrow$W}
+
+\begin{document}
+
+\title{\RPHAST: detecting GC-biased gene conversion}
+\author{M. J. Hubisz, K. S. Pollard, and A. Siepel}
+\SweaveOpts{echo=TRUE,fig=TRUE,eval=TRUE,include=FALSE,engine=R,keep.source=TRUE}
+\maketitle
+
+\section{Introduction}
+This vignette describes some of the basic functions available for detecting 
+GC-biased gene conversion (gBGC) using the \RPHAST package.  gBGC is a process in 
+which GC/AT (strong/weak) heterozygotes are preferentially resolved to the 
+strong allele during gene conversion.  This confers an advantage to G and C alleles
+that mimics positive selection, without conferring any known functional advantage.
+Therefore, some regions of the genome identified to be under positive selection
+may be better explained by gBGC.  gBGC has also been hypothesized to be an 
+important contributor to variation in GC content and to the fixation of 
+deleterious mutations.
+
+For more information on gBGC, we suggest the following review: \citet{DUREGALT09}.
+
+In section \ref{nucmodel}, we will describe how to perform nucleotide tests for gBGC
+and selection.  For background on these tests, please see: \citet{KOSTETAL12}.
+
+In section \ref{bgchmm}, we will describe how to perform tests for gBGC using
+a phylo-HMM.  The background and method behind this model is described here:
+\citet{CAPRETAL13}.
+
+\section{Basic nucleotide model}
+\label{nucmodel}
+Here we show how to set up an evolutionary model with a 4x4 transition matrix that incorporates gBGC.  The idea is to start with a standard model of evolution, such as Jukes Cantor, HKY, or REV, but use an additional gBGC parameter $B$ that affects the rates of strong-to-weak and weak-to-strong mutations on a particular branch of interest.  
+We can also add a selection parameter $S$ to this branch which models positive ($S > 0$) or negative ($S < 0$) selection.
+Given an alignment, we can estimate $B$, $S$, or both together, and assess the evidence of gBGC and/or selection using likelihood ratio tests.
+See \citet{KOSTETAL12} for a full description of these models and tests.  We will take an example from that paper and analyze HAR1.
+
+The first step is to get a neutral model of evolution.  For the HAR analysis we obtained a neutral model based on fourfold-degenerate (4d) sites in ENCODE regions, and then re-scaled the branches for each HAR according to the mutation rate in noncoding regions surrounding the HAR.  There are examples showing how to pull out a region of an alignment and estimate a model based on 4d sites in \RPHAST's vignette 1.  Here we will assume they have already been computed.  The data for HAR1 and its neutral model are stored in our package of example files.  They can be loaded like with the following commands:
+
+<<readHar1>>=
+require("rphast")
+exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+unzip(exampleArchive, c("HAR_001_neutral_SSREV.mod", "HAR_001.fa"))
+neutralMod <- read.tm("HAR_001_neutral_SSREV.mod")
+align <- read.msa("HAR_001.fa")
+@ 
+
+Four different models are described by \citet{KOSTETAL12}:
+\begin{enumerate}
+  \item \textbf{null}: This model has a single free parameter, called the ``selection parameter'' (or sel.global), which scales the entire rate matrix relative to the neutral rates.
+  \item \textbf{selection only}: This model has two free parameters.  sel.global acts as in the null model.  An additional selection parameter, sel.ls (for lineage-specific selection), acts on a branch of interest.  It is additive with sel.global, so that the total selection on the branch of interest is sel.global + sel.ls.
+  \item \textbf{gBGC only}: This model has two free parameters.  sel.global acts as in the null model, affecting all branches.  A parameter called bgc.ls models the effect of gBGC on a branch of interest.  bgc.ls is usually constrained to be $\ge 0$, since there is no biological concept of a negative gBGC effect.
+  \item \textbf{gBGC + selection}: This is the full model, with all three free parameters as described above: sel.global, sel.ls, and bgc.ls.
+\end{enumerate}
+
+A single function will get the maximum likelihood estimates for these parameters in all four models:
+
+<<HAReasy>>=
+nuc.results <- bgc.nucleotide.tests(align, neutralMod, "hg18")
+nuc.results
+@ 
+
+The third argument tells \RPHAST which branch of the tree to test for selection and/or gBGC.  This function returns a data frame with a row for each model, giving the maximum likelihood and the corresponding parameter estimates.  Note that the estimates for sel.ls (lineage-specific selection) and sel.bgc are both 200 in the models where they are not constrained to be zero.  This is because there are so many strong mutations on the human branch of HAR1 that the parameters are being pushed to their upper boundary, which has a default of 200.  We can investigate this:
+<<countMuts>>=
+classify.muts.bgc(align, neutralMod, branch="hg18")
+@ 
+The classify.muts.bgc function counts the expected number of each type of mutation (weak to strong, strong to weak, weak to weak, strong to strong), given the observed nucleotides at the leaf nodes, and a neutral model.  Here, it indicates that there are about 14 weak to strong mutations expected on the human branch, which is quite a lot given the low counts in other category, and that the alignment only has 
+
+<<ncol>>=
+ncol.msa(align)
+@ 
+106 columns in the alignment.
+
+We can adjust the boundaries:
+<<HAReasyBounds>>=
+bgc.nucleotide.tests(align, neutralMod, "hg18", bgc.limits=c(0, 2000), sel.limits=c(-2000,2000))
+@ 
+though it is important to keep in mind that if the boundaries are pushed too high, in some cases the function may quit with an error due to numerical problems computing/exponentiating the rate matrix.
+
+\subsection{Classifying the alignment}
+
+The likelihoods obtained by \Rfunction{bgc.nucleotide.tests} can be compared to each other to obtain likelihood ratios.  The likelihood ratios can be compared to a null distribution to assess the evidence for selection and gBGC on the branch of interest.
+
+In the paper, seven different likelihood ratios were computed:
+<<HAR.lrs>>=
+nullLike <- nuc.results["null", "likelihood"]
+selLike <- nuc.results["sel", "likelihood"]
+bgcLike <- nuc.results["bgc", "likelihood"]
+bgcSelLike <- nuc.results["sel+bgc", "likelihood"]
+
+lrs <- c(selLike - nullLike,
+         bgcLike - nullLike,
+         selLike - bgcLike,
+         bgcLike - selLike,
+         bgcSelLike - bgcLike,
+         bgcSelLike - selLike)
+lrs
+@ 
+
+
+Now that we have all the likelihood ratios, the difficult part is figuring out the significance and choosing the best model.  In \citet{KOSTETAL12}, null distributions were obtained by simulation separately for each HAR, so that each of the seven likelihood ratios could be declared as significant or not.  Given the significance of each of the seven tests, a series of rules was used to assign the HAR to a category.  See the paper for more details.  In the case of HAR1, the best fit is the model with gBGC but no selection.  Therefore, HAR1 is suspected to be a ``false positive'' HAR: the burst of substitutions observed on the human lineage is likely a result of gBGC and not of functional importance.
+
+@ 
+
+\section{gBGC Hidden Markov Model}
+\label{bgchmm}
+In this section we'll show how to set up a Hidden Markov Model (HMM) with four states: conserved, neutral, conserved with gBGC, and neutral with gBGC.  As always, the first step is to obtain an alignment and a model of neutral evolution.  Let's use a 4-species alignment of a 100 kilobase chunk of chromosome 1, and UCSC's neutral model for autosomes which was created for the 44-way alignment displayed on the hg18 browser:
+<<HMMReadData>>=
+unzip(exampleArchive, c("chr1_100k_4way.maf", "placentalMammals.mod"))
+align <- read.msa("chr1_100k_4way.maf")
+mod <- read.tm("placentalMammals.mod")
+mod$tree <- prune.tree(mod$tree, names(align), all.but=TRUE)
+@ 
+
+The function \Rfunction{phastBias} can then be used to set up the HMM and obtain gBGC tract predictions and posterior probabilities for each state.  However, there are many choices to make with regard to which parameters will be estimated.  There are several relevant parameters:
+\begin{itemize}
+  \item{$B$: the level of gBGC on the foreground branch}
+  \item{scale: an overall scaling factor for the tree in all models}
+  \item{$\rho$: a scaling factor for the branches in conserved models}
+  \item{bgc.in: the transition rate into the gBGC state}
+  \item{bgc.out: the transition rate out of the gBGC state}
+  \item{cons.in: the transition rate into the conserved state}
+  \item{cons.out: the transition rate out of the conserved state}
+\end{itemize}
+
+It is important not to try to estimate too many parameters; in the paper the only parameter we optimized was bgc.out.  We tried various values of $B$ and chose $B=3$, which was the lowest value we could use that did not produce many false positives in simulations.  We started with a neutral model and then held scale to 1.0.  We set $\rho=0.31$, as this has been found to be a fairly robust estimate for the level of conservation within conserved elements across several different species sets.
+
+The default \Rfunction{phastBias} arguments are set to the values used \cite{CAPRETAL13}.  However, different topologies or neutral models may perform better with different parameter settings.  The choice for the parameter $B$ is particularly important and may need some tuning.  Higher values of $B$ will give fewer, shorter, higher-confidence gBGC tracts, whereas lower values of $B$ will yield a more inclusive but lower-confidence set of tracts.  If $B$ is too low, the HMM will not be able to distinguish between the gBGC and non-gBGC states, and may predict the entire alignment to be a ``gBGC tract''.  The other parameters seem more forgiving and in most cases should not have to be adjusted.
+
+Let's run \Rfunction{phastBias} on our alignment and examine the results:
+
+<<runBgcHMM>>=
+hmm.results <- phastBias(align, mod, foreground="hg18")
+hmm.results
+@ 
+
+phastBias returns an R list object containing the likelihood, all the final parameter values, posterior probabilities for each state at every site, and predicted gBGC tracts.  The tracts are obtained by thresholding the posterior probability that each site is in one of the gBGC states at 0.5.  In this example, only one tract is predicted:
+
+<<showTract>>=
+hmm.results$tracts
+coverage.feat(hmm.results$tracts)
+@ 
+
+The alignment in this region can be extracted and analyzed:
+<<extractTract>>=
+tractAlign <- split.by.feature.msa(align, hmm.results$tracts)[[1]]
+classify.muts.bgc(tractAlign, mod, "hg18")
+classify.muts.bgc(align, mod, "hg18")
+@ 
+
+So we can see that there is indeed an excess of \ws{} mutations on the human branch within the tract, but not within the entire alignment.
+
+We can also create a plot of the posteriors and the tract:
+<<postPlot,fig=TRUE,prefix=FALSE,width=6.5,height=4.5>>=
+
+tracks <- list(as.track.feat(hmm.results$tracts, name="gBGC tracts"),
+               as.track.wig(score=(hmm.results$post.prob[,"gBGC_neutral"] + 
+                                   hmm.results$post.prob[,"gBGC_conserved"]),
+                            name="gBGC posterior", 
+                            coord=hmm.results$post.prob$coord),
+               as.track.feat(hmm.results$not.informative, name="not informative"))
+plot.track(tracks)
+
+@ 
+
+The plot produced by this code can be seen in Figure \ref{fig:postPlot}.
+
+We can also manually inspect the alignment to see the \ws{} changes on the human branch; however the display only works for alignments of about a 100 bases (more if the display is wider).  So, we cannot see the entire alignment at once, but we can see a part of it:
+<<plotMsa,fig=TRUE,prefix=FALSE,width=6,height=3>>=
+plot.msa(tractAlign, xlim=c(1083115, 1083175), pretty=TRUE)
+@ 
+
+The region plotted here contains four \ws{} mutations on the human lineage in a 60 bp stretch and is shown in figure \ref{fig:plotMsa}.
+
+\subsection{Non-informative columns}
+
+The regions labeled in the \Rfunction{phastBias} results as ``not informative'' for gBGC require some explanation. A column may be uninformative for gBGC if it has missing data in certain leaf nodes of the tree.  In this example, there must be non-missing data in the human, chimp, and at least one outgroup for a substitution to be unambiguously assigned to the human branch.  \Rfunction{phastBias} does not allow evidence for gBGC to accumulate at columns where there is insufficient information.  Otherwise, the phylo-HMM tends to assign these regions to the gBGC state, because without information to differentiate the foreground and background branches, the \ws{} substitutions can be assigned to the foreground branch, and the \sw{} substitutions to a background branch.  Therefore, regions that are not informative for gBGC are essentially masked (by replacing the gBGC states with non-gBGC states at these sites).  These sites may still be assigned to gBGC tracts, but only due to evidence in informative surrounding sites.  \Rfunction{phastBias} returns a features object annotating non-informative regions so that the user can be aware of how many sites did not contribute to the final result.
+
+
+\section{Appendix: nucleotide model details}
+
+Here we show in detail how the bgc.nucleotide.tests function works.  It may shed some light on how models are set up and manipulated in \RPHAST, and how you might customize your own tests.
+
+Let's first re-load the data from HAR1:
+<<reloadHAR1>>=
+align <- read.msa("HAR_001.fa")
+neutralMod <- read.tm("HAR_001_neutral_SSREV.mod")
+neutralMod
+@ 
+
+The null model consists of the neutral model, with a selection parameter that applies to the entire tree.  This selection parameter can be added to the neutral model like so:
+<<addSelHar1>>=
+neutralMod$selection <- 0
+@ 
+If neutralMod\$selection is NULL, then it is implicitly zero, but will not be considered a model parameter and will not be optimized by phyloFit.  If it is not NULL, then phyloFit will optimize it, unless the ``sel'' parameter is specified as part of the no.opt argument to phyloFit.  So, we can optimize the selection parameter like so:
+<<estimateNull>>=
+nullMod <- phyloFit(align, init.mod=neutralMod, no.opt=c("backgd", "branches", "ratematrix"))
+nullMod
+@ 
+Note that we tell phyloFit not to optimize the background frequencies, the branch lengths, or the rate matrix parameters.  The selection parameter is therefore the only parameter being optimized.  In this model, the selection parameter is equivalent to re-scaling the branch lengths, but it is parameterized differently, so that it can interact with the gBGC parameter in later models.  You can see the difference between re-scaling the tree:
+<<rescaleNull>>=
+phyloFit(align, init.mod=neutralMod, scale.only=TRUE, no.opt=c("backgd", "ratematrix", "sel"))
+@ 
+
+Note that this gives the same likelihood as in nullMod, but this time the branch lengths have changed.  It is about the same as rescaling the original tree using the selection parameter estimated above like so:
+<<checkRescale>>=
+rescale.tree(neutralMod$tree, nullMod$selection/(1-exp(-nullMod$selection)))
+@ 
+
+So now we have the null model stored in nullMod.  We can get the likelihood in a couple of ways:
+<<nullLike>>=
+nullMod$likelihood
+likelihood.msa(align, nullMod)
+@ 
+and we can see what the estimate for the selection parameter is:
+<<nullSelection>>=
+nullMod$selection
+@ 
+
+Next we want to estimate the model with selection added onto the foreground branch.  In this case we will use the human branch.  To do this, we need to modify the initial model so that there is a separate model on the human branch.  This is referred to as an ``lineage-specific'' (LS) model in \RPHAST.  An LS model can specify an entirely different substitution model (such as REV, HKY85, JC, etc), or it can specify certain parameters which should be estimated separately for this model.  In this case we want the selection parameter to be estimated separately on the human branch than the rest of the tree.  We do this like so:
+<<addAltModSel>>=
+initSelMod <- add.ls.mod(neutralMod, "hg18", separate.params="sel")
+@ 
+This adds a separate selection parameter to the human branch.  The initial selection parameter is 0, though we could have specified a different initial value like this:
+<<addAltModSel2>>=
+initSelMod2 <- add.ls.mod(neutralMod, "hg18", separate.params="sel", selection=2)
+@ 
+Now that the initial model is set up, we can use phyloFit to get the maximum likelihood estimate for both selection parameters (global and hg18):
+<<estimateSel>>=
+selMod <- phyloFit(align, init.mod=initSelMod, no.opt=c("backgd", "branches", "ratematrix"))
+
+# print the likelihood:
+selMod$likelihood
+# print the global selection parameter:
+selMod$selection
+# print the human selection parameter:
+selMod$ls.mod$selection
+@ 
+Note that when selection is defined in the main model as well as in an LS model, the total selection on the LS model is the sum of the selection parameters in the LS and main models.  You can check by applying the selection parameter to the rate matrix manually:
+<<checkSel>>=
+apply.bgc.sel(neutralMod$rate.matrix, sel=(selMod$selection+selMod$ls.mod$selection)) - 
+  selMod$ls.model$rate.matrix
+@ 
+which is within rounding error of zero.  
+
+The next model is the model with gBGC on the human branch, but no additional selection parameter on the human branch.  There is no concept of a global gBGC parameter, since gBGC is a transient effect, so the gBGC parameter $B$ is implicitly 0 in the main model.  We can add gBGC to the human branch in the same way we added selection:
+<<addAltModBgc>>=
+initBgcMod <- add.ls.mod(neutralMod, "hg18", separate.params="bgc[0,2000]")
+@ 
+The ``[0,2000]'' assigns boundaries to the bgc parameter (the same can be done any parameters specified in \Rfunction{separate.params}, and probably should have been done for the selection parameter above, as phyloFit estimated it at the default maximum of 200).  
+
+Then we can maximize the likelihood using phyloFit in the same way:
+<<estimateBgc>>=
+bgcMod <- phyloFit(align, init.mod=initBgcMod, no.opt=c("backgd", "branches", "ratematrix"))
+
+#print the likelihood, global selection, and bgc parameters:
+bgcMod$likelihood
+bgcMod$selection
+bgcMod$ls.mod$bgc
+@ 
+
+The final model incorporates both lineage-specific gBGC and selection.  We can set it up, and maximize the likelihood, like so:
+<<addAltModBgcSel>>=
+initBgcSelMod <- add.ls.mod(neutralMod, "hg18", separate.params=c("bgc[0,2000]", "sel[-1000,1000]"))
+bgcSelMod <- phyloFit(align, init.mod=initBgcSelMod, no.opt=c("backgd", "branches", "ratematrix"))
+
+# print likelihood, global selection, lineage-specific selection, and bgc parameters:
+bgcSelMod$likelihood
+bgcSelMod$selection
+bgcSelMod$alt.mod$selection
+bgcSelMod$alt.mod$bgc
+
+@ 
+
+Now that we have likelihoods from all four models, we can compare them as described in Section \ref{nucmodel}.
+
+%% \section*{Codon model incorporating gBGC}
+
+%% Here we show how to perform likelihood-ratio tests on codon data using \RPHAST.
+%% We assume that we have an alignment in a common format (MAF, FASTA, PHYLIP) which 
+%% has already been cleaned in such a way that it starts at the beginning of a codon
+%% and every three bases represents a new codon.  As an example, we will use the
+%% alignment of the ADCYAP1 gene from Kosiol et al:
+
+%% <<readAlign>>=
+%% exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
+%% unzip(exampleArchive, "ADCYAP1.ph")
+%% align <- read.msa("ADCYAP1.ph")
+%% unlink("ADCYAP1.ph")
+%% @ 
+
+%% We also need a phylogenetic model.  In the paper, we used a version of the HKA model modified for codons.  We divided the genes into 8 GC\% bins and estimated the branch lengths and transition/transversion ratio ($\kappa$) by maximum likelihood.  For this example, let us assume that $\kappa=3$, and use the neutral branch lengths estimated by UCSC:
+
+%% <<makeMod>>=
+%% unzip(exampleArchive, "placentalMammals.mod")
+%% nuc.mod <- read.tm("placentalMammals.mod")
+%% unlink("placentalMammals.mod")
+
+%% # reduce the tree to the sequences in the alignment
+%% nuc.mod$tree <- prune.tree(nuc.mod$tree, names(align), all.but=TRUE)
+
+%% odon.mod <- tm(tree=nuc.mod$tree, subst.mod="HKY_CODON",
+%%                 backgd=freq3x4.msa(align))
+%% # set the rate matrix using kappa=3
+%% codon.mod <- set.rate.matrix.tm(codon.mod, params=3)
+
+%% @ 
+
+%% Now we have a neutral model of codon evolution.  To do a branch-site model likelihood analysis, let's first set up the null model:
+
+%% <<nullModel>>=
+%% nullSiteMod <- setup.branch.site.tm(neutralMod, "hg18", bgc=FALSE, altmodel=FALSE, init.sel.neg=-2, init.weights=c(1,1))
+%% nullSiteMod.ml <- phyloFit(align, init.mod=nullSiteMod, scale.only=TRUE, no.opt=c("backgd", "ratematrix"), init.backgd.from.data=TRUE)
+%% @ 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% figures
+%\begin{figure}
+%  \begin{center}
+%    \includegraphics[width=6in,height=4.5in,angle=0]{browserFigure}
+%  \end{center}
+%  \caption{Browser-like display created by the plot.track function.}
+%  \label{fig:browser}
+%\end{figure}
+%
+%\begin{figure}
+%  \begin{center}
+%    \includegraphics[width=4in,height=4in,angle=0]{elementLengthByType}
+%  \end{center}
+%  \caption{Distribution of the length of conserved elements.}
+%  \label{fig:elementLength}
+%\end{figure}
+
+\bibliographystyle{plainnat}
+\bibliography{rphast}
+
+%%% figures
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=6in,height=4.5in,angle=0]{postPlot}
+  \end{center}
+  \caption{phastBias result plot}
+  \label{fig:postPlot}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=6.5in,height=3in,angle=0]{plotMsa}
+  \end{center}
+  \caption{60 bp region of the alignment in the phastBias tracts containing 4 \ws{} substitution on the human branch.}
+  \label{fig:plotMsa}
+\end{figure}
+
+\end{document}
