@@ -345,3 +345,15 @@ summary.tree <- function(object, ...) {
   }
   rv
 }
+
+
+##' Get the names of a tree's leaf nodes
+##' @param object A character string containing a newick tree
+##' @param ... Not currently used
+##' @return A character vector containing the names of the leaf nodes
+##' @export
+##' @author Melissa J. Hubisz and Adam Siepel
+leafnames.tree <- function(object, ...) {
+  x <- summary.tree(object, ...)
+  as.character(x[is.na(x$lchild),"name"])
+}

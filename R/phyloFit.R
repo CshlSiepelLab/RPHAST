@@ -21,9 +21,9 @@
 ##' branch lengths constant, "ratevar" for rate variation parameters, "scale"
 ##' for the tree scaling factor, and "scale_sub" for the subtree scaling factor.
 ##' This argument does NOT apply to parameters of a lineage-specific model
-##' created with \code{add.alt.mod}, though such parameters can be held constant
+##' created with \code{add.ls.mod}, though such parameters can be held constant
 ##' by using appropriate arguments when the model is created.  See
-##' \code{\link{add.alt.mod}} for more details about lineage-specific models.
+##' \code{\link{add.ls.mod}} for more details about lineage-specific models.
 ##' @param init.backgd.from.data A logical value; can be \code{FALSE} only if
 ##' init.mod is provided.  If \code{TRUE}, use observed base frequencies in data
 ##' to initialize equilibrium frequencies.  Otherwise use the values from
@@ -127,7 +127,6 @@ phyloFit <- function(msa,
                      quiet=FALSE,
                      bound=NULL,
                      log.file=FALSE
-#                     alt.mod=NULL  # don't use alt.mod here anymore, instead require init.mod with alt.mod defined for alt.mod
 #                     symmetric.freqs=FALSE,
 #                     report.error=FALSE,
 #                     ancestor=NULL,
@@ -168,6 +167,9 @@ phyloFit <- function(msa,
   # check here.
   check.arg(bound, "bound", "character", null.OK=TRUE)
 
+  if (missing(EM) && !missing(rate.constants)) EM <- TRUE
+  if ((!is.null(init.mod)) && (!is.null(init.mod$rate.consts)) && missing(EM)) EM <- TRUE
+
   if (!is.null(rate.constants)) {
     EM <- TRUE
     nrates <- length(rate.constants)
@@ -176,8 +178,7 @@ phyloFit <- function(msa,
   if (is.null(msa$externalPtr))
     msa <- as.pointer.msa(msa)
   if (!is.null(features)) {
-    if (is.null(features$externalPtr))
-      features <- as.pointer.feat(features)
+    features <- as.pointer.feat(features)
   }
   if (!is.null(init.mod))
     init.mod <- as.pointer.tm(init.mod)
@@ -199,7 +200,7 @@ phyloFit <- function(msa,
                                     EM,
                                     max.EM.its,
                                     precision,
-                                    features$externalPtr,
+                                    if (is.null(features)) NULL else features$externalPtr,
                                     ninf.sites,
                                     quiet,
                                     no.opt,
@@ -207,3 +208,6 @@ phyloFit <- function(msa,
                                     log.file,
                                     selection))
 }
+
+
+

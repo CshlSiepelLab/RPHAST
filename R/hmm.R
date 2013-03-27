@@ -232,6 +232,7 @@ score.hmm <- function(msa, mod, hmm, states=NULL, viterbi=TRUE, ref.idx=1,
 }
 
 
+
 # NOTE: should this be put in phyloHmm.R? (maybe if we
 # add more phyloHmm functions)
 # DO NOT export; this doesn't really work.  It isi useful to show what

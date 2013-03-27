@@ -57,6 +57,8 @@ copy.feat <- function(x) {
 ##' @example inst/examples/read-feat.R
 ##' @export
 read.feat <- function(filename, pointer.only=FALSE) {
+  filename <- check.arg(filename, "filename", "character", null.OK=FALSE,
+                        min.length=1L, max.length=1L)
   feat <- .makeObj.feat(TRUE)
   feat$externalPtr <- .Call.rphast("rph_gff_read", filename)
   if (!pointer.only) {
@@ -238,6 +240,7 @@ nrow.feat <- function(x) {
 #    NextMethod()
 #    UseMethod("nrow", x)
   } else {
+    if (is.null(x$externalPtr)) stop("invalid object sent to nrow.feat")
     .Call.rphast("rph_gff_numrow", x$externalPtr)
   }
 }

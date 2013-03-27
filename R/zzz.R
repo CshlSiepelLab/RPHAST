@@ -37,7 +37,7 @@
 ##' @param email Your Email Address (Optional).  If given, we may use it
 ##' very rarely to let you know about major new releases and bug fixes.  We
 ##' will not share your email address with anyone.
-##' @param institution Your Institution (Optinal).  Let us know where
+##' @param institution Your Institution (Optional).  Let us know where
 ##' you are from.
 ##' @param comments Anything else you'd like to tell us!
 ##' @seealso \code{\link{nothanks.rphast}} to get rid of registration reminders

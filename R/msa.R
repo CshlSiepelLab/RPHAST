@@ -603,7 +603,7 @@ read.msa <- function(filename,
                      alphabet=NULL,                     
                      features=NULL,
                      do.4d=FALSE,
-                     ordered=ifelse(do.4d || !is.null(features), FALSE, TRUE),
+                     ordered=ifelse(do.4d || (!is.null(features) && nrow.feat(features) > 1), FALSE, TRUE),
                      tuple.size=(if(do.4d) 3 else NULL),
                      do.cats=NULL,
                      refseq=NULL,
@@ -984,7 +984,7 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 
   if (sum(cols < 1 | cols > ncol.msa(x)) != 0)
     stop("cols out of range")
-  if (sum(rows < 1 | rows > nrow(x)) != 0)
+  if (sum(rows < 1 | rows > nrow.msa(x)) != 0)
     stop("rows out of range")
 
   # don't do the recycling here; save memory and recycle in C code
@@ -1136,7 +1136,8 @@ likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
 ##' describing the phylogenetic model from which to simulate.  If it
 ##' is a list of tree models then an HMM should be provided to describe
 ##' transition rates between models.  Currently only models of order zero
-##' are supported.
+##' are supported, and if multiple models are given, they are currently
+##' assumed to have the same topology.
 ##' @param nsim The number of columns in the simulated alignment.
 ##' @param seed A random number seed.  Either \code{NULL} (the default;
 ##' do not re-seed random  number generator), or an integer to be sent to
@@ -1159,6 +1160,8 @@ likelihood.msa <- function(x, tm, features=NULL, by.column=FALSE) {
 ##' @importFrom stats simulate
 ##' @method simulate msa
 ##' @example inst/examples/simulate-msa.R
+##' @note Currently only supports HMMs in which the models for each state
+##' have the same topologies.
 simulate.msa <- function(object, nsim, seed=NULL, hmm=NULL, get.features=FALSE,
                          pointer.only=FALSE, ...) {
   nsites <- nsim

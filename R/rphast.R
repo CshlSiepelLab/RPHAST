@@ -7,3 +7,6 @@ freeall.rphast <- function() {
   on.exit(freeall.rphast())
   .Call(func, ...)
 }
+
+
+
