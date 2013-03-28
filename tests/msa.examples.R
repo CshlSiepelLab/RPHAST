@@ -81,29 +81,30 @@ print(m, print.seq=TRUE)
 
 # read.msa
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
-files <- c("ENr334.maf", "ENr334.fa", "gencode.ENr334.gff")
+files <- c("ENr334-100k.maf", "ENr334-100k.fa", "gencode.ENr334-100k.gff")
 unzip(exampleArchive, files)
 
-# Read a fasta file, ENr334.fa
-# this file represents a 4-way alignment of the encode region
-# ENr334 starting from hg18 chr6 position 41405894
+# Read a fasta file, ENr334-100k.fa
+# this file represents a 4-way alignment of the first 100k
+# bp of the encode region ENr334 starting from hg18 chr6
+# position 41405894
 idx.offset <- 41405894
-m1 <- read.msa("ENr334.fa", offset=idx.offset, pointer.only=TRUE)
+m1 <- read.msa("ENr334-100k.fa", offset=idx.offset, pointer.only=TRUE)
 m1
 
 # Now read in only a subset represented in a feature file
-f <- read.feat("gencode.ENr334.gff")
+f <- read.feat("gencode.ENr334-100k.gff")
 f$seqname <- "hg18"  # need to tweak source name to match name in alignment
-m1 <- read.msa("ENr334.fa", features=f, offset=idx.offset, pointer.only=TRUE)
+m1 <- read.msa("ENr334-100k.fa", features=f, offset=idx.offset, pointer.only=TRUE)
 
 # Can also subset on certain features
 do.cats <- c("CDS", "5'flank", "3'flank")
-m1 <- read.msa("ENr334.fa", features=f, offset=idx.offset,
+m1 <- read.msa("ENr334-100k.fa", features=f, offset=idx.offset,
                do.cats=do.cats, pointer.only=TRUE)
 
 # Can read MAFs similarly, but don't need offset because
 # MAF file is annotated with coordinates
-m2 <- read.msa("ENr334.maf", features=f, do.cats=do.cats, pointer.only=TRUE)
+m2 <- read.msa("ENr334-100k.maf", features=f, do.cats=do.cats, pointer.only=TRUE)
 # Also, note that when features is given and the file is
 # in MAF format, the first sequence is automatically
 # stripped of gaps

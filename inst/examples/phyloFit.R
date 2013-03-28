@@ -1,14 +1,14 @@
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
-files <- c("ENr334.maf", "ENr334.fa", "gencode.ENr334.gff", "rev.mod")
+files <- c("ENr334-100k.maf", "ENr334-100k.fa", "gencode.ENr334-100k.gff", "rev.mod")
 unzip(exampleArchive, files)
-m <- read.msa("ENr334.maf")
+m <- read.msa("ENr334-100k.maf")
 mod <- phyloFit(m, tree="((hg18, (mm9, rn4)), canFam2)")
 mod
 phyloFit(m, init.mod=mod)
 likelihood.msa(m, mod)
 mod$likelihood
 print(mod$likelihood, digits=10)
-f <- read.feat("gencode.ENr334.gff")
+f <- read.feat("gencode.ENr334-100k.gff")
 mod <- phyloFit(m, tree="((hg18, (mm9, rn4)), canFam2)",
                 features=f, quiet=TRUE)
 names(mod)

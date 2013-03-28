@@ -109,9 +109,10 @@ rv <-  rphast.simplify.list(.Call.rphast("rph_bgc_hmm",
 
 ##' Pretty-print the phastBias result list without spilling giant matrices onto the screen
 ##' @param x phastBias result object
+##' @param ... not used
 ##' @author Melissa J. Hubisz
 ##' @export
-##' @S3method print phastBiasResult
+##' @method print phastBiasResult
 print.phastBiasResult <- function(x, ...) {
   cat("phastBias results: list with the following elements:\n")
   possibleElements <- c("foreground",
