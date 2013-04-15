@@ -6,3 +6,4 @@ x <- total.expected.subs.msa(sub.msa(m, start.col=41447839, end.col=41448033, re
 dim(x)
 dimnames(x)
 x["mm9-rn4",,]
+unlink("ENr334-100k.maf")

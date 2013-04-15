@@ -27,3 +27,5 @@ f.fixed[firstCds,]
 # last CDS has been fixed to not include stop codon
 f[lastCds,]
 f.fixed[lastCds,]
+
+unlink(featFile)

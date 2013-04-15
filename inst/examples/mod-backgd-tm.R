@@ -8,3 +8,5 @@ mod.backgd.tm(tm, c(0.25, 0.25, 0.25, 0.25))
 
 # change background frequencies so that GC content is 0.6
 mod.backgd.tm(tm, gc=0.6)
+
+unlink(filename)

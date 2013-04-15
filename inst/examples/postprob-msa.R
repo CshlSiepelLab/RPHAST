@@ -9,3 +9,4 @@ x[,,"CCCC"]
 
 # now get postprobs for every site
 x <- postprob.msa(sub.msa(m, start.col=41447839, end.col=41448033, refseq="hg18"), mod, every.site=TRUE)
+unlink("ENr334-100k.maf")

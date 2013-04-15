@@ -1269,3 +1269,90 @@ write.wig.feat <- function(x, file=NULL, append=FALSE) {
   invisible(.Call.rphast("rph_wig_print", x$externalPtr, file, append))
 }
            
+
+##' Convert coordinates from one frame of reference to another
+##'
+##' Converts coordinates of features in a GFF according to a multiple
+##' alignment.  Will map from the coordinate system of any sequence
+##' to any other sequence; can also map to or from the coordinate system
+##' of the entire alignment.
+##' @param x A features object; if the from parameter is -1, the first
+##' column should indicate which frame of reference is used for that row
+##' (ie, the species name).
+##' For coordinates in the frame of reference of the entire alignment, set
+##' the first column to "MSA".
+##' @param align An msa object containing the alignment
+##' @param from A single character string or integer, used to indicate the
+##' current frame of reference of the features.  If the rows of the features are
+##' not all in the same frame of reference, set this to -1 and indicate the
+##' frame of reference in the 1st column of the features.  Otherwise, it can
+##' be specified here as a single integer (from 0 to nrow.msa(align)), with
+##' 0 indicating the frame of reference of the entire alignment, and 1
+##' indicating the 1st species, 2 the second, etc.  Or it can be a single
+##' character string giving the name of the species, with "MSA" indicating
+##' the entire alignment.
+##' @param to A single character string or integer, used to indicate the frame
+##' of reference to convert to.  This is specified in the same way as the
+##' "from" argument, above, except that -1 is not an option.
+##' @return A features object with elements in the frame of refernece
+##' indicated by the "to" argument.
+##' @note Ignores any offset in MSA.  All coordinates should start with the
+##' first position in the alignment as 1.
+##' @note If the endpoints of an element have gaps in the "to" species,
+##' the elements will be truncated
+##' @example inst/examples/convert-coords-feat.R
+##' @author Melissa J. Hubisz and Adam Siepel
+##' @export
+convert.coords.feat <- function(x, align, from=-1, to=1) {
+  x <- copy.feat(x)
+  if (is.null(x$externalPtr))
+    x <- as.pointer.feat(x)
+  if (!is.msa(align)) stop("align should be of type msa")
+  if (length(from) != 1L) {
+    cat("from=", from, "\n")
+    cat("length(from)=", length(from), "\n")
+    stop("from should be character or integer of length 1")
+  }
+  is.wholenumber <-
+         function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
+  if (is.character(from)) {
+    if (from=="MSA") from <- 0
+    else {
+      if (!is.element(from, names.msa(align)))  {
+        stop("argument from does not match any names in the alignment")
+      }
+      from <- which(names.msa(align)==from)
+    }
+  } else if (is.numeric(from)) {
+    if (from < -1 || from > nrow.msa(align) || !is.wholenumber(from))
+      stop("argument from should be in the range -1, .., ", nrow.msa(align))
+  } else 
+    stop("from should be a character or integer of length 1")
+  # now from is an integer of length 1
+
+  # do same for to
+  if (length(to) != 1L) 
+    stop("to should be character or integer of length 1")
+  if (is.character(to)) {
+    if (to=="MSA") to <- 0
+    else {
+      if (!is.element(to, names.msa(align))) 
+        stop("argument to does not match any names in the alignment")
+      to <- which(names.msa(align)==to)
+    }
+  } else if (is.numeric(to)) {
+    if (to < 0 || to > nrow.msa(align) || !is.wholenumber(to))
+      stop("argument to should be in the range 0, .., ", nrow.msa(align))
+  } else 
+    stop("to should be a character or integer of length 1")
+  # now to is an integer of length 1
+
+
+  
+  rv <-  .makeObj.feat(TRUE)
+  rv$externalPtr <- .Call.rphast("rph_gff_convert_coords",
+                                 x$externalPtr,
+                                 as.pointer.msa(align)$externalPtr,
+                                 to)
+  from.pointer.feat(rv)
+}

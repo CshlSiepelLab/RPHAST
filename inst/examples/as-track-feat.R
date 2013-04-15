@@ -8,3 +8,4 @@ geneTrack <- as.track.feat(f, "gene track", is.gene=TRUE)
 plot.track(list(featTrack, geneTrack))
 plot.track(list(featTrack, geneTrack, geneTrack, geneTrack, geneTrack),
            xlim=c(14800, 16000))
+unlink(featFile)

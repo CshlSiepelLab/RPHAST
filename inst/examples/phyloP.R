@@ -12,3 +12,5 @@ f <- read.feat("gencode.ENr334-100k.gff")
 t1 <- phyloP(tm, msa, method="LRT", outfile="test.out", features=f)
 t2 <- phyloP(tm, msa, method="LRT", features=f,
              outfile="test.out", outfile.format="gff", outfile.only=TRUE)
+unlink("test.out")
+unlink(files)

@@ -7,3 +7,4 @@ dim(x)
 dimnames(x)
 x[,"CCCC"]
 x["mm9-rn4",]
+unlink("ENr334-100k.maf")
