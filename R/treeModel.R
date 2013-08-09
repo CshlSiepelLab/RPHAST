@@ -406,7 +406,7 @@ bgc.sel.factor <- function(x) {
 ##' Apply bgc+selection parameters to a matrix
 ##' @param m A transition matrix
 ##' @param bgc The bgc (biased gene conversion) parameter, population-scaled.
-##' @param sel The selection parameter (population-scaled0
+##' @param sel The selection parameter (population-scaled)
 ##' @param alphabet The alphabet used for nucleotide states
 ##' @return A matrix with bgc+sel applied.  This matrix may no longer be
 ##' time reversible.
@@ -742,7 +742,7 @@ plot.rate.matrix <- function(x, eq.freq=NULL, max.cex=10.0,
     } else eq.freq.col <- "black"
   }
   if (!is.null(col)) {
-    if (nrow(col) != nrow(m) || ncol(col) != nrow(m))
+    if (nrow(col) != nrow(m) || ncol(col) != ncol(m))
       stop("col should have same dimensions as m")
     col <- as.numeric(col)
   } else {

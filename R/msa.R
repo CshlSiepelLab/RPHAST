@@ -459,7 +459,7 @@ write.msa <- function(x, file=NULL,
 ##' @example inst/examples/summary-msa.R
 ##' @author Melissa J. Hubisz
 summary.msa <- function(object, ...,
-                        print.seq=ifelse(ncol.msa(object)*nrow.msa(object) < 500, TRUE, FALSE),
+                        print.seq=ifelse(ncol.msa(object) > 100 || nrow.msa(object) > 30 || ncol.msa(object)*nrow.msa(object) < 500, TRUE, FALSE),
                         format="FASTA",
                         pretty.print=FALSE) {
   msa <- object

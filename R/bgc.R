@@ -203,40 +203,23 @@ bgc.informative <- function(align, foreground, tree, not.informative=FALSE) {
   if (is.null(foreground))
     stop("foreground cannot be NULL")
   align <- as.pointer.msa(align)
-  if (!is.tm(tree)) 
+  if (!is.tm(tree)) {
+    if ((!is.character(tree)) || length(tree) != 1) {
+      stop("stop: bgc.informative expects tree to be newick formatted character string or tree model")
+    }
     tree <- tm(tree, "REV", backgd=rep(0.25, 4))
+  }
   tree <- as.pointer.tm(tree)
-  rv <- rphast.simplify.list(.Call.rphast("rph_bgc_hmm",
+  rv <- rphast.simplify.list(.Call.rphast("rph_bgc_hmm_get_informative",
                                           align$externalPtr,
                                           tree$externalPtr,
-                                          foreground,
-                                          NULL,
-                                          TRUE,
-                                          TRUE,
-                                          TRUE,
-                                          TRUE,
-                                          TRUE,
-					  TRUE,  #estimate.bgc.trans
-                                          NULL,  #bgc.expected.length
-                                          NULL,  #bgc.target.coverage
-                                          1.0,  #initbgc
-                                          1.0, #initSelPos
-                                          -1.0,  #initSelNeg
-                                          c(0.5, 0.5), #initWeights
-                                          0.0001,  #initBgcIn
-                                          0.001,  #initBgcOut
-					  1.0,   #initScaleP
-                                          1.0,   #initRhoP
-                                          FALSE, #postProbsP
-                                          FALSE, #randomPathP
-                                          FALSE, #getLikelihoodP
-                                          informative.only=TRUE))
-  if (not.informative) return(rv)
+                                          foreground))
+  if (!not.informative) return(rv)
   refseq <- names.msa(align[1])
   region.feat <- feat(refseq, start=1+offset.msa(align),
                       end=ncol.msa(align, refseq=refseq)+offset.msa(align))
   rv <- inverse.feat(rv, region.feat)
-  rv$feature <- "informative"
+  rv$feature <- "not.informative"
   rv$srv <- "bgcHmm"
   rv
 }

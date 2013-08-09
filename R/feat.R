@@ -776,7 +776,7 @@ inverse.feat <- function(x, region.bounds, pointer.only=FALSE) {
 ##' @keywords features
 ##' @example inst/examples/coverage-feat.R
 ##' @author Melissa J. Hubisz
-coverage.feat <- function(..., or=FALSE, not=NULL, get.feats=FALSE,
+coverage.feat <- function(..., or=FALSE, not=FALSE, get.feats=FALSE,
                           pointer.only=FALSE) {
   check.arg(or, "or", "logical", null.OK=FALSE)
   check.arg(get.feats, "get.feats", "logical", null.OK=FALSE)
@@ -785,8 +785,11 @@ coverage.feat <- function(..., or=FALSE, not=NULL, get.feats=FALSE,
   featlist <- list(...)
   check.arg(not, "not", null.OK=TRUE, min.length=1L,
             max.length=length(featlist))
-  not <- rep(not, length.out=length(featlist))
-  if (is.null(not)) not <- rep(FALSE, length(featlist))
+  if (is.null(not)) {
+    not <- rep(FALSE, length(featlist))
+  } else {
+    not <- rep(not, length.out=length(featlist))
+  }
   if (sum(not == FALSE) == 0L)
     stop("at least one feature must have not==FALSE")
   region.bounds <- featlist[[which(not==FALSE)[1]]]
