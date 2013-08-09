@@ -29,7 +29,10 @@
 ##' coverage of gBGC tracts (as a fraction between 0 and 1).
 ##' @param estimate.bgc.target.coverage If \code{FALSE}, constrain the rates
 ##' into and out of gBGC state so that bgc.target.coverage does not change.
-##' @param rho Set the scaling factor for the conserved state.
+##' @param sel Set the scaling factor for the conserved state. This is a
+##' population genetic parameter which translates to a scaling factor of
+##' sel/(1-exp(-sel)). The default value of s=-2.01483 translates to a
+##' scaling factor of 0.31 in the background branches.
 ##' @param cons.expected.length Set the expected length of conserved
 ##' elements.
 ##' @param cons.target.coverage Set the target coverage for conserved
@@ -55,7 +58,7 @@ phastBias <- function(align,
                       estimate.bgc.expected.length=FALSE,
                       bgc.target.coverage=0.01,
                       estimate.bgc.target.coverage=TRUE,
-                      rho=0.31,
+                      sel=-2.01483,
                       cons.expected.length=45,
                       cons.target.coverage=0.3,
                       estimate.scale=FALSE,
@@ -74,8 +77,7 @@ phastBias <- function(align,
     if (bgc.target.coverage <= 0 || bgc.target.coverage >= 1)
       stop("bgc.target.coverage should be in the range (0,1), got ", bgc.target.coverage)
   }
-  rho <- check.arg(rho, "rho", "numeric", FALSE)
-  if (rho <= 0) stop("rho should be > 0, got ", rho)
+  sel <- check.arg(sel, "sel", "numeric", FALSE)
   cons.expected.length <- check.arg(cons.expected.length, "cons.expected.length", "numeric", FALSE)
   if (cons.expected.length <= 0) stop("cons.expected.length should be > 0, got ", cons.expected.length)
   cons.target.coverage <- check.arg(cons.target.coverage, "cons.target.coverage", "numeric", FALSE)
@@ -96,7 +98,7 @@ rv <-  rphast.simplify.list(.Call.rphast("rph_bgc_hmm",
                                     estimate.bgc.expected.length,
                                     bgc.target.coverage,
                                     estimate.bgc.target.coverage,
-                                    rho,
+                                    sel,
                                     cons.expected.length,
                                     cons.target.coverage,
                                     estimate.scale,
