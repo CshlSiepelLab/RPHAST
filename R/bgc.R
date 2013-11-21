@@ -125,10 +125,12 @@ print.phastBiasResult <- function(x, ...) {
                         "mu",
                         "nu",
                         "scale",
+                        "sel",
                         "rho",
                         "tracts",
                         "post.prob",
-                        "not.informative")
+                        "not.informative",
+                        "informative")
   elementDescriptions <- c("branch tested for gBGC",
                            "total posterior likelihood",
                            "gBGC strength parameter B",
@@ -137,11 +139,13 @@ print.phastBiasResult <- function(x, ...) {
                            "rate out of conserved state",
                            "rate into conserved state",
                            "overall tree scale",
+                           "population genetic parameter describing selection in conserved state",
                            "conserved state tree scale",
                            "features object with gBGC tracts",
                            "posterior probability for each state in each column",
-                           "features object with regions of alignment not informative for gBGC on foreground branch")
-  isTwoD <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1)
+                           "features object with regions of alignment not informative for gBGC on foreground branch",
+                           "features object with regions of alignment informative for gBGC on foreground branch")
+  isTwoD <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1)
 
   for (i in 1:length(possibleElements)) {
     w <- which(names(x) == possibleElements[i])
