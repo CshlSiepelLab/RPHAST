@@ -171,11 +171,11 @@ We can also create a plot of the posteriors and the tract:
 <<postPlot,fig=TRUE,prefix=FALSE,width=6.5,height=4.5>>=
 
 tracks <- list(as.track.feat(hmm.results$tracts, name="gBGC tracts"),
-               as.track.wig(score=(hmm.results$post.prob[,"gBGC_neutral"] + 
-                                   hmm.results$post.prob[,"gBGC_conserved"]),
+               as.track.wig(score=(hmm.results$post.prob[,"gBGC.neutral"] + 
+                                   hmm.results$post.prob[,"gBGC.conserved"]),
                             name="gBGC posterior", 
                             coord=hmm.results$post.prob$coord),
-               as.track.feat(hmm.results$not.informative, name="not informative"))
+               as.track.feat(hmm.results$informative, name="informative"))
 plot.track(tracks)
 
 @ 
