@@ -1,7 +1,9 @@
-4-12-2013: 1.4.1
+8-14-2013: 1.5
         * fixed bug and added examples to translate.msa; also changed default
 	  frame to 1
         * added convert.coords.feat function
+	* bug fixes/improvements to phastBias function
+	* added LICENSE file
 3-26-2013:  1.4
         * added gBGC functions phastBias, bgc.nucleotide.tests, and
 	  classify.muts.bgc
