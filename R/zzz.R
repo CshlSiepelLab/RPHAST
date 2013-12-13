@@ -1,25 +1,25 @@
-.onAttach <- function(libname, pkgname) {
-  if(Sys.info()[[1]] == "Windows") { 
-    regDir <- paste(shell("echo %appdata%", intern=TRUE), "\\rphast\\", sep="")
-  }  else {
-    regDir <- paste(system("echo $HOME", intern=TRUE), "/.rphast/", sep="")
-  }
-  
-  Sys.setenv(rphastRegDir=regDir)
-  
-  if((!file.exists(paste(regDir, "registered", sep=""))) &&
-     (!file.exists(paste(regDir, "notRegistered", sep="")))) {
-    packageStartupMessage("
-************************************************************************
-** If you find RPHAST useful, we would appreciate if you let us know  **
-**   so we can better understand our user base.  Registration is free **
-**   and can be anonymous.                                            **
-** See ?register.rphast for more details, or type nothanks.rphast()   **
-**   to stop these reminders without registering.  Thanks!            **
-************************************************************************
-")
-  }
-}
+#.onAttach <- function(libname, pkgname) {
+#  if(Sys.info()[[1]] == "Windows") { 
+#    regDir <- paste(shell("echo %appdata%", intern=TRUE), "\\rphast\\", sep="")
+#  }  else {
+#    regDir <- paste(system("echo $HOME", intern=TRUE), "/.rphast/", sep="")
+#  }
+#  
+#  Sys.setenv(rphastRegDir=regDir)
+#  
+#  if((!file.exists(paste(regDir, "registered", sep=""))) &&
+#     (!file.exists(paste(regDir, "notRegistered", sep="")))) {
+#    packageStartupMessage("
+#************************************************************************
+#** If you find RPHAST useful, we would appreciate if you let us know  **
+#**   so we can better understand our user base.  Registration is free **
+#**   and can be anonymous.                                            **
+#** See ?register.rphast for more details, or type nothanks.rphast()   **
+#**   to stop these reminders without registering.  Thanks!            **
+#************************************************************************
+#")
+#  }
+#}
 
 ##' If you are making use of RPHAST, we would appreciate if you would let us
 ##' know.  This will send your name, email, and institution (all optional),
