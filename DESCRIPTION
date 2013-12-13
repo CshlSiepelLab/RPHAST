@@ -6,8 +6,8 @@ Maintainer: Melissa Hubisz <mjhubisz@cornell.edu>
 License: BSD_3_clause + file LICENSE
 Title: R interface to PHAST software for comparative genomics
 Author: Melissa Hubisz, Katherine Pollard, and Adam Siepel
-Description: RPHAST is an R interface to the PHAST pacakge
-    (Phylogenetic Analyis with Space/Time Models).  It can be used for
+Description: RPHAST is an R interface to the PHAST package
+    (Phylogenetic Analysis with Space/Time Models).  It can be used for
     many types of analysis in comparative and evolutionary genomics,
     such as estimating models of evolution from sequence data, scoring
     alignments for conservation or acceleration, and predicting
@@ -16,7 +16,7 @@ Description: RPHAST is an R interface to the PHAST pacakge
     sequence alignments and phylogenetic trees.
 Version: 1.5
 URL: http://compgen.bscb.cornell.edu/rphast
-Date: 2011-02-08
+Date: 2013-12-13
 Depends:
     stats
 Suggests:
