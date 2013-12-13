@@ -459,10 +459,7 @@ write.msa <- function(x, file=NULL,
 ##' @example inst/examples/summary-msa.R
 ##' @author Melissa J. Hubisz
 summary.msa <- function(object, ...,
-                        print.seq=ifelse(ncol.msa(object) > 100 ||
-                                         nrow.msa(object) > 30 ||
-                                         ncol.msa(object)*nrow.msa(object) < 500,
-                                         TRUE, FALSE),
+                        print.seq=ncol.msa(object)<100 && nrow.msa(object)<30,
                         format="FASTA",
                         pretty.print=FALSE) {
   msa <- object
@@ -606,16 +603,21 @@ read.msa <- function(filename,
                      alphabet=NULL,                     
                      features=NULL,
                      do.4d=FALSE,
-                     ordered=ifelse(do.4d ||
-                                    (!is.null(features) &&
-                                      nrow.feat(features) > 1),
-                                    FALSE, TRUE),
+                     ordered=(do.4d==FALSE && is.null(features)),
                      tuple.size=(if(do.4d) 3 else NULL),
                      do.cats=NULL,
                      refseq=NULL,
                      offset=0,
                      seqnames=NULL, discard.seqnames=NULL,
                      pointer.only=FALSE) {
+  if (ordered && do.4d) {
+    warning("cannot keep order when reading 4d sites; returning un-ordered alignment")
+    ordered = FALSE
+  }
+  if (ordered && !is.null(features) && nrow.feat(features) > 1) {
+    warning("cannot keep order when subsetting by feature with more than one row; returning un-ordered alignment")
+    ordered = FALSE
+  }
 
   cats.cycle <- NULL  
   check.arg(filename, "filename", "character", null.OK=FALSE)
