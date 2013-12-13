@@ -41,9 +41,8 @@ For more information on gBGC, we suggest the following review: \citet{DUREGALT09
 In section \ref{nucmodel}, we will describe how to perform nucleotide tests for gBGC
 and selection.  For background on these tests, please see: \citet{KOSTETAL12}.
 
-In section \ref{bgchmm}, we will describe how to perform tests for gBGC using
-a phylo-HMM.  The background and method behind this model is described here:
-\citet{CAPRETAL13}.
+In section \ref{bgchmm}, we will describe how to use phastBias, the 
+phylo-HMM gBGC model described in \citet{CAPRETAL13}.
 
 \section{Basic nucleotide model}
 \label{nucmodel}
@@ -52,7 +51,7 @@ We can also add a selection parameter $S$ to this branch which models positive (
 Given an alignment, we can estimate $B$, $S$, or both together, and assess the evidence of gBGC and/or selection using likelihood ratio tests.
 See \citet{KOSTETAL12} for a full description of these models and tests.  We will take an example from that paper and analyze HAR1.
 
-The first step is to get a neutral model of evolution.  For the HAR analysis we obtained a neutral model based on fourfold-degenerate (4d) sites in ENCODE regions, and then re-scaled the branches for each HAR according to the mutation rate in noncoding regions surrounding the HAR.  There are examples showing how to pull out a region of an alignment and estimate a model based on 4d sites in \RPHAST's vignette 1.  Here we will assume they have already been computed.  The data for HAR1 and its neutral model are stored in our package of example files.  They can be loaded like with the following commands:
+The first step is to get a neutral model of evolution.  For the HAR analysis we obtained a neutral model based on fourfold-degenerate (4d) sites in ENCODE regions, and then re-scaled the branches for each HAR according to the mutation rate in noncoding regions surrounding the HAR.  There are examples showing how to pull out a region of an alignment and estimate a model based on 4d sites in \RPHAST's vignette 1.  Here we will assume they have already been computed.  The data for HAR1 and its neutral model are stored in our package of example files.  They can be loaded with the following commands:
 
 <<readHar1>>=
 require("rphast")
@@ -119,9 +118,9 @@ Now that we have all the likelihood ratios, the difficult part is figuring out t
 
 @ 
 
-\section{gBGC Hidden Markov Model}
+\section{phastBias: A Hidden Markov Model for gBGC}
 \label{bgchmm}
-In this section we'll show how to set up a Hidden Markov Model (HMM) with four states: conserved, neutral, conserved with gBGC, and neutral with gBGC.  As always, the first step is to obtain an alignment and a model of neutral evolution.  Let's use a 4-species alignment of a 100 kilobase chunk of chromosome 1, and UCSC's neutral model for autosomes which was created for the 44-way alignment displayed on the hg18 browser:
+In this section we'll show how to use the phastBias function, which was described in \citet{CAPRETAL13}. This runs a Hidden Markov Model (HMM) with four states: conserved, neutral, conserved with gBGC, and neutral with gBGC.  As always, the first step is to obtain an alignment and a model of neutral evolution.  Let's use a 4-species alignment of a 100 kilobase chunk of chromosome 1, and UCSC's neutral model for autosomes which was created for the 44-way alignment displayed on the hg18 browser:
 <<HMMReadData>>=
 unzip(exampleArchive, c("chr1_100k_4way.maf", "placentalMammals.mod"))
 align <- read.msa("chr1_100k_4way.maf")
@@ -142,7 +141,7 @@ The function \Rfunction{phastBias} can then be used to set up the HMM and obtain
 
 It is important not to try to estimate too many parameters; in the paper the only parameter we optimized was bgc.out.  We tried various values of $B$ and chose $B=3$, which was the lowest value we could use that did not produce many false positives in simulations.  We started with a neutral model and then held scale to 1.0.  We set $\rho=0.31$, as this has been found to be a fairly robust estimate for the level of conservation within conserved elements across several different species sets.
 
-The default \Rfunction{phastBias} arguments are set to the values used \cite{CAPRETAL13}.  However, different topologies or neutral models may perform better with different parameter settings.  The choice for the parameter $B$ is particularly important and may need some tuning.  Higher values of $B$ will give fewer, shorter, higher-confidence gBGC tracts, whereas lower values of $B$ will yield a more inclusive but lower-confidence set of tracts.  If $B$ is too low, the HMM will not be able to distinguish between the gBGC and non-gBGC states, and may predict the entire alignment to be a ``gBGC tract''.  The other parameters seem more forgiving and in most cases should not have to be adjusted.
+The default \Rfunction{phastBias} arguments are set to the values used in \cite{CAPRETAL13}.  However, different topologies or neutral models may perform better with different parameter settings.  The choice for the parameter $B$ is particularly important and may need some tuning.  Higher values of $B$ will give fewer, shorter, higher-confidence gBGC tracts, whereas lower values of $B$ will yield a more inclusive but lower-confidence set of tracts.  If $B$ is too low, the HMM will not be able to distinguish between the gBGC and non-gBGC states, and may predict the entire alignment to be a ``gBGC tract''.  The other parameters seem more forgiving and in most cases should not have to be adjusted.
 
 Let's run \Rfunction{phastBias} on our alignment and examine the results:
 
@@ -191,7 +190,7 @@ The region plotted here contains four \ws{} mutations on the human lineage in a 
 
 \subsection{Non-informative columns}
 
-The regions labeled in the \Rfunction{phastBias} results as ``not informative'' for gBGC require some explanation. A column may be uninformative for gBGC if it has missing data in certain leaf nodes of the tree.  In this example, there must be non-missing data in the human, chimp, and at least one outgroup for a substitution to be unambiguously assigned to the human branch.  \Rfunction{phastBias} does not allow evidence for gBGC to accumulate at columns where there is insufficient information.  Otherwise, the phylo-HMM tends to assign these regions to the gBGC state, because without information to differentiate the foreground and background branches, the \ws{} substitutions can be assigned to the foreground branch, and the \sw{} substitutions to a background branch.  Therefore, regions that are not informative for gBGC are essentially masked (by replacing the gBGC states with non-gBGC states at these sites).  These sites may still be assigned to gBGC tracts, but only due to evidence in informative surrounding sites.  \Rfunction{phastBias} returns a features object annotating non-informative regions so that the user can be aware of how many sites did not contribute to the final result.
+The \Rfunction{phastBias} results include an object describing which columns of the alignment are informative for gBGC. A column may be uninformative for gBGC if it has missing data in certain leaf nodes of the tree.  In this example, there must be non-missing data in the human, chimp, and at least one outgroup for a substitution to be unambiguously assigned to the human branch.  \Rfunction{phastBias} does not allow evidence for gBGC to accumulate at columns where there is insufficient information.  Otherwise, the phylo-HMM tends to assign these regions to the gBGC state, because without information to differentiate the foreground and background branches, the \ws{} substitutions can be assigned to the foreground branch, and the \sw{} substitutions to a background branch.  To avoid this effect, regions that are not informative for gBGC are essentially masked (by replacing the gBGC states with non-gBGC states at these sites).  These sites may still be assigned to gBGC tracts, but only due to evidence in informative surrounding sites.  \Rfunction{phastBias} returns a features object annotating informative regions so that the user can be aware of how many sites contributed to the final result.
 
 
 \section{Appendix: nucleotide model details}
