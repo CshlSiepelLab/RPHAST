@@ -99,6 +99,7 @@ The likelihoods obtained by \Rfunction{bgc.nucleotide.tests} can be compared to 
 
 In the paper, seven different likelihood ratios were computed:
 <<HAR.lrs>>=
+# note this is not portable
 nullLike <- nuc.results["null", "likelihood"]
 selLike <- nuc.results["sel", "likelihood"]
 bgcLike <- nuc.results["bgc", "likelihood"]
