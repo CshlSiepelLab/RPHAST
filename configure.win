@@ -1,2 +1,0 @@
-mv -f src/pcre/config.h.win src/pcre/config.h
-mv -f src/pcre/pcre.h.win src/pcre/pcre.h
