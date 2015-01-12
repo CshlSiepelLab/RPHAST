@@ -2,7 +2,7 @@
 % NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
 % likely to be overwritten.
 %
-% \VignetteIndexEntry{vignette1}
+% \VignetteIndexEntry{GC-biased gene conversio}
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
 
@@ -98,7 +98,7 @@ though it is important to keep in mind that if the boundaries are pushed too hig
 The likelihoods obtained by \Rfunction{bgc.nucleotide.tests} can be compared to each other to obtain likelihood ratios.  The likelihood ratios can be compared to a null distribution to assess the evidence for selection and gBGC on the branch of interest.
 
 In the paper, seven different likelihood ratios were computed:
-<<HAR.lrs>>=
+<<HAR>>=
 # note this is not portable
 nullLike <- nuc.results["null", "likelihood"]
 selLike <- nuc.results["sel", "likelihood"]

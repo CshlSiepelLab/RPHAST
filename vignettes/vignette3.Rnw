@@ -2,7 +2,7 @@
 % NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
 % likely to be overwritten.
 %
-% \VignetteIndexEntry{vignette3}
+% \VignetteIndexEntry{Custom phylo-HMM with RPHAST}
 % \VignetteDepends{seqLogo}
 % \VignetteKeywords{Phylogenetics, conservation, Hidden Markov Models}
 % \VignettePackage{rphast}
@@ -129,10 +129,15 @@ the known NRSF motif.  We will use the ``seqLogo'' package to create a
 in the ``examples.zip'' package).  The plot is shown in Figure 
 \ref{fig:seqLogo-plot}. 
 <<seqLogoPlot,width=6,height=3,fig=TRUE,prefix=FALSE>>=
-require("seqLogo")
-m <- read.table("NRSF/NRSF.mtf")
-pwm <- makePWM(t(m))
-seqLogo(pwm, xfontsize=10)
+haveSeqLogo <- require("seqLogo")
+if (haveSeqLogo) {
+    m <- read.table("NRSF/NRSF.mtf")
+    pwm <- makePWM(t(m))
+    seqLogo(pwm, xfontsize=10)
+} else {
+    plot(c(0),c(0), type="n", xlab="", ylab="", xaxt="n", yaxt="n")
+    text(0, 0, "Need to install seqLogo to see this plot")
+}
 @ 
 
 Notice the general agreement between the log odds scores and the
@@ -145,11 +150,16 @@ on the equilibrium frequencies in the estimated phylogenetic models
 (called ``background'' frequencies in PHAST).  We can also plot these using
 ``seqLogo'' (Figure \ref{fig:seqLogo-plot-backgd}):
 <<seqLogoPlotBackgd,width=6,height=3,fig=TRUE,prefix=FALSE>>=
-m <- matrix(0, nrow=21, ncol=4)
-for (i in 1:21)
-  m[i,] <- mods[[i]]$backgd
-pwm <- makePWM(t(m))
-seqLogo(pwm, xfontsize=10)
+if (haveSeqLogo) {
+    m <- matrix(0, nrow=21, ncol=4)
+    for (i in 1:21)
+        m[i,] <- mods[[i]]$backgd
+    pwm <- makePWM(t(m))
+    seqLogo(pwm, xfontsize=10)
+} else {
+    plot(c(0),c(0), type="n", xlab="", ylab="", xaxt="n", yaxt="n")
+    text(0, 0, "Need to install seqLogo to see this plot")
+}
 @ 
 
 Again, we see a reasonable agreement between the estimates from these
