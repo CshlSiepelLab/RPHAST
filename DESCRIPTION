@@ -3,7 +3,7 @@ Copyright: All code is Copyright (c) 2002-2015 University
 Package: rphast
 Maintainer: Melissa Hubisz <mjhubisz@cornell.edu>
 License: BSD_3_clause + file LICENSE
-Title: R interface to PHAST software for comparative genomics
+Title: R Interface to PHAST Software for Comparative Genomics
 Author: Melissa Hubisz, Katherine Pollard, and Adam Siepel
 Description: RPHAST is an R interface to the PHAST software 
     (Phylogenetic Analyis with Space/Time Models).  It can be used for
