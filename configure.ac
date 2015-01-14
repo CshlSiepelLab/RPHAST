@@ -21,8 +21,11 @@ AC_MSG_RESULT(${CFLAGS})
 # Checks for header files.
 AC_FUNC_ALLOCA
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stddef.h stdlib.h string.h strings.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([stddef.h stdlib.h string.h strings.h sys/time.h unistd.h], ,
+[AC_MSG_ERROR(
+[Couldn't find all necessary system headers])])
 
+AC_CHECK_HEADER(pcre.h, , [AC_MSG_ERROR([Couldn't find pcre.h... download/install at www.pcre.org])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
