@@ -1180,17 +1180,23 @@ tagval <- function(x, tag) {
 
 ##' Combine adjacent features with the same "feature" field
 ##' @param x An object of type feat
+##' @param weightedAverageScore If TRUE, scores of merged features
+##' are given by the average of those features, weighted by their
+##' original lengths. Otherwise, scores of merged features are
+##' simply summed.
 ##' @return A features object in which adjacent features are
 ##' combined into one longer feature.
 ##' @note If x is stored as a pointer to a C structure, then
 ##' x will be modified to the return value.
 ##' @author Melissa J. Hubisz and Adam Siepel
 ##' @export
-flatten.feat <- function(x) {
+flatten.feat <- function(x, weightedAverageScore=FALSE) {
   isPointer <- !is.null(x$externalPtr)
   if (!isPointer) x <- as.pointer.feat(x)
+  if (!is.logical(weightedAverageScore))
+      stop("Expected weightedAverageScore to be a logical")
   sort.feat(x)
-  .Call.rphast("rph_gff_flatten", x$externalPtr)
+  .Call.rphast("rph_gff_flatten", x$externalPtr, weightedAverageScore)
   if (!isPointer) return(from.pointer.feat(x))
   x
 }
