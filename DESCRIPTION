@@ -1,5 +1,6 @@
 Copyright: All code is Copyright (c) 2002-2016 University
     of California, Cornell University, Cold Spring Harbor Laboratory.
+Package: rphast
 Maintainer: Melissa Hubisz <mjhubisz@cornell.edu>
 License: BSD_3_clause + file LICENSE
 Title: Interface to PHAST Software for Comparative Genomics
