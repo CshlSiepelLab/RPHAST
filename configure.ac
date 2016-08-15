@@ -83,7 +83,10 @@ fi
 LIBS="${OLD_LIBS}"
 
 OLD_CFLAGS=${CFLAGS}
-CFLAGS="${CFLAGS} -fno-strict-aliasing"
+#Removing -g flag (CRAN rules)
+#CFLAGS="${CFLAGS} -fno-strict-aliasing"
+CFLAGS="-fno-strict-aliasing"
+
 AC_MSG_CHECKING(for -fno-strict-aliasing)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], AC_MSG_RESULT(yes), [AC_MSG_RESULT(no)
 		                           CFLAGS=${OLD_CFLAGS}])

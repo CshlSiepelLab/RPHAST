@@ -1,3 +1,5 @@
+08-15-2016: 1.6.5
+	* Removed -g flag during compiling ( requested by CRAN)
 05-31-2016: 1.6.4
 	* changed description language as per CRAN rules. 
 05-25-2016: 1.6.3
@@ -5,7 +7,6 @@
 	* replaced pow function with pow_bounded in maf.c and sufficient_stats.c
 	  to handle overflow
 	* added seed for phyloP testing
-
 8-14-2013: 1.5
         * fixed bug and added examples to translate.msa; also changed default
 	  frame to 1
