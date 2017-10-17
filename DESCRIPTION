@@ -13,9 +13,9 @@ Description: Provides an R interface to the PHAST software
     elements based on conservation or custom phylogenetic hidden Markov
     models.  It can also perform many basic operations on multiple
     sequence alignments and phylogenetic trees.
-Version: 1.6.4
+Version: 1.6.5
 URL: http://compgen.cshl.edu/rphast
-Date: 2016-05-25
+Date: 2016-08-15
 Imports: methods
 Depends:
     stats
