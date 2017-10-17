@@ -265,11 +265,11 @@ bgc.nucleotide.tests <- function(align, neutralMod, branch, sel.limits=c(-200,20
   } else bgc.arg <- "bgc"
   
   nullMod <- phyloFit(align, init.mod=neutralMod, no.opt=c("backgd", "branches", "ratematrix"))
-  initSelMod <- add.ls.mod(neutralMod, "hg18", separate.params=sel.arg)
+  initSelMod <- add.ls.mod(neutralMod, branch, separate.params=sel.arg)
   selMod <- phyloFit(align, init.mod=initSelMod, no.opt=c("backgd", "branches", "ratematrix"))
-  initBgcMod <- add.ls.mod(neutralMod, "hg18", separate.params=bgc.arg)
+  initBgcMod <- add.ls.mod(neutralMod, branch, separate.params=bgc.arg)
   bgcMod <- phyloFit(align, init.mod=initBgcMod, no.opt=c("backgd", "branches", "ratematrix"))
-  initBgcSelMod <- add.ls.mod(neutralMod, "hg18", separate.params=c(bgc.arg, sel.arg))
+  initBgcSelMod <- add.ls.mod(neutralMod, branch, separate.params=c(bgc.arg, sel.arg))
   bgcSelMod <- phyloFit(align, init.mod=initBgcSelMod, no.opt=c("backgd", "branches", "ratematrix"))
   data.frame(row.names=c("null", "sel", "bgc", "sel+bgc"),
              likelihood=c(nullMod$like, selMod$like, bgcMod$like, bgcSelMod$like),
