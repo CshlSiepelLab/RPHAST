@@ -80,7 +80,7 @@ is.msa <- function(msa) {
 ##' if is.ordered==FALSE.
 ##' @param pointer.only a boolean indicating whether returned alignment object
 ##' should be stored by reference (see Details)
-##' @useDynLib rphast
+##' @useDynLib rphast, .registration = TRUE
 ##' @keywords msa
 ##' @export msa
 ##' @example inst/examples/msa.R
@@ -939,8 +939,10 @@ strip.gaps.msa <- function(x, strip.mode=1) {
 ##' replaced by value.
 ##' @note If \code{x} is stored as a pointer, x will be changed to the
 ##' return value.
+##' @method "[<-" msa
 ##' @usage \method{[}{msa}(x, rows, cols) <- value
 ##' @export "[<-.msa"
+##' @export
 ##' @rdname square-bracket-assign-msa
 ##' @example inst/examples/square-bracket-assign-msa.R
 ##' @author Melissa J. Hubisz

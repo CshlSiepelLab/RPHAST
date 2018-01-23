@@ -913,6 +913,8 @@ fix.start.stop.feat <- function(x) {
 ##' @param ... objects of type \code{feat} to be combined into a single object
 ##' @return An object of type \code{feat} containing entries from all
 ##' given features
+##' @method rbind feat
+##' @export rbind.feat
 ##' @export
 ##' @keywords features
 ##' @author Melissa J. Hubisz and Adam Siepel
