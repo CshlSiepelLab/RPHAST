@@ -609,13 +609,13 @@ plot.gene <- function(x, y=0, height=1,
 density.feat <- function(x, type="length", ...) {
   if (type == "length") {
     if (!is.null(x$externalPtr)) {
-      vals <- .Call.rphast("rphast_gff_lengths", x$externalPtr)
+      vals <- .Call.rphast("rph_gff_ends", x$externalPtr) - .Call.rphast("rph_gff_starts", x$externalPtr)
     } else {
       vals <- x$end - x$start
     }
   } else if (type == "score") {
     if (!is.null(x$externalPtr)) {
-      vals <- .Call.rphast("rphast_gff_scores", x$externalPtr)
+      vals <- .Call.rphast("rph_gff_scores", x$externalPtr)
     } else {
       vals <- x$score
     }
