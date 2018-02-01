@@ -615,7 +615,7 @@ density.feat <- function(x, type="length", ...) {
     }
   } else if (type == "score") {
     if (!is.null(x$externalPtr)) {
-      vals <- .Call.rphast("rphast_gff_getScores", x$externalPtr)
+      vals <- .Call.rphast("rphast_gff_scores", x$externalPtr)
     } else {
       vals <- x$score
     }
