@@ -23,7 +23,7 @@ RPHAST can be installed from source code using the command in R:
       
 The package source can also be installed from the command line on non-Windows platforms using the command:
 
-    R CMD INSTALL rphast_1.6.tar.gz     
+     R CMD INSTALL rphast_1.6.tar.gz     
 
 *NOTE: If you do not have administrator privileges, you may need to specify a directory where the package will be stored. This can be done with the "library" argument to install.packages, or by using R CMD INSTALL --library=/path/to/library on the command line.
 
