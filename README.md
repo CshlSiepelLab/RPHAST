@@ -30,7 +30,7 @@ The package source can also be installed from the command line on non-Windows pl
 # Documentation
 
 
-| First Header  | Second Header | Third Header |
+| PDF  | Sweave Source | Description |
 | ------------- | ------------- |------------- |
 | [Vignette1.pdf](http://compgen.cshl.edu/rphast/vignette1.pdf)  | [Vignette1.Rnw](http://compgen.cshl.edu/rphast/vignette1.Rnw)  | Read in alignment and features, estimate neutral model based on 4d sites using phyloFit, run phyloP and phastCons |
 | [Vignette2.pdf](http://compgen.cshl.edu/rphast/vignette2.pdf)  | [Vignette2.Rnw](http://compgen.cshl.edu/rphast/vignette2.Rnw)  | Detect rodent-accelerated regions using a multiple species alignment of human chromosome 22, assess significance by simulation |
