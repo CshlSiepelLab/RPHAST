@@ -1,5 +1,5 @@
-Copyright: All code is Copyright (c) 2002-2018 University
-    of California, Cornell University, Cold Spring Harbor Laboratory.
+Copyright: All code is Copyright (c) 2002-2020 University of
+        California, Cornell University, Cold Spring Harbor Laboratory.
 Package: rphast
 Maintainer: Ritika Ramani <rramani@cshl.edu>
 License: BSD_3_clause + file LICENSE
@@ -13,29 +13,15 @@ Description: Provides an R interface to the PHAST software
     elements based on conservation or custom phylogenetic hidden Markov
     models.  It can also perform many basic operations on multiple
     sequence alignments and phylogenetic trees.
-Version: 1.6.8
+Version: 1.6.11
 URL: http://compgen.cshl.edu/rphast
-Date: 2018-01-22
+Date: 2020-02-12
 Imports: methods
-Depends:
-    stats
-Suggests:
-    ape,
-    seqLogo
-Collate:
-    'bgc.R'
-    'checkArgs.R'
-    'feat.R'
-    'hmm.R'
-    'listOfLists.R'
-    'msa.R'
-    'optim.R'
-    'phastCons.R'
-    'phyloFit.R'
-    'phyloP.R'
-    'plot.R'
-    'rphast.R'
-    'treeModel.R'
-    'trees.R'
-    'zzz.R'
+Depends: stats
+Suggests: ape, seqLogo
+Collate: 'bgc.R' 'checkArgs.R' 'feat.R' 'hmm.R' 'listOfLists.R' 'msa.R'
+        'optim.R' 'phastCons.R' 'phyloFit.R' 'phyloP.R' 'plot.R'
+        'rphast.R' 'treeModel.R' 'trees.R' 'zzz.R'
 RoxygenNote: 5.0.1
+SystemRequirements: PCRE
+Packaged: 2020-02-13 17:26:41 UTC; rramani
