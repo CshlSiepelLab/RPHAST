@@ -37,3 +37,12 @@ The package source can also be installed from the command line on non-Windows pl
 | [Vignette3.pdf](http://compgen.cshl.edu/rphast/vignette3.pdf)  | [Vignette3.Rnw](http://compgen.cshl.edu/rphast/vignette3.Rnw)  | Create custom phylogenetic HMM which models a transcription factor binding site; verify the model on a simulated alignment |
 | [Vignette4.pdf](http://compgen.cshl.edu/rphast/vignette4.pdf)  | [Vignette4.Rnw](http://compgen.cshl.edu/rphast/vignette4.Rnw)  | Introduction to detecting GC-biased gene conversion with RPHAST; nucleotide and phylo-HMM models |
 | [RPHAST-Manual.pdf](http://compgen.cshl.edu/rphast/rphast-manual.pdf)  |   | RPHAST  Reference Manual |
+
+
+# Publications
+
+ [Hubisz MJ, Pollard KS, and Siepel A. PHAST and RPHAST: Phylogenetic Analysis with Space/Time Models. (in press, Briefings in Bioinformatics).](https://academic.oup.com/bib/article/12/1/41/244593)
+ 
+ # Contact
+ 
+Problems, questions, feature requests should be directed to [phasthelp@cshl.edu](phasthelp@cshl.edu).
