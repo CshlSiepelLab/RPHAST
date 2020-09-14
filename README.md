@@ -19,7 +19,7 @@ The RPHAST package source code can be downloaded here - [rphast_1.6.11.tar.gz](h
 
 RPHAST can be installed from source code using the command in R:
       
-      install.packages("rtfbs_0.3.5.tar.gz", repos=NULL, type="source")
+      install.packages("rphast_1.6.11.tar.gz", repos=NULL, type="source")
       
 The package source can also be installed from the command line on non-Windows platforms using the command:
 
