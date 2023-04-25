@@ -283,7 +283,7 @@ void mm_exp_higham(MarkovMatrix *P, MarkovMatrix *Q, double t, int do_mu) {
     mat_to_lapack(Qt, mat);
     ln = (LAPACK_INT)n;
 #ifdef R_LAPACK
-    F77_CALL(dgebal)(&job, &ln, mat, &ln, &ilo, &ihi, scale, &info);
+    F77_CALL(dgebal)(&job, &ln, mat, &ln, &ilo, &ihi, scale, &info FCONE);
 #else
     dgebal_(&job, &ln, mat, &ln, &ilo, &ihi, scale, &info);
 #endif
@@ -423,7 +423,7 @@ void mm_exp_higham(MarkovMatrix *P, MarkovMatrix *Q, double t, int do_mu) {
     // undo balancing- check- this function is meant for eigenvalues,
     // not sure if job should be 'R' or 'L', or if it will work at all.
 #ifdef R_LAPACK
-    F77_CALL(dgebak)(&job, &side, &ln, &ilo, &ihi, scale, &ln, mat, &ln, &info);
+    F77_CALL(dgebak)(&job, &side, &ln, &ilo, &ihi, scale, &ln, mat, &ln, &info FCONE FCONE);
 #else
     dgebak_(&job, &side, &ln, &ilo, &ihi, scale, &ln, mat, &ln, &info);
 #endif

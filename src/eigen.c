@@ -57,7 +57,7 @@ int mat_diagonalize(Matrix *M, /* input matrix (n x n) */
 
 #ifdef R_LAPACK
   F77_CALL(dgeev)(&jobvl, &jobvr, &n, tmp, &n, wr, wi, vl, &n,
-		  vr, &n, work, &lwork, &info);
+		  vr, &n, work, &lwork, &info FCONE FCONE);
 #else
   dgeev_(&jobvl, &jobvr, &n, tmp, &n, wr, wi, vl,
 	 &n, vr, &n, work, &lwork, &info);
@@ -194,7 +194,7 @@ int mat_eigenvals(Matrix *M, /* input matrix (n x n) */
 
 #ifdef R_LAPACK
   F77_CALL(dgeev)(&jobvl, &jobvr, &n, tmp, &n, wr, wi, NULL,
-		  &n, NULL, &n, work, &lwork, &info);
+		  &n, NULL, &n, work, &lwork, &info FCONE FCONE);
 #else
   dgeev_(&jobvl, &jobvr, &n, tmp, &n, wr, wi, NULL,
          &n, NULL, &n, work, &lwork, &info);
