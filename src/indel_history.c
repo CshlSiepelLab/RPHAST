@@ -531,7 +531,7 @@ IndelHistory *ih_reconstruct(MSA *msa, TreeNode *tree) {
     }
 
     if (!(min >= 0 && max >= min))
-      die("ERROR ih_reconstruct min=%e should be >=0 and <= max=%e\n", 
+      die("ERROR ih_reconstruct min=%i should be >=0 and <= max=%i\n", 
 	  min, max);
 
     /* the LCA of all leaves with bases must be the first ancestor of

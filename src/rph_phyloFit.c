@@ -205,7 +205,7 @@ SEXP rph_phyloFit(SEXP msaP,
   if (pf->logf != NULL && pf->logf != stdout && pf->logf != stderr)
     phast_fclose(pf->logf);
   PutRNGstate();
-  if (die_message != NULL) die(die_message);
+  if (die_message != NULL) die("%s", die_message);
   if (numProtect > 0) 
     UNPROTECT(numProtect);
   return rv;

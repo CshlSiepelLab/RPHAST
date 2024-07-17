@@ -789,7 +789,7 @@ int msa_map_seq_to_msa(msa_coord_map *map, int seq_pos) {
   idx = lst_bsearch_int(map->seq_list, seq_pos);
   if (idx < 0 || idx >= lst_size(map->msa_list))
     die("ERROR msa_map_seq_to_msa: idx=%i, should be in [0,%i)\n",
-	idx, 0, lst_size(map->msa_list));
+	idx, lst_size(map->msa_list));
   prec_match_msa_pos = lst_get_int(map->msa_list, idx);
   prec_match_seq_pos = lst_get_int(map->seq_list, idx);
   return (prec_match_msa_pos + (seq_pos - prec_match_seq_pos));
@@ -806,7 +806,7 @@ int msa_map_msa_to_seq(msa_coord_map *map, int msa_pos) {
   if (idx < 0) return -1;
   if (idx >= lst_size(map->msa_list))
     die("ERROR msa_map_msa_to_seq: idx=%i, should be < %i\n",
-	idx, 0, lst_size(map->msa_list));
+	idx, lst_size(map->msa_list));
   prec_match_msa_pos = lst_get_int(map->msa_list, idx);
   prec_match_seq_pos = lst_get_int(map->seq_list, idx);
   next_match_seq_pos = (idx < lst_size(map->seq_list) - 1 ? 

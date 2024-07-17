@@ -664,7 +664,7 @@ void compute_grad_em_approx(Vector *grad, Vector *params, void *data,
                 dp_da = z_add(dp_da, z_mul(z_mul(zmat_get(Q->evec_matrix_z, k, i), diag[i]), zmat_get(Q->evec_matrix_inv_z, i, l)));
 
               if (!(fabs(dp_da.y) <= TM_IMAG_EPS))
-		die("ERROR compute_grad_em_approx: fabs(dp_da.y=%i) should be <= %e\n", dp_da.y, TM_IMAG_EPS);
+		die("ERROR compute_grad_em_approx: fabs(dp_da.y=%f) should be <= %e\n", dp_da.y, TM_IMAG_EPS);
 	      
               if (p == 0) {
                 if (dp_da.x == 0) dp_da_div_p = 0;
@@ -724,7 +724,7 @@ void compute_grad_em_approx(Vector *grad, Vector *params, void *data,
     lst_cpy(erows, mod->rate_matrix_param_row[params_idx]);
     lst_cpy(ecols, mod->rate_matrix_param_col[params_idx]);
     if (lst_size(erows) != lst_size(ecols))
-      die("ERROR compute_grad_em_approx: size of erows (%i) does not match size of ecols (%i)\n", erows, ecols);
+      die("ERROR compute_grad_em_approx: size of erows (%p) does not match size of ecols (%p)\n", (void *)erows, (void *)ecols);
 
     /* set up dQ, the partial deriv of Q wrt the current param */
     for (i = 0; i < nstates; i++) mark_col[i] = 0;

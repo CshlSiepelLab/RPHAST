@@ -311,7 +311,7 @@ Matrix *mm_build_helper(MS *inputMS, int norder, int pseudoCount, int considerRe
   char c;
 	
   if(inputMS == NULL)
-    die("ERROR: GC% group passed to mm_build_helper was null");
+    die("ERROR: GC%% group passed to mm_build_helper was null");
   if (inputMS->nseqs <= 0) //Must have at least one sequence
     die("ERROR: At least one sequence must be present to build a markov model");
   if (norder < 0)//Order of Markov matrix must be positive

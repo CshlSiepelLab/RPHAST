@@ -252,7 +252,7 @@ void phyloP(struct phyloP_struct *p) {
 	str_append(warnstr, (String*)lst_get_ptr(pruned_names, j));
 	str_append_charstr(warnstr, j < lst_size(pruned_names)-1 ? ", " : ").\n");
       }
-      phast_warning(warnstr->chars);
+      phast_warning("%s", warnstr->chars);
       str_free(warnstr);
     }
     lst_free(pruned_names);

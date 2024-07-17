@@ -713,7 +713,7 @@ void hmm_train_update_counts(Matrix *trans_counts, Vector *state_counts,
   /* temporary */
   for (j = 0; j < state_counts->size; j++) 
     if (vec_get(state_counts, j) < 0)
-      die("ERROR hmm_train_update_counts: state_counts[%j]=%f\n",
+      die("ERROR hmm_train_update_counts: state_counts[%i]=%f\n",
 	  j, vec_get(state_counts, j));
 }
 

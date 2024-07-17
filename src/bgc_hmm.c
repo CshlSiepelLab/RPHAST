@@ -241,7 +241,7 @@ int bgcHmm(struct bgchmm_struct *b) {
     for (j=1; j < lst_size(pruned_names); j++) 
       strcat(warning_str, ((String*)lst_get_ptr(pruned_names, j))->chars);
     strcat(warning_str, ")\n");
-    phast_warning(warning_str);
+    phast_warning("%s", warning_str);
   }
 
 

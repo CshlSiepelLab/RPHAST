@@ -1146,7 +1146,7 @@ int opt_newton_1d(double (*f)(double, void*), double (*x), void *data,
   struct timeval start_time, end_time;
 
   if (!(*x > lb && *x < ub && ub > lb))
-    die("ERROR opt_newton_1d: x=%e, lb=%e, ub=%e\n", x, lb, ub);
+    die("ERROR opt_newton_1d: x=%e, lb=%e, ub=%e\n", *x, lb, ub);
 
   if (logf != NULL) {
     gettimeofday(&start_time, NULL);

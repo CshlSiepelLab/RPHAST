@@ -236,7 +236,7 @@ SEXP rph_msa_extract_feature(SEXP msaP, SEXP gffP) {
       if (msa->categories[i] == 0) {
 	msa->ss->counts[msa->ss->tuple_idx[i]]--;
 	if (msa->ss->counts[msa->ss->tuple_idx[i]] < 0)
-	  die("ERROR msa->ss->counts[msa->ss->tuple_idx[%i]]=%i\n",
+	  die("ERROR msa->ss->counts[msa->ss->tuple_idx[%i]]=%f\n",
 	      i, msa->ss->counts[msa->ss->tuple_idx[i]]);
       }
     }
