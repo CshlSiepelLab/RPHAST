@@ -19,4 +19,3 @@ Check whether an object is of type tm (tree model)
 Melissa J. Hubisz
 }
 \keyword{tm}
-

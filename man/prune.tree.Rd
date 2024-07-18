@@ -31,4 +31,3 @@ prune.tree(trees, "hg18", all.but=FALSE)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{trees}
-

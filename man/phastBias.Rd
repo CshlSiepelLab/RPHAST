@@ -4,12 +4,23 @@
 \alias{phastBias}
 \title{phastBias}
 \usage{
-phastBias(align, mod, foreground = NULL, do.bgc = TRUE, bgc = 3,
-  estimate.bgc = FALSE, bgc.expected.length = 1000,
-  estimate.bgc.expected.length = FALSE, bgc.target.coverage = 0.01,
-  estimate.bgc.target.coverage = TRUE, sel = -2.01483,
-  cons.expected.length = 45, cons.target.coverage = 0.3,
-  estimate.scale = FALSE, post.probs = TRUE)
+phastBias(
+  align,
+  mod,
+  foreground = NULL,
+  do.bgc = TRUE,
+  bgc = 3,
+  estimate.bgc = FALSE,
+  bgc.expected.length = 1000,
+  estimate.bgc.expected.length = FALSE,
+  bgc.target.coverage = 0.01,
+  estimate.bgc.target.coverage = TRUE,
+  sel = -2.01483,
+  cons.expected.length = 45,
+  cons.target.coverage = 0.3,
+  estimate.scale = FALSE,
+  post.probs = TRUE
+)
 }
 \arguments{
 \item{align}{An msa object representing an alignment}
@@ -81,4 +92,3 @@ probability at 0.5).
 \author{
 Melissa J. Hubisz
 }
-

@@ -33,4 +33,3 @@ rename.tree(trees,
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{trees}
-

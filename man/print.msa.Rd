@@ -4,8 +4,13 @@
 \alias{print.msa}
 \title{Printing MSA objects}
 \usage{
-\method{print}{msa}(x, ..., print.seq = ifelse(ncol.msa(x) * nrow.msa(x) <
-  500, TRUE, FALSE), format = NULL, pretty.print = FALSE)
+\method{print}{msa}(
+  x,
+  ...,
+  print.seq = ifelse(ncol.msa(x) * nrow.msa(x) < 500, TRUE, FALSE),
+  format = NULL,
+  pretty.print = FALSE
+)
 }
 \arguments{
 \item{x}{an object of class msa}
@@ -54,4 +59,3 @@ print(m)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

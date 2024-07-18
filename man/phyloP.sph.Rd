@@ -4,12 +4,25 @@
 \alias{phyloP.sph}
 \title{phyloP SPH}
 \usage{
-phyloP.sph(mod, msa = NULL, mode = "CON", features = NULL,
-  basewise = FALSE, subtree = NULL, ref.idx = 1, outfile = NULL,
-  outfile.only = FALSE, outfile.format = "default", prior.only = FALSE,
-  nsites = NULL, post.only = FALSE, fit.model = FALSE,
-  epsilon = ifelse(basewise, 1e-06, 1e-10), confidence.interval = NULL,
-  quantiles = FALSE)
+phyloP.sph(
+  mod,
+  msa = NULL,
+  mode = "CON",
+  features = NULL,
+  basewise = FALSE,
+  subtree = NULL,
+  ref.idx = 1,
+  outfile = NULL,
+  outfile.only = FALSE,
+  outfile.format = "default",
+  prior.only = FALSE,
+  nsites = NULL,
+  post.only = FALSE,
+  fit.model = FALSE,
+  epsilon = ifelse(basewise, 1e-06, 1e-10),
+  confidence.interval = NULL,
+  quantiles = FALSE
+)
 }
 \arguments{
 \item{mod}{An object of class \code{tm} representing the neutral model.}
@@ -85,4 +98,3 @@ phyloP in SPH mode
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

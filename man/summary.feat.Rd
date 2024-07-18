@@ -28,4 +28,3 @@ summary(as.pointer.feat(f))
 Melissa J. Hubisz
 }
 \keyword{features}
-

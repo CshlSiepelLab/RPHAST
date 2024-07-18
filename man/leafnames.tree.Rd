@@ -20,4 +20,3 @@ Get the names of a tree's leaf nodes
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

@@ -4,8 +4,13 @@
 \alias{bgc.nucleotide.tests}
 \title{Do maximum likelihood analysis for gBGC and selection using nucleotide model}
 \usage{
-bgc.nucleotide.tests(align, neutralMod, branch, sel.limits = c(-200, 200),
-  bgc.limits = c(0, 200))
+bgc.nucleotide.tests(
+  align,
+  neutralMod,
+  branch,
+  sel.limits = c(-200, 200),
+  bgc.limits = c(0, 200)
+)
 }
 \arguments{
 \item{align}{A nucleotide alignment of type \code{msa}}
@@ -33,4 +38,3 @@ Do maximum likelihood analysis for gBGC and selection using nucleotide model
 \author{
 Melissa J. Hubisz
 }
-

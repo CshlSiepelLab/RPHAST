@@ -27,4 +27,3 @@ is.subst.mod.tm(c("JC69", "K80", "F81", "HKY85", "HKY85+Gap",
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

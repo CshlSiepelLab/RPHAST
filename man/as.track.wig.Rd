@@ -4,10 +4,20 @@
 \alias{as.track.wig}
 \title{Create a wig track}
 \usage{
-as.track.wig(wig = NULL, name, coord = NULL, score = NULL,
-  short.label = NULL, col = "black", ylim = NULL, smooth = FALSE,
-  numpoints = 250, horiz.line = NULL, horiz.lty = 2,
-  horiz.col = "black")
+as.track.wig(
+  wig = NULL,
+  name,
+  coord = NULL,
+  score = NULL,
+  short.label = NULL,
+  col = "black",
+  ylim = NULL,
+  smooth = FALSE,
+  numpoints = 250,
+  horiz.line = NULL,
+  horiz.lty = 2,
+  horiz.col = "black"
+)
 }
 \arguments{
 \item{wig}{A "wig" object (Must have elements wig$coord and wig$score which should both
@@ -51,4 +61,3 @@ Create a wig track
 Melissa J. Hubisz
 }
 \keyword{plot}
-

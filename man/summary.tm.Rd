@@ -21,11 +21,10 @@ unzip(exampleArchive, filename)
 read.tm(filename)
 unlink(c(filename, "test.mod"))
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{tm}}
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{tm}
-

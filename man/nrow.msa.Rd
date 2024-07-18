@@ -20,11 +20,10 @@ m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
          names=c("human", "mouse", "rat"))
 nrow.msa(m)
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{msa}}
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{msa}
-

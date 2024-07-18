@@ -14,11 +14,10 @@
 \description{
 Prints a features object.
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{write.feat}}
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{features}
-

@@ -19,4 +19,3 @@ subst.mods()
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

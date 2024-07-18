@@ -25,4 +25,3 @@ as a pointer.
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

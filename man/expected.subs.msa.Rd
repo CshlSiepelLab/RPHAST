@@ -34,4 +34,3 @@ unlink("ENr334-100k.maf")
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

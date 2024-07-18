@@ -28,4 +28,3 @@ be modified to the return value.
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{features}
-

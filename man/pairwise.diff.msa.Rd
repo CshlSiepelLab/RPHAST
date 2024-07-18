@@ -4,8 +4,13 @@
 \alias{pairwise.diff.msa}
 \title{Get pairwise differences per site between sequences}
 \usage{
-pairwise.diff.msa(x, seq1 = NULL, seq2 = NULL, ignore.missing = TRUE,
-  ignore.gaps = TRUE)
+pairwise.diff.msa(
+  x,
+  seq1 = NULL,
+  seq2 = NULL,
+  ignore.missing = TRUE,
+  ignore.gaps = TRUE
+)
 }
 \arguments{
 \item{x}{An object of type \code{msa}}
@@ -33,10 +38,9 @@ giving this value for every sequence compared with every other sequence.
 \description{
 Get pairwise differences per site between sequences
 }
-\author{
-Melissa J. Hubisz
-}
 \seealso{
 \code{ninf.msa} To count the number of non-gap and non-missing character
 }
-
+\author{
+Melissa J. Hubisz
+}

@@ -21,4 +21,3 @@ Get the observed frequencies of states in an alignment
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

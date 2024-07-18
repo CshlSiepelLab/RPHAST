@@ -28,4 +28,3 @@ nrow.feat(f)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{features}
-

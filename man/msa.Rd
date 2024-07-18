@@ -4,8 +4,14 @@
 \alias{msa}
 \title{MSA Objects}
 \usage{
-msa(seqs, names = NULL, alphabet = "ACGT", is.ordered = TRUE,
-  offset = NULL, pointer.only = FALSE)
+msa(
+  seqs,
+  names = NULL,
+  alphabet = "ACGT",
+  is.ordered = TRUE,
+  offset = NULL,
+  pointer.only = FALSE
+)
 }
 \arguments{
 \item{seqs}{a character vector containing sequences, one per sample}
@@ -75,4 +81,3 @@ print(m2, print.seq=TRUE)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

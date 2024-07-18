@@ -4,8 +4,15 @@
 \alias{optim.rphast}
 \title{Optimize using phast's optimization code}
 \usage{
-optim.rphast(func, params, lower = NULL, upper = NULL, precision = "HIGH",
-  logfile = NULL, ...)
+optim.rphast(
+  func,
+  params,
+  lower = NULL,
+  upper = NULL,
+  precision = "HIGH",
+  logfile = NULL,
+  ...
+)
 }
 \arguments{
 \item{func}{A function to be maximized.  The first argument of the function
@@ -53,4 +60,3 @@ C code to optimize a C function).
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

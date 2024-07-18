@@ -69,4 +69,3 @@ are 64 states instead of 16.  params should be numeric vector of length
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

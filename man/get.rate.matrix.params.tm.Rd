@@ -26,4 +26,3 @@ in, if the rate matrix does not follow the model indicated in x.
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

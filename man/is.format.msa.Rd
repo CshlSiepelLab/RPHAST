@@ -31,4 +31,3 @@ is.format.msa(c("MAF", "SS", "PHYLIP", "MPM", "LAV", "FASTA",
 Melissa J. Hubisz
 }
 \keyword{msa}
-

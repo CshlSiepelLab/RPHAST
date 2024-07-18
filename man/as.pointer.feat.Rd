@@ -27,11 +27,10 @@ f2 <- as.pointer.feat(f1)
 f1
 f2
 }
-\author{
-Melissa J. Hubisz
-}
 \seealso{
 \code{\link{feat}} for more details on features storage
 options.
 }
-
+\author{
+Melissa J. Hubisz
+}

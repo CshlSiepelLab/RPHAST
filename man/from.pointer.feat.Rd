@@ -19,4 +19,3 @@ Convert a features object from C memory (external pointer) to R memory
 \author{
 Melissa J. Hubisz
 }
-

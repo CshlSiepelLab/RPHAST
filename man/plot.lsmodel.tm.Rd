@@ -5,9 +5,19 @@
 \title{Make a bubble plot of a lineage-specific transition matrix of a
 tree model.}
 \usage{
-\method{plot}{lsmodel.tm}(x, i = 1, show.eq.freq = TRUE, max.cex = 10,
-  eq.freq.max.cex = 5, alphabet = NULL, col = NULL, eq.freq.col = NULL,
-  filled = TRUE, add = FALSE, ...)
+\method{plot}{lsmodel.tm}(
+  x,
+  i = 1,
+  show.eq.freq = TRUE,
+  max.cex = 10,
+  eq.freq.max.cex = 5,
+  alphabet = NULL,
+  col = NULL,
+  eq.freq.col = NULL,
+  filled = TRUE,
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{An object of type \code{tm}.}
@@ -68,4 +78,3 @@ unlink(filename)
 \author{
 Melissa J. Hubisz
 }
-

@@ -22,6 +22,7 @@ Suggests: ape, seqLogo
 Collate: 'bgc.R' 'checkArgs.R' 'feat.R' 'hmm.R' 'listOfLists.R' 'msa.R'
         'optim.R' 'phastCons.R' 'phyloFit.R' 'phyloP.R' 'plot.R'
         'rphast.R' 'treeModel.R' 'trees.R' 'zzz.R'
-RoxygenNote: 5.0.1
+RoxygenNote: 7.3.2
+Encoding: UTF-8
 SystemRequirements: PCRE
 Packaged: 2020-02-13 17:26:41 UTC; rramani

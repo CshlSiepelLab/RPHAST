@@ -4,9 +4,18 @@
 \alias{add.ls.mod}
 \title{Add a lineage-specific model}
 \usage{
-add.ls.mod(x, branch = NULL, label = NULL, category = 0,
-  subst.mod = NULL, separate.params = NULL, const.params = NULL,
-  backgd = NULL, selection = NULL, bgc = NULL)
+add.ls.mod(
+  x,
+  branch = NULL,
+  label = NULL,
+  category = 0,
+  subst.mod = NULL,
+  separate.params = NULL,
+  const.params = NULL,
+  backgd = NULL,
+  selection = NULL,
+  bgc = NULL
+)
 }
 \arguments{
 \item{x}{An object of type \code{tm}}
@@ -109,4 +118,3 @@ of the \code{tm} object.
 \author{
 Melissa J. Hubisz
 }
-

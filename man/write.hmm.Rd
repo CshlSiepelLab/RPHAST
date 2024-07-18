@@ -31,4 +31,3 @@ unlink(filename)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{hmm}
-

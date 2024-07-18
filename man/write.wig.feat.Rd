@@ -41,4 +41,3 @@ Melissa J. Hubisz
 \keyword{features}
 \keyword{fixedStep}
 \keyword{wig}
-

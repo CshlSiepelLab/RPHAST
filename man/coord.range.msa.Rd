@@ -23,4 +23,3 @@ Obtain the range of coordinates in a MSA objects
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

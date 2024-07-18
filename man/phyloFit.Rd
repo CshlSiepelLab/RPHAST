@@ -4,13 +4,31 @@
 \alias{phyloFit}
 \title{Fit a Phylogenetic model to an alignment...}
 \usage{
-phyloFit(msa, tree = NULL, subst.mod = "REV", init.mod = NULL,
-  no.opt = c("backgd"), init.backgd.from.data = ifelse(is.null(init.mod),
-  TRUE, FALSE), features = NULL, scale.only = FALSE, scale.subtree = NULL,
-  nrates = NULL, alpha = 1, rate.constants = NULL, selection = NULL,
-  init.random = FALSE, init.parsimony = FALSE, clock = FALSE,
-  EM = FALSE, max.EM.its = NULL, precision = "HIGH", ninf.sites = 50,
-  quiet = FALSE, bound = NULL, log.file = FALSE)
+phyloFit(
+  msa,
+  tree = NULL,
+  subst.mod = "REV",
+  init.mod = NULL,
+  no.opt = c("backgd"),
+  init.backgd.from.data = ifelse(is.null(init.mod), TRUE, FALSE),
+  features = NULL,
+  scale.only = FALSE,
+  scale.subtree = NULL,
+  nrates = NULL,
+  alpha = 1,
+  rate.constants = NULL,
+  selection = NULL,
+  init.random = FALSE,
+  init.parsimony = FALSE,
+  clock = FALSE,
+  EM = FALSE,
+  max.EM.its = NULL,
+  precision = "HIGH",
+  ninf.sites = 50,
+  quiet = FALSE,
+  bound = NULL,
+  log.file = FALSE
+)
 }
 \arguments{
 \item{msa}{An alignment object.  May be altered if passed in as a pointer to
@@ -140,6 +158,7 @@ normal default boundary will be used for that parameter.  (Most parameters
 are defined between 0 and infinity).  Most of the parameters listed in the
 description of no.opt can also have their boundaries set in this way.
 }
+
 \examples{
 exampleArchive <- system.file("extdata", "examples.zip", package="rphast")
 files <- c("ENr334-100k.maf", "ENr334-100k.fa", "gencode.ENr334-100k.gff", "rev.mod")
@@ -182,4 +201,3 @@ Melissa J. Hubisz and Adam Siepel
 \keyword{msa}
 \keyword{tm}
 \keyword{trees}
-

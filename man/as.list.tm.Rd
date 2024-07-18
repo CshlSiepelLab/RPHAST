@@ -20,10 +20,9 @@ tm <- tm(tree="((human:0.01, chimp:0.01):0.03, mouse:0.3)",
 is.list(tm)
 is.list(as.list(tm))
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{tm}}
 }
-
+\author{
+Melissa J. Hubisz and Adam Siepel
+}

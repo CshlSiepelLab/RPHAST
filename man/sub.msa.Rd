@@ -4,8 +4,15 @@
 \alias{sub.msa}
 \title{MSA Subset}
 \usage{
-sub.msa(x, seqs = NULL, keep = TRUE, start.col = NULL, end.col = NULL,
-  refseq = NULL, pointer.only = FALSE)
+sub.msa(
+  x,
+  seqs = NULL,
+  keep = TRUE,
+  start.col = NULL,
+  end.col = NULL,
+  refseq = NULL,
+  pointer.only = FALSE
+)
 }
 \arguments{
 \item{x}{An object of type \code{msa}}
@@ -50,4 +57,3 @@ print(sub.msa(m, c("mouse"), keep=FALSE, refseq="human",
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

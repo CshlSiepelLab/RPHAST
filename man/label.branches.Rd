@@ -35,4 +35,3 @@ label.branches(trees, c("hg18", "mm9"), "humanAndMouse")
 Melissa J. Hubisz
 }
 \keyword{trees}
-

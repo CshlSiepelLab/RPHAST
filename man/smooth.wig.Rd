@@ -24,4 +24,3 @@ Smooth a wig plot in rphast
 \author{
 Melissa J. Hubisz
 }
-

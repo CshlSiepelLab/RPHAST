@@ -16,12 +16,11 @@ column has at least two non-missing and non-gap characters.
 \description{
 The number of informative columns in an alignment
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{pairwise.diff.msa} To get differences per base
 between pairs of sequences
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{msa}
-

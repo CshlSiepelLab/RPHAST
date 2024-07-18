@@ -38,4 +38,3 @@ label.subtree(trees, "hg18-panTro2", "human-chimp", include.leading=TRUE)
 Melissa J. Hubisz
 }
 \keyword{trees}
-

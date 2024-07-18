@@ -21,4 +21,3 @@ BGC+selection factor
 \author{
 Melissa J. Hubisz
 }
-

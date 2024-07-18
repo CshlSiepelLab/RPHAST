@@ -25,4 +25,3 @@ of the MSA object.
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

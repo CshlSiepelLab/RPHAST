@@ -26,12 +26,11 @@ each state, and overall frequency of each state.
 \description{
 Get the frequencies of characters in an alignment
 }
-\author{
-Melissa J. Hubisz
-}
 \seealso{
 \code{statfreq.msa}, which gets observed frequencies of states
 in an alignment with respect to a substitution model, and works for
 pointers.
 }
-
+\author{
+Melissa J. Hubisz
+}

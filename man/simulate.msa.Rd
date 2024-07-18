@@ -4,8 +4,15 @@
 \alias{simulate.msa}
 \title{Simulate a MSA given a tree model and HMM.}
 \usage{
-\method{simulate}{msa}(object, nsim, seed = NULL, hmm = NULL,
-  get.features = FALSE, pointer.only = FALSE, ...)
+\method{simulate}{msa}(
+  object,
+  nsim,
+  seed = NULL,
+  hmm = NULL,
+  get.features = FALSE,
+  pointer.only = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{An object of type \code{tm} (or a list of these objects)
@@ -80,4 +87,3 @@ Melissa J. Hubisz and Adam Siepel
 }
 \keyword{hmm}
 \keyword{msa}
-

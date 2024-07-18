@@ -5,11 +5,23 @@
 \title{Produce conservation scores and identify conserved elements,
 given a multiple alignment and a phylo-HMM.}
 \usage{
-phastCons(msa, mod, rho = 0.3, target.coverage = 0.05,
-  expected.length = 10, transitions = NULL, estimate.rho = FALSE,
-  estimate.expected.length = FALSE, estimate.transitions = FALSE,
-  estimate.trees = FALSE, viterbi = TRUE, gc = NULL, nrates = NULL,
-  ref.idx = 1, quiet = FALSE)
+phastCons(
+  msa,
+  mod,
+  rho = 0.3,
+  target.coverage = 0.05,
+  expected.length = 10,
+  transitions = NULL,
+  estimate.rho = FALSE,
+  estimate.expected.length = FALSE,
+  estimate.transitions = FALSE,
+  estimate.trees = FALSE,
+  viterbi = TRUE,
+  gc = NULL,
+  nrates = NULL,
+  ref.idx = 1,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{msa}{An object of type \code{msa} representing the multiple
@@ -137,4 +149,3 @@ unlink(files)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

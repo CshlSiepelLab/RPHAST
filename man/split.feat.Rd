@@ -4,8 +4,7 @@
 \alias{split.feat}
 \title{Split features by length}
 \usage{
-\method{split}{feat}(x, f, drop = FALSE, start.from = "left",
-  pointer.only = FALSE, ...)
+\method{split}{feat}(x, f, drop = FALSE, start.from = "left", pointer.only = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of type \code{feat}}
@@ -41,4 +40,3 @@ Split features by length
 Melissa J. Hubisz
 }
 \keyword{features}
-

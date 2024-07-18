@@ -25,4 +25,3 @@ Apply bgc+selection parameters to a matrix
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

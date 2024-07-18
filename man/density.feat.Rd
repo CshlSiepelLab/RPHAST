@@ -25,4 +25,3 @@ Features kernel density
 Melissa J. Hubisz
 }
 \keyword{features}
-

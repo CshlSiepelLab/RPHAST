@@ -27,4 +27,3 @@ is.ordered.msa(m)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

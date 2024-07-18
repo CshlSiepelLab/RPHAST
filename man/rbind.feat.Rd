@@ -20,4 +20,3 @@ concatenate feature objects
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{features}
-

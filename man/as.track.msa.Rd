@@ -4,9 +4,16 @@
 \alias{as.track.msa}
 \title{Create an alignment track}
 \usage{
-as.track.msa(x, name, refseq = names.msa(x)[1], short.label = NULL,
-  pretty = TRUE, nuc.text = NULL, nuc.text.pos = "bottom",
-  nuc.text.col = "black")
+as.track.msa(
+  x,
+  name,
+  refseq = names.msa(x)[1],
+  short.label = NULL,
+  pretty = TRUE,
+  nuc.text = NULL,
+  nuc.text.pos = "bottom",
+  nuc.text.col = "black"
+)
 }
 \arguments{
 \item{x}{An object of type \code{msa}}
@@ -44,11 +51,10 @@ Create an alignment track
 alignment plots will only be displayed if the plot is zoomed in
 enough to show the alignment data.
 }
-\author{
-Melissa J. Hubisz
-}
 \seealso{
 plot.track
 }
+\author{
+Melissa J. Hubisz
+}
 \keyword{plot}
-

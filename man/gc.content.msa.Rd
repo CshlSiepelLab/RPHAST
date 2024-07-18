@@ -27,4 +27,3 @@ Get the fraction of G's and C's in an alignment
 \author{
 Melissa J. Hubisz
 }
-

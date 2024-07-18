@@ -32,4 +32,3 @@ they are stored as pointers to objects in C.
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

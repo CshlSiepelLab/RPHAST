@@ -4,8 +4,14 @@
 \alias{as.track.feat}
 \title{Create a features track}
 \usage{
-as.track.feat(x, name, short.label = NULL, col = "black", is.gene = FALSE,
-  arrow.density = 10)
+as.track.feat(
+  x,
+  name,
+  short.label = NULL,
+  col = "black",
+  is.gene = FALSE,
+  arrow.density = 10
+)
 }
 \arguments{
 \item{x}{An object of type \code{feat}}
@@ -49,4 +55,3 @@ unlink(featFile)
 Melissa J. Hubisz
 }
 \keyword{plot}
-

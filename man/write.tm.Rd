@@ -27,11 +27,10 @@ write.tm(tm, NULL)
 write.tm(tm, "test.mod")
 unlink(c(filename, "test.mod"))
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{tm}}
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{tm}
-

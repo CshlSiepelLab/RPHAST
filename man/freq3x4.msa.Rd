@@ -20,4 +20,3 @@ Get codon frequencies based on 3x4 model
 \author{
 Melissa J. Hubisz
 }
-

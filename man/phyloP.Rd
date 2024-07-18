@@ -4,9 +4,19 @@
 \alias{phyloP}
 \title{phyloP (basewise or by feature)}
 \usage{
-phyloP(mod, msa, method = "LRT", mode = "CON", features = NULL,
-  subtree = NULL, branches = NULL, ref.idx = 1, outfile = NULL,
-  outfile.only = FALSE, outfile.format = "default")
+phyloP(
+  mod,
+  msa,
+  method = "LRT",
+  mode = "CON",
+  features = NULL,
+  subtree = NULL,
+  branches = NULL,
+  ref.idx = 1,
+  outfile = NULL,
+  outfile.only = FALSE,
+  outfile.format = "default"
+)
 }
 \arguments{
 \item{mod}{An object of class \code{tm} representing the neutral model.}
@@ -100,4 +110,3 @@ Melissa J. Hubisz and Adam Siepel
 \keyword{features}
 \keyword{msa}
 \keyword{tm}
-

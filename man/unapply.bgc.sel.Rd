@@ -24,4 +24,3 @@ Unapply bgc+selection parameters from a matrix
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

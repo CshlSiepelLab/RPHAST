@@ -74,4 +74,3 @@ convert.coords.feat(feat(seqname="mouse", start=2, end=5),
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

@@ -23,4 +23,3 @@ Count the number of mutations of each gBGC type on each branch
 \author{
 Melissa J. Hubisz
 }
-

@@ -20,4 +20,3 @@ Returns the dimensions of an msa object as (# of species, # of columns)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

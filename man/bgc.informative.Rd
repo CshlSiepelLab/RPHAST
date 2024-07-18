@@ -35,4 +35,3 @@ Return features indicating regions informative for bgc
 \author{
 Melissa J. Hubisz
 }
-

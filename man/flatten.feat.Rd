@@ -31,4 +31,3 @@ x will be modified to the return value.
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

@@ -30,4 +30,3 @@ be sorted by this function.  region.bounds will not be changed.
 Melissa J. Hubisz
 }
 \keyword{features}
-

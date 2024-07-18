@@ -23,4 +23,3 @@ Get the distance from a node to the root of a tree
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{trees}
-

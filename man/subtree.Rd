@@ -34,4 +34,3 @@ subtree(trees, c("hg18-panTro2", "mm9-rn4"))
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{trees}
-

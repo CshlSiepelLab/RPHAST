@@ -4,9 +4,19 @@
 \alias{plot.msa}
 \title{Plot an alignment}
 \usage{
-\method{plot}{msa}(x, refseq = names.msa(x)[1], xlim = NULL, ylim = c(0,
-  1), add = FALSE, pretty = FALSE, min.char.size = 0.05,
-  nuc.text = NULL, nuc.text.pos = "bottom", nuc.text.col = "black", ...)
+\method{plot}{msa}(
+  x,
+  refseq = names.msa(x)[1],
+  xlim = NULL,
+  ylim = c(0, 1),
+  add = FALSE,
+  pretty = FALSE,
+  min.char.size = 0.05,
+  nuc.text = NULL,
+  nuc.text.pos = "bottom",
+  nuc.text.col = "black",
+  ...
+)
 }
 \arguments{
 \item{x}{An object of type \code{msa}}
@@ -63,4 +73,3 @@ unlink("ENr334-100k.maf")
 \author{
 Melissa J. Hubisz
 }
-

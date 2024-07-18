@@ -29,4 +29,3 @@ summary.tree(label.subtree(tree, "mm9-rn4", "rodent", include.leading=TRUE))
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

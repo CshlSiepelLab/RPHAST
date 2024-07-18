@@ -32,4 +32,3 @@ stored in C, they will be sorted after the function call.
 Melissa J. Hubisz
 }
 \keyword{features}
-

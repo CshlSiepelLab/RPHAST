@@ -35,4 +35,3 @@ Melissa J. Hubisz and Adam Siepel
 \keyword{PHYLIP}
 \keyword{SS}
 \keyword{msa}
-

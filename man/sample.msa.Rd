@@ -4,8 +4,7 @@
 \alias{sample.msa}
 \title{Sample columns from an MSA}
 \usage{
-\method{sample}{msa}(x, size, replace = FALSE, prob = NULL,
-  pointer.only = FALSE)
+\method{sample}{msa}(x, size, replace = FALSE, prob = NULL, pointer.only = FALSE)
 }
 \arguments{
 \item{x}{An object of type \code{msa}}
@@ -43,4 +42,3 @@ sample.msa(m, 10, replace=TRUE, prob=c(rep(1, 10), rep(2, 5), rep(5, 2), 10))
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

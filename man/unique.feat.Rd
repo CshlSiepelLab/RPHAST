@@ -47,4 +47,3 @@ the features by strand as well as chromosome.
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{features}
-

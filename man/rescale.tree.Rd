@@ -37,4 +37,3 @@ rescale.tree(trees, 0.5, c("hg18-panTro2", "hg18-mm9"))
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{trees}
-

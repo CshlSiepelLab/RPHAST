@@ -20,4 +20,3 @@ DNA complement
 Melissa J. Hubisz
 }
 \keyword{msa}
-

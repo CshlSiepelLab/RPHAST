@@ -33,9 +33,6 @@ dim(f)
 f[1:10,]
 unlink(featFile)
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{feat}} for more description of features objects.
 
@@ -48,8 +45,10 @@ objects mirror the GFF column definitions.
 \url{http://genome.ucsc.edu/FAQ/FAQformat} for descriptions
 of BED and GenePred formats.
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{BED}
 \keyword{GFF}
 \keyword{Genepred}
 \keyword{features}
-

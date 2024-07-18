@@ -23,11 +23,10 @@ m
 m <- as.pointer.msa(m)
 m
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{msa}} for details on MSA storage options.
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{msa}
-

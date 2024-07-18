@@ -29,11 +29,10 @@ guess.format.msa(files)
 # the last file is not an alignment, which is why it returns UNKNOWN
 unlink(files)
 }
-\author{
-Melissa J. Hubisz
-}
 \seealso{
 is.format.msa
 }
+\author{
+Melissa J. Hubisz
+}
 \keyword{msa}
-

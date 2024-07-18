@@ -19,4 +19,3 @@ A GFF object representing data in wig file
 Reads fixed or variable step wig files.  Stores them as a
 features object.
 }
-

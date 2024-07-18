@@ -24,4 +24,3 @@ then this is the only way to make an explicity copy of the features.
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

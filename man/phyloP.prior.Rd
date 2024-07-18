@@ -4,9 +4,16 @@
 \alias{phyloP.prior}
 \title{phyloP prior}
 \usage{
-phyloP.prior(mod, nsites = 100, subtree = NULL, branches = NULL,
-  outfile = NULL, outfile.only = FALSE, quantiles = FALSE,
-  epsilon = 1e-10)
+phyloP.prior(
+  mod,
+  nsites = 100,
+  subtree = NULL,
+  branches = NULL,
+  outfile = NULL,
+  outfile.only = FALSE,
+  quantiles = FALSE,
+  epsilon = 1e-10
+)
 }
 \arguments{
 \item{mod}{An object of class \code{tm} representing the neutral model.}
@@ -57,4 +64,3 @@ plot(t1$nsub, t1$prior)
 points(t2$nsub, t2$prior, col="red")
 unlink("rev.mod")
 }
-

@@ -19,4 +19,3 @@ Check an MSA object
 Melissa J. Hubisz
 }
 \keyword{msa}
-

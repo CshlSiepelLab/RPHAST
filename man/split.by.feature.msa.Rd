@@ -4,8 +4,7 @@
 \alias{split.by.feature.msa}
 \title{Split an MSA by feature}
 \usage{
-\method{split}{by.feature.msa}(x, f, drop = FALSE, pointer.only = FALSE,
-  ...)
+\method{split}{by.feature.msa}(x, f, drop = FALSE, pointer.only = FALSE, ...)
 }
 \arguments{
 \item{x}{An object of type \code{msa}}
@@ -46,4 +45,3 @@ Melissa J. Hubisz and Adam Siepel
 }
 \keyword{features}
 \keyword{msa}
-

@@ -26,11 +26,10 @@ m <- msa(seqs=c("A--ACGTAT", "AG-AGGTAA", "AGGAGGTAG"),
 ncol.msa(m)
 ncol.msa(m, names.msa(m))
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{msa}}
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{msa}
-

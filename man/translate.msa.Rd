@@ -68,4 +68,3 @@ translate.msa(msa(c("NNATGGCCACG", "AT--GGCCACG")), one.frame=FALSE, frame=c(3,1
 \author{
 Melissa J. Hubisz
 }
-

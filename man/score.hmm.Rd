@@ -4,8 +4,17 @@
 \alias{score.hmm}
 \title{Score an alignment using a general phylo-HMM}
 \usage{
-score.hmm(msa, mod, hmm, states = NULL, viterbi = TRUE, ref.idx = 1,
-  reflect.strand = NULL, features = NULL, quiet = (!is.null(features)))
+score.hmm(
+  msa,
+  mod,
+  hmm,
+  states = NULL,
+  viterbi = TRUE,
+  ref.idx = 1,
+  reflect.strand = NULL,
+  features = NULL,
+  quiet = (!is.null(features))
+)
 }
 \arguments{
 \item{msa}{An object of type \code{msa}}
@@ -100,4 +109,3 @@ unlink(files)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{hmm}
-

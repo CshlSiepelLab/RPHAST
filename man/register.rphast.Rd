@@ -32,11 +32,10 @@ in ~/.rphast (non-Windows) or \%appData\%\\rphast (Windows) which will
 indicate to us that you have registered, and you will no longer receive
 any reminders to register when rphast is loaded.
 }
-\author{
-Nicholas Peterson
-}
 \seealso{
 \code{\link{nothanks.rphast}} to get rid of registration reminders
 without actually registering.
 }
-
+\author{
+Nicholas Peterson
+}

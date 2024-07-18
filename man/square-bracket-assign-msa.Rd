@@ -50,4 +50,3 @@ m["rat",] <- "ABCDEF"
 \author{
 Melissa J. Hubisz
 }
-

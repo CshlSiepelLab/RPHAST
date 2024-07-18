@@ -22,4 +22,3 @@ Get the range of a features object
 Melissa J. Hubisz
 }
 \keyword{features}
-

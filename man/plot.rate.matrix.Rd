@@ -4,9 +4,18 @@
 \alias{plot.rate.matrix}
 \title{Make a bubble plot of a transition matrix}
 \usage{
-\method{plot}{rate.matrix}(x, eq.freq = NULL, max.cex = 10,
-  eq.freq.max.cex = 5, alphabet = NULL, col = NULL, eq.freq.col = NULL,
-  filled = TRUE, add = FALSE, ...)
+\method{plot}{rate.matrix}(
+  x,
+  eq.freq = NULL,
+  max.cex = 10,
+  eq.freq.max.cex = 5,
+  alphabet = NULL,
+  col = NULL,
+  eq.freq.col = NULL,
+  filled = TRUE,
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{A square matrix representing a continuous-time markov model;
@@ -50,4 +59,3 @@ Make a bubble plot of a transition matrix
 \author{
 Melissa J. Hubisz
 }
-

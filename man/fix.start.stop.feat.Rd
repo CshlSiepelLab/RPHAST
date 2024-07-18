@@ -63,4 +63,3 @@ unlink(featFile)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{features}
-

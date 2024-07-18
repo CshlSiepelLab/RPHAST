@@ -40,4 +40,3 @@ unlink(filename)
 \author{
 Melissa J. Hubisz and Adam Siepel
 }
-

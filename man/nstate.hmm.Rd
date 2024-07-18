@@ -19,4 +19,3 @@ HMM number of states
 Melissa J. Hubisz
 }
 \keyword{hmm}
-

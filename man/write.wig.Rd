@@ -38,4 +38,3 @@ Melissa J. Hubisz
 }
 \keyword{fixedStep}
 \keyword{wig}
-

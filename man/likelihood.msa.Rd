@@ -53,13 +53,12 @@ features$seqname <- names(msa)[1]
 likelihood.msa(msa, mod, features=features)
 unlink(files)
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{phyloFit}, \code{tm}
+}
+\author{
+Melissa J. Hubisz and Adam Siepel
 }
 \keyword{features}
 \keyword{msa}
 \keyword{tm}
-

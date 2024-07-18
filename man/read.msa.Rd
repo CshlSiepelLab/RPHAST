@@ -4,11 +4,21 @@
 \alias{read.msa}
 \title{Reading an MSA Object}
 \usage{
-read.msa(filename, format = c(guess.format.msa(filename), "FASTA")[1],
-  alphabet = NULL, features = NULL, do.4d = FALSE, ordered = (do.4d ==
-  FALSE && is.null(features)), tuple.size = (if (do.4d) 3 else NULL),
-  do.cats = NULL, refseq = NULL, offset = 0, seqnames = NULL,
-  discard.seqnames = NULL, pointer.only = FALSE)
+read.msa(
+  filename,
+  format = c(guess.format.msa(filename), "FASTA")[1],
+  alphabet = NULL,
+  features = NULL,
+  do.4d = FALSE,
+  ordered = (do.4d == FALSE && is.null(features)),
+  tuple.size = (if (do.4d) 3 else NULL),
+  do.cats = NULL,
+  refseq = NULL,
+  offset = 0,
+  seqnames = NULL,
+  discard.seqnames = NULL,
+  pointer.only = FALSE
+)
 }
 \arguments{
 \item{filename}{The name of the input file containing an alignment.}
@@ -110,15 +120,14 @@ ncol.msa(m1, "hg18")
 
 unlink(files) # clean up
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{msa}}, \code{\link{read.feat}}
+}
+\author{
+Melissa J. Hubisz and Adam Siepel
 }
 \keyword{FASTA}
 \keyword{MAF}
 \keyword{PHYLIP}
 \keyword{SS}
 \keyword{msa}
-

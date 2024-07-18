@@ -48,13 +48,12 @@ print(m[c(TRUE, FALSE, TRUE),], print.seq=TRUE)
 print(m[TRUE,], print.seq=TRUE)
 print("[.msa"(m, "mouse",c(1,6,3,5)), print.seq=TRUE)
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{sub.msa}} which can subset columns based on genomic
 coordinates, and \code{\link{extract.feature.msa}} which can subset based
 on genomic coordinates denoted in a features object.
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{msa}
-

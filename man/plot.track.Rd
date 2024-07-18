@@ -4,11 +4,24 @@
 \alias{plot.track}
 \title{Make browser-like plot in rphast}
 \usage{
-\method{plot}{track}(x, doLabels = TRUE, cex.axis = 1, cex.labels = 1,
-  cex.shortLabels = 0.75, relWigSize = 5, relMsaSize = 5, xlim = NULL,
-  xlab = "coord", ylab = "", blankSpace = 0.25, axisDigits = 3,
-  labelSpace = min(length(x) * 0.05, 0.25), belowLabelSpace = 0.2,
-  lmar = 4, ...)
+\method{plot}{track}(
+  x,
+  doLabels = TRUE,
+  cex.axis = 1,
+  cex.labels = 1,
+  cex.shortLabels = 0.75,
+  relWigSize = 5,
+  relMsaSize = 5,
+  xlim = NULL,
+  xlab = "coord",
+  ylab = "",
+  blankSpace = 0.25,
+  axisDigits = 3,
+  labelSpace = min(length(x) * 0.05, 0.25),
+  belowLabelSpace = 0.2,
+  lmar = 4,
+  ...
+)
 }
 \arguments{
 \item{x}{a list of tracks, created by the as.track.wig or as.track.feat}
@@ -52,11 +65,10 @@ in fractions of a character width.}
 \description{
 Make browser-like plot in rphast
 }
-\author{
-Melissa J. Hubisz
-}
 \seealso{
 \code{plotPhast}, which may be easier to use but less flexible
 }
+\author{
+Melissa J. Hubisz
+}
 \keyword{plot}
-

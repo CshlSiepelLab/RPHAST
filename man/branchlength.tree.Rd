@@ -19,4 +19,3 @@ Get the total length of the edges of a tree
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{trees}
-

@@ -17,4 +17,3 @@ Pretty-print the phastBias result list without spilling giant matrices onto the 
 \author{
 Melissa J. Hubisz
 }
-

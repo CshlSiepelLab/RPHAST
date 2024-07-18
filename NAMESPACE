@@ -183,7 +183,3 @@ export(write.wig.feat)
 importFrom(stats,density)
 importFrom(stats,simulate)
 useDynLib(rphast, .registration = TRUE)
-importFrom(graphics, abline, axis, hist, lines, mtext,
-           par, plot, points, rect, segments, text)
-importFrom(methods, as, is)
-importFrom(utils, URLencode, packageDescription, read.csv)

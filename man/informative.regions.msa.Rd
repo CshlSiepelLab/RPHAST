@@ -4,8 +4,13 @@
 \alias{informative.regions.msa}
 \title{Get informative regions of an alignment}
 \usage{
-informative.regions.msa(x, min.numspec, spec = NULL,
-  refseq = names.msa(x)[1], gaps.inf = FALSE)
+informative.regions.msa(
+  x,
+  min.numspec,
+  spec = NULL,
+  refseq = names.msa(x)[1],
+  gaps.inf = FALSE
+)
 }
 \arguments{
 \item{x}{An object of type \code{msa}.}
@@ -58,4 +63,3 @@ informative.regions.msa(m, 3, refseq="mouse", spec=c("mouse", "rat"))
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

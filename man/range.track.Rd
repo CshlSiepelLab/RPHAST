@@ -23,4 +23,3 @@ Get the coordinate range of a list of RPHAST results
 Melissa J. Hubisz
 }
 \keyword{plot}
-

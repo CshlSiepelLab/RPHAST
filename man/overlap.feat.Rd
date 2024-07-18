@@ -4,8 +4,15 @@
 \alias{overlap.feat}
 \title{Feature overlap}
 \usage{
-overlap.feat(x, filter, numbase = 1, min.percent = NULL,
-  overlapping = TRUE, get.fragments = FALSE, pointer.only = FALSE)
+overlap.feat(
+  x,
+  filter,
+  numbase = 1,
+  min.percent = NULL,
+  overlapping = TRUE,
+  get.fragments = FALSE,
+  pointer.only = FALSE
+)
 }
 \arguments{
 \item{x}{An object of type \code{feat} containing features to select}
@@ -66,4 +73,3 @@ rm(feat1, feat2)
 Melissa J. Hubisz
 }
 \keyword{features}
-

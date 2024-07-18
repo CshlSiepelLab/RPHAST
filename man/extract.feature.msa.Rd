@@ -31,12 +31,11 @@ will be modified to the return value of the function.
 Use \code{extract.feature.msa(copy.msa(x), features,...)}
 if you don't want this behavior!
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{sub.msa}, \code{[.msa}
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{features}
 \keyword{msa}
-

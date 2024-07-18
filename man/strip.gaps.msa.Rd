@@ -51,4 +51,3 @@ print(m, print.seq=TRUE)
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{msa}
-

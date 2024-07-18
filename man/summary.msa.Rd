@@ -4,8 +4,13 @@
 \alias{summary.msa}
 \title{MSA Summary}
 \usage{
-\method{summary}{msa}(object, ..., print.seq = ncol.msa(object) < 100 &&
-  nrow.msa(object) < 30, format = "FASTA", pretty.print = FALSE)
+\method{summary}{msa}(
+  object,
+  ...,
+  print.seq = ncol.msa(object) < 100 && nrow.msa(object) < 30,
+  format = "FASTA",
+  pretty.print = FALSE
+)
 }
 \arguments{
 \item{object}{an MSA object}
@@ -34,11 +39,10 @@ m <- msa(seqs=c("ACGTAT", "AGGTAA", "AGGTAG"),
          pointer.only=TRUE)
 summary(m)
 }
-\author{
-Melissa J. Hubisz
-}
 \seealso{
 \code{\link{print.msa}}
 }
+\author{
+Melissa J. Hubisz
+}
 \keyword{msa}
-

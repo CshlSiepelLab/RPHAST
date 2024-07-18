@@ -4,8 +4,16 @@
 \alias{setup.branch.site.tm}
 \title{Set up a tree model for branch site selection analysis}
 \usage{
-setup.branch.site.tm(mod, foreground, bgc = FALSE, altModel = TRUE,
-  init.sel.neg = 0, init.sel.pos = 0, init.bgc = 0, init.weights = NULL)
+setup.branch.site.tm(
+  mod,
+  foreground,
+  bgc = FALSE,
+  altModel = TRUE,
+  init.sel.neg = 0,
+  init.sel.pos = 0,
+  init.bgc = 0,
+  init.weights = NULL
+)
 }
 \arguments{
 \item{mod}{an object of type \code{tm}}
@@ -41,4 +49,3 @@ Set up a tree model for branch site selection analysis
 \author{
 Melissa J. Hubisz
 }
-

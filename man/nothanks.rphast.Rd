@@ -18,4 +18,3 @@ This creates an empty file called "notRegistered" in
 \author{
 Melissa J. Hubisz
 }
-

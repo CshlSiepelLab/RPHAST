@@ -4,9 +4,18 @@
 \alias{feat}
 \title{Features Objects}
 \usage{
-feat(seqname = "default", src = ".", feature = ".", start, end,
-  score = NULL, strand = NULL, frame = NULL, attribute = NULL,
-  pointer.only = FALSE)
+feat(
+  seqname = "default",
+  src = ".",
+  feature = ".",
+  start,
+  end,
+  score = NULL,
+  strand = NULL,
+  frame = NULL,
+  attribute = NULL,
+  pointer.only = FALSE
+)
 }
 \arguments{
 \item{seqname}{a character vector containing the name of the sequence.  If
@@ -68,13 +77,12 @@ dim.feat(f)
 f <- feat(seq, src, feature, start, end, pointer.only=TRUE)
 dim.feat(f)
 }
-\author{
-Melissa J. Hubisz and Adam Siepel
-}
 \seealso{
 \code{\link{read.feat}}
 
 \code{\link{msa}} for more details on the pointer.only option.
 }
+\author{
+Melissa J. Hubisz and Adam Siepel
+}
 \keyword{features}
-

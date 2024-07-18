@@ -4,9 +4,20 @@
 \alias{tm}
 \title{Tree Models}
 \usage{
-tm(tree, subst.mod, rate.matrix = NULL, backgd = NULL, alphabet = "ACGT",
-  nratecats = 1, alpha = 0, rate.consts = NULL, rate.weights = NULL,
-  selection = NULL, root.leaf = NULL, likelihood = NULL)
+tm(
+  tree,
+  subst.mod,
+  rate.matrix = NULL,
+  backgd = NULL,
+  alphabet = "ACGT",
+  nratecats = 1,
+  alpha = 0,
+  rate.consts = NULL,
+  rate.weights = NULL,
+  selection = NULL,
+  root.leaf = NULL,
+  likelihood = NULL
+)
 }
 \arguments{
 \item{tree}{A character string representing a phylogenetic tree in
@@ -89,4 +100,3 @@ t
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{tm}
-

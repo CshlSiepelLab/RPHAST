@@ -19,4 +19,3 @@ Get the number of leaves in a tree
 Melissa J. Hubisz and Adam Siepel
 }
 \keyword{trees}
-
