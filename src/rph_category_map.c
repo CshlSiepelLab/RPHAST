@@ -24,9 +24,8 @@ Last updated: 1/5/2010
 #include <sufficient_stats.h>
 #include <local_alignment.h>
 #include <category_map.h>
-
-#include <Rdefines.h>
 #include <rph_util.h>
+#include <Rdefines.h>
 
 void rph_cm_free(SEXP cmP) {
   CategoryMap *cm = (CategoryMap*)EXTPTR_PTR(cmP);

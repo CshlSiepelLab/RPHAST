@@ -24,7 +24,7 @@ Last updated: 1/13/10
 #include <subst_mods.h>
 #include <external_libs.h>
 #include <misc.h>
-
+#define COMPLEX R_COMPLEX_OVERRIDE
 #include <Rdefines.h>
 
 

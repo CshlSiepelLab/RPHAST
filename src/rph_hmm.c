@@ -19,12 +19,12 @@ Last updated: 12/14/08
 #include <stdio.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <rph_util.h>
 #include <Rdefines.h>
 #undef Matrix
 #undef nrows
 #include <hmm.h>
 #include <math.h>
-#include <rph_util.h>
 #include <misc.h>
 #include <markov_matrix.h>
 #include <vector.h>
