@@ -46,20 +46,38 @@ AC_SEARCH_LIBS([pcre_compile], [pcre], [],
  [AC_MSG_RESULT(no)
   AC_MSG_ERROR([ Need to install pcre ])])
 
-# use vecLib if available
-AC_MSG_CHECKING(for vecLib)
+# Check for Accelerate framework first
+AC_MSG_CHECKING(for Accelerate)
 OLD_CFLAGS=${CFLAGS}
 OLD_LIBS=${LIBS}
-CFLAGS="${CFLAGS} -DVECLIB"
-LIBS="${LIBS} -framework vecLib"
-AC_LINK_IFELSE( [AC_LANG_PROGRAM()], 
-		[AC_MSG_RESULT(yes)
-                 LAPACK_FLAG="-DVECLIB"
-                 LAPACK_LIBS="-framework vecLib"],
-		[ AC_MSG_RESULT(no)
-                  CFLAGS=${OLD_CFLAGS}])
+CFLAGS="${CFLAGS} -DACCELERATE"
+LIBS="${LIBS} -framework Accelerate"
+AC_LINK_IFELSE(
+    [AC_LANG_PROGRAM()],
+    [AC_MSG_RESULT(yes)
+     LAPACK_FLAG="-DACCELERATE"
+     LAPACK_LIBS="-framework Accelerate"],
+    [AC_MSG_RESULT(no)
+     CFLAGS=${OLD_CFLAGS}
+     LIBS=${OLD_LIBS}
+     
+     # If Accelerate is not found, check for vecLib
+     AC_MSG_CHECKING(for vecLib)
+     CFLAGS="${CFLAGS} -DVECLIB"
+     LIBS="${LIBS} -framework vecLib"
+     AC_LINK_IFELSE(
+         [AC_LANG_PROGRAM()],
+         [AC_MSG_RESULT(yes)
+          LAPACK_FLAG="-DVECLIB"
+          LAPACK_LIBS="-framework vecLib"],
+         [AC_MSG_RESULT(no)
+          CFLAGS=${OLD_CFLAGS}
+          LIBS=${OLD_LIBS}]
+     )
+    ]
+)
 CFLAGS=${OLD_CFLAGS}
-#echo "VECLIB=${VECLIB} CFLAGS=${CFLAGS}"
+LIBS=${OLD_LIBS}
 
 # if not veclib, try to use R's lapack
 if test -z "$LAPACK_FLAG"; then

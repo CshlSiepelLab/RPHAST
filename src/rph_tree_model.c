@@ -26,8 +26,8 @@ Last updated: 1/13/10
 #include <tree_likelihoods.h>
 #include <list_of_lists.h>
 #include <misc.h>
-#include <Rdefines.h>
 #include <rph_util.h>
+#include <Rdefines.h>
 
 //these are defined as macros in R and we don't want them overriding
 // phast's matrix->nrows and matrix->ncols

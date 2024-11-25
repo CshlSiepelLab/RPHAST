@@ -1,4 +1,5 @@
 //NOTE: this file is only included by files in src/lib/rphast
+#define COMPLEX R_COMPLEX_OVERRIDE
 #include <Rdefines.h>
 #undef Matrix
 #undef nrows
