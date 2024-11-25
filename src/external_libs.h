@@ -32,8 +32,18 @@
 #define LAPACK_DOUBLE double
 #else
 
-#ifdef VECLIB
+#ifdef ACCELERATE
 #include <Accelerate/Accelerate.h>
+#define LAPACK_FLAG "-DACCELERATE"
+#define LAPACK_LIBS "-framework Accelerate"
+#define LAPACK_INT __CLPK_integer
+#define LAPACK_DOUBLE __CLPK_doublereal
+#else
+
+#ifdef VECLIB
+#include <vecLib/vecLib.h>
+#define LAPACK_FLAG "-DVECLIB"
+#define LAPACK_LIBS "-framework vecLib"
 #define LAPACK_INT __CLPK_integer
 #define LAPACK_DOUBLE __CLPK_doublereal
 #else
@@ -44,6 +54,8 @@
 #define LAPACK_INT integer
 #define LAPACK_DOUBLE doublereal
 #endif  /*ifndef SKIP_LAPACK */
+
+#endif /*ifdef ACCELERATE*/
 
 #endif  /*ifdef VECLIB */
 
