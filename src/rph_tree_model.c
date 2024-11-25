@@ -26,6 +26,7 @@ Last updated: 1/13/10
 #include <tree_likelihoods.h>
 #include <list_of_lists.h>
 #include <misc.h>
+#define COMPLEX R_COMPLEX_OVERRIDE
 #include <Rdefines.h>
 #include <rph_util.h>
 
