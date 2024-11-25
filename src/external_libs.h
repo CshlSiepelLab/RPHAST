@@ -36,7 +36,7 @@
 #include <Accelerate/Accelerate.h>
 #define LAPACK_FLAG "-DACCELERATE"
 #define LAPACK_LIBS "-framework Accelerate"
-#define COMPLEX DSPComplex
+#define COMPLEX ACCELERATE_Complex
 #define LAPACK_INT __CLPK_integer
 #define LAPACK_DOUBLE __CLPK_doublereal
 #else
