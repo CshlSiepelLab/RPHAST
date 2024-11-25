@@ -1,7 +1,7 @@
 //NOTE: this file is only included by files in src/lib/rphast
-#undef COMPLEX
+#define COMPLEX R_COMPLEX_OVERRIDE
 #include <Rdefines.h>
-#define COMPLEX R_COMPLEX
+#undef COMPLEX
 #undef Matrix
 #undef nrows
 #include <misc.h>
