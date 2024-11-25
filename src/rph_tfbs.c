@@ -29,6 +29,9 @@
 #include <R.h>
 #include <Rinternals.h>
 
+#ifdef COMPLEX
+#undef COMPLEX
+#endif
 
 //ncols and nrows have a name collision with Matrix->ncols, Matrix->nrows
 #undef ncols
