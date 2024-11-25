@@ -33,7 +33,7 @@
 #else
 
 #ifdef ACCELERATE
-#define COMPLEX R_COMPLEX_OVERRIDE
+#define COMPLEX ACCELERATE_COMPLEX
 #include <Accelerate/Accelerate.h>
 #define LAPACK_FLAG "-DACCELERATE"
 #define LAPACK_LIBS "-framework Accelerate"
